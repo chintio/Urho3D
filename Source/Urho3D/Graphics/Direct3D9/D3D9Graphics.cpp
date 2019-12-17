@@ -2389,6 +2389,7 @@ void Graphics::AdjustWindow(int& newWidth, int& newHeight, bool& newFullscreen, 
     }
 }
 
+// 创建DX接口（IDirect3D9）及其相关的对象（D3DCAPS9、D3DADAPTER_IDENTIFIER9）
 bool Graphics::CreateInterface()
 {
     impl_->interface_ = Direct3DCreate9(D3D_SDK_VERSION);

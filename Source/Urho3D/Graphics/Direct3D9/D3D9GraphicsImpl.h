@@ -134,4 +134,21 @@ private:
 
 };
 
+// System Memory：就是系统内存，存放在System Memory上的Resource是不能直接被GPU访问的，对于GPU来说是不可见的，这种Resource必须经过拷贝才能运用到GPU的渲染中。
+// AGP Memory : 也叫Share System Memory或者Non - Local  Video Memory, 其实就是系统内存的一部分，只是这部分内存已经被Mapping为显存的一部分，不但CPU可以访问这部分内存，而且GPU也可以通过PCI - E / AGP总线透明访问这部分内存，就像显存一样，但GPU访问速度比显存慢，毕竟经过映射，而且还要走PCI - E总线进行读写。
+// Video Memory : 显存，也叫做Local Video Memory, 只有GPU可以访问，CPU不可见也不能访问，速度最快。
+
+// D3DPOOL：
+// D3DPOOL_DEFAULT：一般存放在video memory或AGP memory中。由于在系统内存中没有备份，在Device Lost时需要释放后重新创建。
+// D3DPOOL_MANAGED：和D3DPOOL_DEFAULT的区别在于D3DRuntime会在System Memory中为其创建备份，Device Lost后不需要处理，D3DRuntime会自动用备份通过显卡驱动重新创建出资源。
+// D3DPOOL_SYSTEMMEM：只存放于系统内存中，这种资源不能被GPU访问，Device Lost后不需要处理。
+// D3DPOOL_SCRATCH：只存放于系统内存中，不同于D3DPOOL_SYSTEMMEM，这些资源不受图形设备的制约。所以，设备无法访问该类型内存池中的资源。但这些资源之间可以互相复制。
+// 在创建Resource时，对指定 D3DPOOL时有些限制，比如创建RenderTarget和DepthStencil只能标志为D3DPOOL_DEFAULT，被指定为dynamic的resource只能标志为D3DPOOL_DEFAULT或D3DPOOL_SYSTEMMEM，详细可参考D3D SDK 文档。
+// 总结：对于静态资源（不需要经常修改或访问的数据，例如，地形、城市建筑），就用D3DPOOL_MANAGED，Device Lost后由托管直接从备份中恢复。
+//       对于动态资源（比如粒子、动态纹理、RenderTarget、DepthStencil），就用D3DPOOL_DEFAULT，Device Lost后自助创建。
+
+// D3DUSAGE：
+// 显存与非D3DUSAGE_DYNAMIC:创建缓存时，如果未使用标记 D3DUSAGE_DYNAMIC ，则称所创建的缓存为静态缓存(static buffer)。静态缓存一般被放置在显存中，以保证存储于其中的数据得到最高效的处理。然而，静态缓存是以牺牲对静态缓存读写操作的速度为代价的，这是因为访问显存的速度本身就很慢。基于上述原因，我们用静态缓存来存储静态数据(那些不需要经常修改或访问的数据)。静态缓存必须在应用程序初始化时用几何体的数据进行填充。
+// AGP与D3DUSAGE_DYNAMIC: 创建缓存时，如果使用了标记 D3DUSAGE_DYNAMIC ， 则称所创建的缓存为动态缓存(dynamic buffer)。动态缓存一般放置在 AGP(Accelerated Graphics Port) 存储区中，其内容可被迅速更新。动态缓存中数据的处理速度不像静态缓存那样快，这是因为在绘制之前数据必须传输到显存中。但动态缓存的突出优点是其更新速度相当快(快速的 CPU 写操作)。所以，如果您需要频繁更新缓存中的内容，该缓存应设置为动态的。
+// 对显存和AGP存储区进行读操作非常慢。所以，如果需要在程序运行时读取几何数据，最好在系统内存中保留一份副本，然后在需要时对其进行读操作。
 }
