@@ -144,8 +144,8 @@ private:
 // D3DPOOL_SYSTEMMEM：只存放于系统内存中，这种资源不能被GPU访问，Device Lost后不需要处理。
 // D3DPOOL_SCRATCH：只存放于系统内存中，不同于D3DPOOL_SYSTEMMEM，这些资源不受图形设备的制约。所以，设备无法访问该类型内存池中的资源。但这些资源之间可以互相复制。
 // 在创建Resource时，对指定 D3DPOOL时有些限制，比如创建RenderTarget和DepthStencil只能标志为D3DPOOL_DEFAULT，被指定为dynamic的resource只能标志为D3DPOOL_DEFAULT或D3DPOOL_SYSTEMMEM，详细可参考D3D SDK 文档。
-// 总结：对于静态资源（不需要经常修改或访问的数据，例如，地形、城市建筑），就用D3DPOOL_MANAGED，Device Lost后由托管直接从备份中恢复。
-//       对于动态资源（比如粒子、动态纹理、RenderTarget、DepthStencil），就用D3DPOOL_DEFAULT，Device Lost后自助创建。
+// 总结：对于动态资源（RenderTarget、DepthStencil、D3DUSAGE_DYNAMIC资源），就用D3DPOOL_DEFAULT（Device Lost后自助创建）。
+//       对于静态资源（不需要经常修改或访问的数据，例如，地形、城市建筑），可以用D3DPOOL_DEFAULT或D3DPOOL_MANAGED（Device Lost后由托管直接从备份中恢复）。
 
 // D3DUSAGE：
 // 显存与非D3DUSAGE_DYNAMIC:创建缓存时，如果未使用标记 D3DUSAGE_DYNAMIC ，则称所创建的缓存为静态缓存(static buffer)。静态缓存一般被放置在显存中，以保证存储于其中的数据得到最高效的处理。然而，静态缓存是以牺牲对静态缓存读写操作的速度为代价的，这是因为访问显存的速度本身就很慢。基于上述原因，我们用静态缓存来存储静态数据(那些不需要经常修改或访问的数据)。静态缓存必须在应用程序初始化时用几何体的数据进行填充。

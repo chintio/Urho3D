@@ -247,4 +247,6 @@ protected:
     SharedPtr<Texture> backupTexture_;
 };
 
+// 纹理是类似于表面的一个像素矩阵，与表面不同的是它可被映射到三角形单元中
+
 }

@@ -70,51 +70,77 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 namespace Urho3D
 {
 
-static const D3DCMPFUNC d3dCmpFunc[] =
+//模板缓存使用步骤
+//启用/禁用 Device->SetRenderState(D3DRS_STENCILENABLE, true/false);
+//模板测试
+//	(ref & mask) ComparisonOperation (value & mask)，
+//		依据ComparisonOperation所指定的比较规则对LHS（即ref & mask，ref通过D3DRS_STENCILREF指定）和RHS（即value & mask，value为模板缓存中的值）进行比较。
+//		如果测试结果为true，便将该像素写入后台缓存（并用参考值（ref）代替模板缓存中的值）。否则阻止该像素写入后台缓存。当然，当一个像素不被写入后台缓存时，也不会被写入深度缓存。
+//	设置模板参考值 Device->SetRenderState(D3DRS_STENCILREF, ref);
+//	设置模板掩码 Device->SetRenderState(D3DRS_STENCILMASK, mask);
+//	设置比较函数 Device->SetRenderState(D3DRS_STENCILFUNC, d3dCmpFunc);
+//	设置模板缓存的更新（设置模板缓存中的值如何进行更新） Device->SetRenderState(D3DRS_STENCILFAIL/D3DRS_STENCILZFAIL/D3DRS_STENCILPASS, d3dStencilOp);
+//	设置模板写掩码（该值可屏蔽我们将写入模板缓存的任何值的某些位） Device->SetRenderState(D3DRS_STENCILWRITEMASK, wmask);
+	static const D3DCMPFUNC d3dCmpFunc[] =
 {
-    D3DCMP_ALWAYS,
-    D3DCMP_EQUAL,
-    D3DCMP_NOTEQUAL,
-    D3DCMP_LESS,
-    D3DCMP_LESSEQUAL,
-    D3DCMP_GREATER,
-    D3DCMP_GREATEREQUAL
+    D3DCMP_ALWAYS, //模板测试总是成功的，即比较函数总是返回true。
+    D3DCMP_EQUAL, //若LHS=RHS，则模板测试成功
+    D3DCMP_NOTEQUAL, //若LHS!=RHS，则模板测试成功
+    D3DCMP_LESS, //若LHS<RHS，则模板测试成功
+    D3DCMP_LESSEQUAL, //若LHS<=RHS，则模板测试成功
+    D3DCMP_GREATER, //若LHS>RHS，则模板测试成功
+    D3DCMP_GREATEREQUAL //若LHS>=RHS，则模板测试成功
 };
 
-static const D3DTEXTUREFILTERTYPE d3dMinFilter[] =
+//纹理映射使用步骤
+//设置放大、缩小、多级渐进 过滤器 Device->SetSamplerState(0, D3DSAMP_MINFILTER/D3DSAMP_MAGFILTER/D3DSAMP_MIPFILTER, D3DTEXF_POINT/D3DTEXF_LINEAR/D3DTEXF_ANISOTROPIC);
+//设置寻址模式（用于纹理坐标值超出[0,1]区间） Device->SetSamplerState(0, D3DSAMP_ADDRESSU/D3DSAMP_ADDRESSV/D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP/D3DTADDRESS_BORDER/D3DTADDRESS_CLAMP/D3DTADDRESS_MIRROR);
+//启用纹理 Device->SetTexture
+
+static const D3DTEXTUREFILTERTYPE d3dMinFilter[] = //缩小过滤器
+{
+    D3DTEXF_POINT, //最近点采样
+    D3DTEXF_LINEAR, //线性过滤
+    D3DTEXF_LINEAR,
+    D3DTEXF_ANISOTROPIC, //各项异性过滤
+    D3DTEXF_ANISOTROPIC
+};
+
+static const D3DTEXTUREFILTERTYPE d3dMagFilter[] = //放大过滤器
 {
     D3DTEXF_POINT,
     D3DTEXF_LINEAR,
+    D3DTEXF_LINEAR,
+    D3DTEXF_ANISOTROPIC,
+    D3DTEXF_POINT,
+};
+
+static const D3DTEXTUREFILTERTYPE d3dMipFilter[] = //多级渐进(mipmap)过滤器
+{
+    D3DTEXF_POINT,
+    D3DTEXF_POINT,
     D3DTEXF_LINEAR,
     D3DTEXF_ANISOTROPIC,
     D3DTEXF_ANISOTROPIC
 };
 
-static const D3DTEXTUREFILTERTYPE d3dMagFilter[] =
+static const D3DTEXTUREADDRESS d3dAddressMode[] = //寻址模式
 {
-    D3DTEXF_POINT,
-    D3DTEXF_LINEAR,
-    D3DTEXF_LINEAR,
-    D3DTEXF_ANISOTROPIC,
-    D3DTEXF_POINT,
+    D3DTADDRESS_WRAP, //重复
+    D3DTADDRESS_MIRROR, //镜像
+    D3DTADDRESS_CLAMP, //箝位
+    D3DTADDRESS_BORDER //边界颜色
 };
 
-static const D3DTEXTUREFILTERTYPE d3dMipFilter[] =
-{
-    D3DTEXF_POINT,
-    D3DTEXF_POINT,
-    D3DTEXF_LINEAR,
-    D3DTEXF_ANISOTROPIC,
-    D3DTEXF_ANISOTROPIC
-};
+//在融合运算时，必须遵循以下原则：
+//首先绘制那些不需要进行融合的物体。
+//然后将需要进行融合的物体按照相对于摄像机的深度值进行排序（如果物体已经处于观察坐标系中，该运算的效率会相当高，因为此时只需对Z分量进行排序。）；
+//最后，按照自后往前的顺序逐个绘制将要进行融合运算的物体。
 
-static const D3DTEXTUREADDRESS d3dAddressMode[] =
-{
-    D3DTADDRESS_WRAP,
-    D3DTADDRESS_MIRROR,
-    D3DTADDRESS_CLAMP,
-    D3DTADDRESS_BORDER
-};
+//融合使用步骤：
+//1，指定Alpha来源（材质/纹理） Device->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE/D3DTA_TEXTURE); Device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+//2，设置融合因子 Device->SetRenderState(D3DRS_SRCBLEND/D3DRS_DESTBLEND, factor);
+//3，打开（关闭）融合渲染状态 Device->SetRenderState(D3DRS_ALPHABLENDENABLE, true/false);
 
 static const DWORD d3dBlendEnable[] =
 {
@@ -131,26 +157,26 @@ static const DWORD d3dBlendEnable[] =
 
 static const D3DBLEND d3dSrcBlend[] =
 {
+    D3DBLEND_ONE, //BlendFactor=(1,1,1,1)
     D3DBLEND_ONE,
-    D3DBLEND_ONE,
-    D3DBLEND_DESTCOLOR,
+    D3DBLEND_DESTCOLOR, //BlendFactor=(Rd,Gd,Bd,Ad)
+    D3DBLEND_SRCALPHA, //BlendFactor=(As,As,As,As)
     D3DBLEND_SRCALPHA,
-    D3DBLEND_SRCALPHA,
     D3DBLEND_ONE,
-    D3DBLEND_INVDESTALPHA,
+    D3DBLEND_INVDESTALPHA, //BlendFactor=(1-Ad,1-Ad,1-Ad,1-Ad)
     D3DBLEND_ONE,
     D3DBLEND_SRCALPHA,
 };
 
 static const D3DBLEND d3dDestBlend[] =
 {
-    D3DBLEND_ZERO,
+    D3DBLEND_ZERO, //BlendFactor=(0,0,0,0)
     D3DBLEND_ONE,
     D3DBLEND_ZERO,
-    D3DBLEND_INVSRCALPHA,
+    D3DBLEND_INVSRCALPHA, //BlendFactor=(1-As,1-As,1-As,1-As)
     D3DBLEND_ONE,
     D3DBLEND_INVSRCALPHA,
-    D3DBLEND_DESTALPHA,
+    D3DBLEND_DESTALPHA, //BlendFactor=(Ad,Ad,Ad,Ad)
     D3DBLEND_ONE,
     D3DBLEND_ONE
 };
@@ -168,27 +194,29 @@ static const D3DBLENDOP d3dBlendOp[] =
     D3DBLENDOP_REVSUBTRACT
 };
 
+//背面消隐 Device->SetRenderState(D3DRS_CULLMODE, value);
 static const D3DCULL d3dCullMode[] =
 {
-    D3DCULL_NONE,
-    D3DCULL_CCW,
-    D3DCULL_CW
+    D3DCULL_NONE, //完全禁用背面消隐
+    D3DCULL_CCW, //默认值，只对逆时针绕序的三角形单元进行消隐
+    D3DCULL_CW //只对顺时针绕序的三角形单元进行消隐
 };
 
+//多边形填充模式 Device->SetRenderState(D3DRS_FILLMODE, value);
 static const D3DFILLMODE d3dFillMode[] =
 {
-    D3DFILL_SOLID,
-    D3DFILL_WIREFRAME,
-    D3DFILL_POINT
+    D3DFILL_SOLID, //面模式，D3D默认模式，对多边形的面进行填充
+    D3DFILL_WIREFRAME, //线填充模式，D3D在多边形的每个边绘制一条线
+    D3DFILL_POINT //点填充模式，D3D在多边形的每个顶点绘制一个像素
 };
 
 static const D3DSTENCILOP d3dStencilOp[] =
 {
-    D3DSTENCILOP_KEEP,
-    D3DSTENCILOP_ZERO,
-    D3DSTENCILOP_REPLACE,
-    D3DSTENCILOP_INCR,
-    D3DSTENCILOP_DECR
+    D3DSTENCILOP_KEEP, //不更新模板缓存中的值（即，保留当前值）.
+    D3DSTENCILOP_ZERO, //将模板缓存中的值设为0.
+    D3DSTENCILOP_REPLACE, //用模板参考值代替模板缓存中的对应值。
+    D3DSTENCILOP_INCR, //增加模板缓存中的对应数值，如果超过最大值，则取0.
+    D3DSTENCILOP_DECR //减小模板缓存中的对应数值，如果小于0，则取最大值.
 };
 
 static unsigned GetD3DColor(const Color& color)
