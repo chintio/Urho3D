@@ -70,18 +70,25 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 namespace Urho3D
 {
 
+//通过模板测试的像素会进入到下一步的深度测试，以期被绘制到color buffer上，没有通过的话，直接丢掉它。
+//片元--》模板测试--》深度测试--》混合--》颜色缓冲区
+//模板测试通常用于限制渲染的区域，另外，模板测试还有一些更高级的用法，如渲染阴影、轮廓渲染等；
 //模板缓存使用步骤
 //启用/禁用 Device->SetRenderState(D3DRS_STENCILENABLE, true/false);
 //模板测试
 //	(ref & mask) ComparisonOperation (value & mask)，
-//		依据ComparisonOperation所指定的比较规则对LHS（即ref & mask，ref通过D3DRS_STENCILREF指定）和RHS（即value & mask，value为模板缓存中的值）进行比较。
-//		如果测试结果为true，便将该像素写入后台缓存（并用参考值（ref）代替模板缓存中的值）。否则阻止该像素写入后台缓存。当然，当一个像素不被写入后台缓存时，也不会被写入深度缓存。
+//		依据ComparisonOperation所指定的比较规则对LHS（即ref & mask，ref为参考值，通过D3DRS_STENCILREF指定，用于和模板缓存中的既有值比较）和RHS（即value & mask，value为模板缓存中的值）进行比较。
+//		如果测试结果为true，便将该像素写入后台缓存。如果测试结果为false，我们将阻止该像素写入后台缓存。当然，当一个像素不被写入后台缓存时，也不会被写入深度缓存。
 //	设置模板参考值 Device->SetRenderState(D3DRS_STENCILREF, ref);
 //	设置模板掩码 Device->SetRenderState(D3DRS_STENCILMASK, mask);
 //	设置比较函数 Device->SetRenderState(D3DRS_STENCILFUNC, d3dCmpFunc);
 //	设置模板缓存的更新（设置模板缓存中的值如何进行更新） Device->SetRenderState(D3DRS_STENCILFAIL/D3DRS_STENCILZFAIL/D3DRS_STENCILPASS, d3dStencilOp);
 //	设置模板写掩码（该值可屏蔽我们将写入模板缓存的任何值的某些位） Device->SetRenderState(D3DRS_STENCILWRITEMASK, wmask);
-	static const D3DCMPFUNC d3dCmpFunc[] =
+//模板缓存的更新
+//	模板测试失败时，模板缓存的更新 Device->SetRenderState(D3DRS_STENCILFAIL, d3dStencilOp);
+//	深度测试失败时，模板缓存的更新 Device->SetRenderState(D3DRS_STENCILZFAIL, d3dStencilOp);
+//	模板、深度测试均成功时，模板缓存的更新 Device->SetRenderState(D3DRS_STENCILPASS, d3dStencilOp);
+static const D3DCMPFUNC d3dCmpFunc[] =
 {
     D3DCMP_ALWAYS, //模板测试总是成功的，即比较函数总是返回true。
     D3DCMP_EQUAL, //若LHS=RHS，则模板测试成功
