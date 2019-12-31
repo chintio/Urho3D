@@ -307,6 +307,7 @@ void Graphics::RemoveGPUObject(GPUObject* object)
     gpuObjects_.Remove(object);
 }
 
+// 申请系统内存（scratchBuffers_管理）
 void* Graphics::ReserveScratchBuffer(unsigned size)
 {
     if (!size)

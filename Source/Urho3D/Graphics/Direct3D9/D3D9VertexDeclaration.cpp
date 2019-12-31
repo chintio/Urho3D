@@ -109,6 +109,7 @@ VertexDeclaration::VertexDeclaration(Graphics* graphics, const PODVector<VertexB
             }
 
             // Override existing element if necessary
+			// ¸²¸ÇÖØ¸´µÄÃèÊö
             for (unsigned k = 0; k < prevBufferElements; ++k)
             {
                 if (elements[k].semantic_ == srcElement.semantic_ && elements[k].index_ == srcElement.index_)

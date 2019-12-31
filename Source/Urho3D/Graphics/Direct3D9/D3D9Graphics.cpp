@@ -1121,6 +1121,7 @@ bool Graphics::SetVertexBuffers(const PODVector<VertexBuffer*>& buffers, unsigne
     if (hash)
     {
         // If no previous vertex declaration for that hash, create new
+		// 之前没用过，新建一个
         VertexDeclarationMap::Iterator i = impl_->vertexDeclarations_.Find(hash);
         if (i == impl_->vertexDeclarations_.End())
         {
@@ -1131,6 +1132,7 @@ bool Graphics::SetVertexBuffers(const PODVector<VertexBuffer*>& buffers, unsigne
             i = impl_->vertexDeclarations_.Insert(MakePair(hash, newDeclaration));
         }
 
+		// 设为设备的当前值
         VertexDeclaration* declaration = i->second_;
         if (declaration != impl_->vertexDeclaration_)
         {

@@ -120,7 +120,7 @@ private:
     /// Blend operation.
     D3DBLENDOP blendOp_;
     /// Vertex declarations.
-    VertexDeclarationMap vertexDeclarations_;
+    VertexDeclarationMap vertexDeclarations_; // 使用过的顶点描述
     /// Stream frequencies by vertex buffer.
     unsigned streamFrequencies_[MAX_VERTEX_STREAMS];
     /// Stream offsets by vertex buffer.

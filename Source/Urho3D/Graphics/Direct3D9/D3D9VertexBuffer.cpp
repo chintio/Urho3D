@@ -274,6 +274,7 @@ bool VertexBuffer::UpdateToGPU()
         return false;
 }
 
+// IDirect3DVertexBuffer9::Lock
 void* VertexBuffer::MapBuffer(unsigned start, unsigned count, bool discard)
 {
     void* hwData = nullptr;
@@ -295,6 +296,7 @@ void* VertexBuffer::MapBuffer(unsigned start, unsigned count, bool discard)
     return hwData;
 }
 
+// IDirect3DVertexBuffer9::UnLock
 void VertexBuffer::UnmapBuffer()
 {
     if (object_.ptr_ && lockState_ == LOCK_HARDWARE)

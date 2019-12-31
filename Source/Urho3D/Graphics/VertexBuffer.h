@@ -153,7 +153,7 @@ private:
     /// Vertex elements.
     PODVector<VertexElement> elements_;
     /// Vertex element hash.
-    unsigned long long elementHash_{};
+    unsigned long long elementHash_{}; // 每个元素占6位
     /// Vertex element legacy bitmask.
     VertexMaskFlags elementMask_{};
     /// Buffer locking state.
