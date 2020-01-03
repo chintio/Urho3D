@@ -145,17 +145,17 @@ private:
     void UnmapBuffer();
 
     /// Shadow data.
-    SharedArrayPtr<unsigned char> shadowData_;
+    SharedArrayPtr<unsigned char> shadowData_; // 影子数据，系统内存中
     /// Number of vertices.
-    unsigned vertexCount_{};
+    unsigned vertexCount_{}; // 顶点个数
     /// Vertex size.
-    unsigned vertexSize_{};
+    unsigned vertexSize_{}; // 每顶点的字节数
     /// Vertex elements.
     PODVector<VertexElement> elements_;
     /// Vertex element hash.
-    unsigned long long elementHash_{}; // 每个元素占6位
+    unsigned long long elementHash_{}; // 顶点元素的哈希值，每个元素占6位
     /// Vertex element legacy bitmask.
-    VertexMaskFlags elementMask_{};
+    VertexMaskFlags elementMask_{}; // 顶点元素的位掩码（LEGACY_VERTEXELEMENTS，按数组下标设置掩码）
     /// Buffer locking state.
     LockState lockState_{LOCK_NONE};
     /// Lock start vertex.
@@ -165,11 +165,18 @@ private:
     /// Scratch buffer for fallback locking.
     void* lockScratchData_{};
     /// Dynamic flag.
-    bool dynamic_{};
+    bool dynamic_{}; // 动态数据，存于AGP，在系统内存中没有备份，在Device Lost时需要释放后重新创建
     /// Shadowed flag.
     bool shadowed_{};
     /// Discard lock flag. Used by OpenGL only.
     bool discardLock_{};
 };
+
+// 顶点数据的影子拷贝可以存在于CPU存储器中，见SetShadowed（），以便允许射线（raycasts）进入几何，而不必锁定和读取GPU存储器。
+
+// 顶点缓冲区仅包含逐顶点数据或逐实例数据。高级渲染（渲染器和视图类）中的实例通过瞬间将实例顶点缓冲区附加到以实例方式渲染的几何体来工作。
+
+// 生成“顶点描述”时如果元素包含相同的语义（例如位置），则较高的索引缓冲区将覆盖较低的缓冲区索引。
+// AnimatedModel组件使用此选项来应用顶点变形：它创建一个单独的克隆顶点缓冲区，该缓冲区覆盖原始模型的位置、法线和切线数据，并在索引1上指定它，而索引0是原始模型的顶点缓冲区。
 
 }

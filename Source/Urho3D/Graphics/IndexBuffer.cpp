@@ -89,6 +89,7 @@ bool IndexBuffer::SetSize(unsigned indexCount, bool largeIndices, bool dynamic)
     return Create();
 }
 
+// ¼ÆËã¶¥µã£¨VertexBuffer£©Ë÷Òý
 bool IndexBuffer::GetUsedVertexRange(unsigned start, unsigned count, unsigned& minVertex, unsigned& vertexCount)
 {
     if (!shadowData_)

@@ -66,11 +66,13 @@ void VertexBuffer::SetShadowed(bool enable)
     }
 }
 
+// “位掩码”定义顶点数据
 bool VertexBuffer::SetSize(unsigned vertexCount, unsigned elementMask, bool dynamic)
 {
     return SetSize(vertexCount, GetElements(elementMask), dynamic);
 }
 
+// “顶点描述”定义顶点数据
 bool VertexBuffer::SetSize(unsigned vertexCount, const PODVector<VertexElement>& elements, bool dynamic)
 {
     Unlock();
@@ -89,6 +91,7 @@ bool VertexBuffer::SetSize(unsigned vertexCount, const PODVector<VertexElement>&
     return Create();
 }
 
+// 计算elements_[].offset_（顶点元素的偏移字节），elementHash_，elementMask_
 void VertexBuffer::UpdateOffsets()
 {
     unsigned elementOffset = 0;
@@ -97,11 +100,14 @@ void VertexBuffer::UpdateOffsets()
 
     for (PODVector<VertexElement>::Iterator i = elements_.Begin(); i != elements_.End(); ++i)
     {
+		// 顶点元素的字节偏移
         i->offset_ = elementOffset;
         elementOffset += ELEMENT_TYPESIZES[i->type_];
+		// 元素的哈希值，取6位
         elementHash_ <<= 6;
         elementHash_ += (((int)i->type_ + 1) * ((int)i->semantic_ + 1) + i->index_);
 
+		// 匹配LEGACY_VERTEXELEMENTS中的值，按数组下标设置掩码
         for (unsigned j = 0; j < MAX_LEGACY_VERTEX_ELEMENTS; ++j)
         {
             const VertexElement& legacy = LEGACY_VERTEXELEMENTS[j];

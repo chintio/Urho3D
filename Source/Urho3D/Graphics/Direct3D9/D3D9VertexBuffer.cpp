@@ -32,6 +32,7 @@
 namespace Urho3D
 {
 
+// 设备丢失，如果是动态数据，则需要释放对象，便于后续重建
 void VertexBuffer::OnDeviceLost()
 {
     // Dynamic buffers are in the default pool and need to be released on device loss
@@ -39,6 +40,7 @@ void VertexBuffer::OnDeviceLost()
         Release();
 }
 
+// 恢复设备对象和数据
 void VertexBuffer::OnDeviceReset()
 {
     // Dynamic buffers are in the default pool and need to be recreated after device reset
@@ -53,6 +55,7 @@ void VertexBuffer::OnDeviceReset()
     dataPending_ = false;
 }
 
+// 释放设备对象
 void VertexBuffer::Release()
 {
     Unlock();
@@ -69,6 +72,7 @@ void VertexBuffer::Release()
     URHO3D_SAFE_RELEASE(object_.ptr_);
 }
 
+// 将数据更新到GPU，且同步到影子缓冲区
 bool VertexBuffer::SetData(const void* data)
 {
     if (!data)
@@ -83,7 +87,7 @@ bool VertexBuffer::SetData(const void* data)
         return false;
     }
 
-    if (shadowData_ && data != shadowData_.Get())
+    if (shadowData_ && data != shadowData_.Get()) // 复制到影子缓冲区
         memcpy(shadowData_.Get(), data, vertexCount_ * vertexSize_);
 
     if (object_.ptr_)
@@ -109,6 +113,7 @@ bool VertexBuffer::SetData(const void* data)
     return true;
 }
 
+// 将指定范围的数据更新到GPU，且同步到影子缓冲区
 bool VertexBuffer::SetDataRange(const void* data, unsigned start, unsigned count, bool discard)
 {
     if (start == 0 && count == vertexCount_)
@@ -135,9 +140,10 @@ bool VertexBuffer::SetDataRange(const void* data, unsigned start, unsigned count
     if (!count)
         return true;
 
-    if (shadowData_ && shadowData_.Get() + start * vertexSize_ != data)
+    if (shadowData_ && shadowData_.Get() + start * vertexSize_ != data) // 同步到影子缓存
         memcpy(shadowData_.Get() + start * vertexSize_, data, count * vertexSize_);
 
+	// 更新到GPU内存
     if (object_.ptr_)
     {
         if (graphics_->IsDeviceLost())
@@ -160,6 +166,7 @@ bool VertexBuffer::SetDataRange(const void* data, unsigned start, unsigned count
     return true;
 }
 
+// 返回对应的缓冲区（GPU内存、影子缓存、或graphics_管理的系统内存）
 void* VertexBuffer::Lock(unsigned start, unsigned count, bool discard)
 {
     if (lockState_ != LOCK_NONE)
@@ -187,14 +194,14 @@ void* VertexBuffer::Lock(unsigned start, unsigned count, bool discard)
     lockCount_ = count;
 
     // Because shadow data must be kept in sync, can only lock hardware buffer if not shadowed
-    if (object_.ptr_ && !shadowData_ && !graphics_->IsDeviceLost())
+    if (object_.ptr_ && !shadowData_ && !graphics_->IsDeviceLost()) // 设备状态正常，且没有影子数据时，直接返回设备内存IDirect3DVertexBuffer9
         return MapBuffer(start, count, discard);
-    else if (shadowData_)
+    else if (shadowData_) // 返回影子数据缓存
     {
         lockState_ = LOCK_SHADOW;
         return shadowData_.Get() + start * vertexSize_;
     }
-    else if (graphics_)
+    else if (graphics_) // 返回graphics_管理的系统内存
     {
         lockState_ = LOCK_SCRATCH;
         lockScratchData_ = graphics_->ReserveScratchBuffer(count * vertexSize_);
@@ -204,6 +211,7 @@ void* VertexBuffer::Lock(unsigned start, unsigned count, bool discard)
         return nullptr;
 }
 
+// 数据填入GPU缓存，并解锁
 void VertexBuffer::Unlock()
 {
     switch (lockState_)
@@ -229,6 +237,7 @@ void VertexBuffer::Unlock()
     }
 }
 
+// 创建设备顶点缓冲区IDirect3DVertexBuffer9，动态数据使用D3DPOOL_DEFAULT、D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY，否则使用D3DPOOL_MANAGED、0
 bool VertexBuffer::Create()
 {
     Release();
@@ -266,6 +275,7 @@ bool VertexBuffer::Create()
     return true;
 }
 
+// 将影子数据更新到GPU
 bool VertexBuffer::UpdateToGPU()
 {
     if (object_.ptr_ && shadowData_)

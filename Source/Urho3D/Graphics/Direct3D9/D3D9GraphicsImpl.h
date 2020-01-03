@@ -126,7 +126,7 @@ private:
     /// Stream offsets by vertex buffer.
     unsigned streamOffsets_[MAX_VERTEX_STREAMS];
     /// Vertex declaration in use.
-    VertexDeclaration* vertexDeclaration_;
+    VertexDeclaration* vertexDeclaration_; // 当前使用的顶点描述
     /// Shader programs.
     ShaderProgramMap shaderPrograms_;
     /// Shader program in use.

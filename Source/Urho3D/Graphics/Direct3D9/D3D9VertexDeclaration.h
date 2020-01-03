@@ -75,4 +75,8 @@ private:
     IDirect3DVertexDeclaration9* declaration_;
 };
 
+// 1，顶点声明的描述 D3DVERTEXELEMENT9
+// 2，创建顶点声明 IDirect3DDevice9->CreateVertexDeclaration(D3DVERTEXELEMENT9*, IDirect3DVertexDeclaration9**)
+// 3，启用顶点声明 IDirect3DDevice9->SetVertexDeclaration(IDirect3DVertexDeclaration9*)
+
 }

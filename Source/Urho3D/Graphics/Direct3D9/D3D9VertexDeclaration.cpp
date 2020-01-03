@@ -109,7 +109,8 @@ VertexDeclaration::VertexDeclaration(Graphics* graphics, const PODVector<VertexB
             }
 
             // Override existing element if necessary
-			// 覆盖重复的描述
+			// 如果元素包含相同的语义（例如位置），则较高的索引缓冲区将覆盖较低的缓冲区索引。
+			// AnimatedModel组件使用此选项来应用顶点变形：它创建一个单独的克隆顶点缓冲区，该缓冲区覆盖原始模型的位置、法线和切线数据，并在索引1上指定它，而索引0是原始模型的顶点缓冲区。
             for (unsigned k = 0; k < prevBufferElements; ++k)
             {
                 if (elements[k].semantic_ == srcElement.semantic_ && elements[k].index_ == srcElement.index_)
@@ -198,6 +199,7 @@ VertexDeclaration::~VertexDeclaration()
     Release();
 }
 
+// 根据VertexDeclarationElement构造D3DVERTEXELEMENT9，创建设备的顶点声明IDirect3DVertexDeclaration9
 void VertexDeclaration::Create(Graphics* graphics, const PODVector<VertexDeclarationElement>& elements)
 {
     SharedArrayPtr<D3DVERTEXELEMENT9> elementArray(new D3DVERTEXELEMENT9[elements.Size() + 1]);

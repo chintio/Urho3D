@@ -117,4 +117,6 @@ private:
     bool discardLock_;
 };
 
+// 类似于顶点缓冲区（VertexBuffer），但是索引缓冲区只需要定义索引的数量，索引是16位还是32位（largeIndices标志）以及缓冲区是否是动态的。
+
 }
