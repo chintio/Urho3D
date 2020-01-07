@@ -30,7 +30,8 @@ namespace Urho3D
 {
 
 /// Abstract stream for reading.
-class URHO3D_API Deserializer
+// 反序列化基类，用于读取的抽象流。
+	class URHO3D_API Deserializer
 {
 public:
     /// Construct with zero size.

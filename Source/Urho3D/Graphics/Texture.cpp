@@ -63,6 +63,10 @@ Texture::Texture(Context* context) :
 
 Texture::~Texture() = default;
 
+// 设置请求的mip级别数。要在设置大小之前调用。
+// 默认值（0）根据需要分配尽可能多的mip级别以达到1x1大小。将值1设置为禁用mipmapping。
+// 请注意，rendertargets需要在渲染后动态重新生成mips，这可能会降低性能。
+// 屏幕缓冲区和渲染器分配的阴影贴图将禁用mipmaps。
 void Texture::SetNumLevels(unsigned levels)
 {
     if (usage_ > TEXTURE_RENDERTARGET)
@@ -71,18 +75,21 @@ void Texture::SetNumLevels(unsigned levels)
         requestedLevels_ = levels;
 }
 
+// 过滤器模式，包括最近点采样（D3DTEXF_POINT）、线性（D3DTEXF_LINEAR）、各向异性（D3DTEXF_ANISOTROPIC）
 void Texture::SetFilterMode(TextureFilterMode mode)
 {
     filterMode_ = mode;
     parametersDirty_ = true;
 }
 
+// 寻址模式，包括重复（D3DADDRESS_WRAP）、边界颜色（D3DADDRESS_BORDER）、箝位（D3DADDRESS_CLAMP）、镜像（D3DADDRESS_MIRROR）
 void Texture::SetAddressMode(TextureCoordinate coord, TextureAddressMode mode)
 {
     addressModes_[coord] = mode;
     parametersDirty_ = true;
 }
 
+// 各向异性等级SetSamplerState(index, D3DSAMP_MAXANISOTROPY, level)
 void Texture::SetAnisotropy(unsigned level)
 {
     anisotropy_ = level;
@@ -106,6 +113,7 @@ void Texture::SetBackupTexture(Texture* texture)
     backupTexture_ = texture;
 }
 
+// toSkip以下将不采用
 void Texture::SetMipsToSkip(MaterialQuality quality, int toSkip)
 {
     if (quality >= QUALITY_LOW && quality < MAX_TEXTURE_QUALITY_LEVELS)
@@ -113,6 +121,7 @@ void Texture::SetMipsToSkip(MaterialQuality quality, int toSkip)
         mipsToSkip_[quality] = (unsigned)toSkip;
 
         // Make sure a higher quality level does not actually skip more mips
+		// 越高质量级的显示效果，会要求mipmap的渐进层级越精细。因此要求mipsToSkip_[i] <= mipsToSkip_[i - 1]
         for (int i = 1; i < MAX_TEXTURE_QUALITY_LEVELS; ++i)
         {
             if (mipsToSkip_[i] > mipsToSkip_[i - 1])
@@ -177,6 +186,7 @@ void Texture::SetParameters(XMLFile* file)
     SetParameters(rootElem);
 }
 
+// 读取纹理文件的配置
 void Texture::SetParameters(const XMLElement& element)
 {
     LoadMetadataFromXML(element);
@@ -237,6 +247,7 @@ void Texture::SetLevelsDirty()
         levelsDirty_ = true;
 }
 
+// 检测最大mips层数
 unsigned Texture::CheckMaxLevels(int width, int height, unsigned requestedLevels)
 {
     unsigned maxLevels = 1;
@@ -270,6 +281,7 @@ unsigned Texture::CheckMaxLevels(int width, int height, int depth, unsigned requ
         return requestedLevels;
 }
 
+// 检查是否已超出纹理内存预算。在这种情况下释放未使用的材质以释放纹理引用。
 void Texture::CheckTextureBudget(StringHash type)
 {
     auto* cache = GetSubsystem<ResourceCache>();

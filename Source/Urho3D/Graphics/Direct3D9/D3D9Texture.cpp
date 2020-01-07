@@ -58,6 +58,7 @@ bool Texture::IsCompressed() const
     return format_ == D3DFMT_DXT1 || format_ == D3DFMT_DXT3 || format_ == D3DFMT_DXT5;
 }
 
+// 返回像素或块行的数据大小（字节）
 unsigned Texture::GetRowDataSize(int width) const
 {
     switch (format_)

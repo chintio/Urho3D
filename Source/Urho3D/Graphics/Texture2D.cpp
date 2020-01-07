@@ -57,6 +57,7 @@ void Texture2D::RegisterObject(Context* context)
     context->RegisterFactory<Texture2D>();
 }
 
+// 从读取流中得到纹理图像数据loadImage_，并得到同名的纹理配置资源loadParameters_
 bool Texture2D::BeginLoad(Deserializer& source)
 {
     // In headless mode, do not actually load the texture, just return success
@@ -91,6 +92,7 @@ bool Texture2D::BeginLoad(Deserializer& source)
     return true;
 }
 
+// 用loadImage_、loadParameters_填充Texture2D成员
 bool Texture2D::EndLoad()
 {
     // In headless mode, do not actually load the texture, just return success
@@ -109,6 +111,7 @@ bool Texture2D::EndLoad()
     return success;
 }
 
+// 设置纹理的大小、格式、用法和多采样参数，创建设备对象。
 bool Texture2D::SetSize(int width, int height, unsigned format, TextureUsage usage, int multiSample, bool autoResolve)
 {
     if (width <= 0 || height <= 0)
@@ -120,7 +123,7 @@ bool Texture2D::SetSize(int width, int height, unsigned format, TextureUsage usa
     multiSample = Clamp(multiSample, 1, 16);
     if (multiSample == 1)
         autoResolve = false;
-    else if (multiSample > 1 && usage < TEXTURE_RENDERTARGET)
+    else if (multiSample > 1 && usage < TEXTURE_RENDERTARGET) // 多重采样只支持rendertarget或者depth-stencil textures
     {
         URHO3D_LOGERROR("Multisampling is only supported for rendertarget or depth-stencil textures");
         return false;

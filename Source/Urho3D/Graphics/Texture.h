@@ -36,6 +36,7 @@ class XMLElement;
 class XMLFile;
 
 /// Base class for texture resources.
+// 纹理基类，提供纹理的基础属性
 class URHO3D_API Texture : public ResourceWithMetadata, public GPUObject
 {
     URHO3D_OBJECT(Texture, ResourceWithMetadata);
@@ -212,7 +213,7 @@ protected:
     /// Current mip levels.
     unsigned levels_{};
     /// Requested mip levels.
-    unsigned requestedLevels_{};
+    unsigned requestedLevels_{}; // 0（默认值）根据需要分配尽可能多的mip级别以达到1x1大小。1为禁用mipmapping。
     /// Texture width.
     int width_{};
     /// Texture height.
@@ -248,5 +249,6 @@ protected:
 };
 
 // 纹理是类似于表面的一个像素矩阵，与表面不同的是它可被映射到三角形单元中
+// MIP来源于拉丁文中的multum in parvo，意为在一个小空间里的多数
 
 }

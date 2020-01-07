@@ -494,6 +494,7 @@ bool Texture2D::GetData(unsigned level, void* dest) const
     return true;
 }
 
+// 创建设备对象
 bool Texture2D::Create()
 {
     Release();
