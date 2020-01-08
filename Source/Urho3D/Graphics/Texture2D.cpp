@@ -111,7 +111,7 @@ bool Texture2D::EndLoad()
     return success;
 }
 
-// 设置纹理的大小、格式、用法和多采样参数，创建设备对象。
+// 设置纹理的大小、格式、用法和多采样参数，并通过Create()创建设备对象。
 bool Texture2D::SetSize(int width, int height, unsigned format, TextureUsage usage, int multiSample, bool autoResolve)
 {
     if (width <= 0 || height <= 0)
@@ -163,6 +163,7 @@ bool Texture2D::SetSize(int width, int height, unsigned format, TextureUsage usa
     return Create();
 }
 
+// 将设备数据回填到image
 bool Texture2D::GetImage(Image& image) const
 {
     if (format_ != Graphics::GetRGBAFormat() && format_ != Graphics::GetRGBFormat())

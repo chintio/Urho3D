@@ -84,6 +84,7 @@ void Texture2D::Release()
     levelsDirty_ = false;
 }
 
+// 向设备（IDirect3DTexture9）对应的mip级别部分或全部拷入数据
 bool Texture2D::SetData(unsigned level, int x, int y, int width, int height, const void* data)
 {
     URHO3D_PROFILE(SetTextureData);
@@ -205,6 +206,7 @@ bool Texture2D::SetData(unsigned level, int x, int y, int width, int height, con
     return true;
 }
 
+// 根据Image数据创建设备对象，将纹理数据拷入设备。可以选择仅生成单通道图像alpha。
 bool Texture2D::SetData(Image* image, bool useAlpha)
 {
     if (!image)
@@ -328,6 +330,7 @@ bool Texture2D::SetData(Image* image, bool useAlpha)
     return true;
 }
 
+// 从设备（IDirect3DTexture9）对应的mip级别获取数据。目标缓冲区必须足够大
 bool Texture2D::GetData(unsigned level, void* dest) const
 {
     if (!object_.ptr_)
@@ -494,7 +497,8 @@ bool Texture2D::GetData(unsigned level, void* dest) const
     return true;
 }
 
-// 创建设备对象
+// 创建IDirect3DTexture9（object_.ptr）或IDirect3DSurface9（renderSurface_->surface_）对象
+// Device->CreateTexture 可以创建任意大小的纹理，这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
 bool Texture2D::Create()
 {
     Release();
@@ -561,7 +565,7 @@ bool Texture2D::Create()
     // If creating a depth-stencil texture, and it is not supported, create a depth-stencil surface instead
     // Multisampled surfaces need also to be created this way
     if (usage_ == TEXTURE_DEPTHSTENCIL && (multiSample_ > 1 || !graphics_->GetImpl()->CheckFormatSupport((D3DFORMAT)format_, 
-        d3dUsage, D3DRTYPE_TEXTURE)))
+        d3dUsage, D3DRTYPE_TEXTURE))) // 创建深度模板，多重采样等级大于1或者纹理格式不被支持，则创建表面
     {
         HRESULT hr = device->CreateDepthStencilSurface(
             (UINT)width_,
@@ -583,6 +587,7 @@ bool Texture2D::Create()
     }
     else
     {
+		// 创建IDirect3DTexture9对象
         HRESULT hr = graphics_->GetImpl()->GetDevice()->CreateTexture(
             (UINT)width_,
             (UINT)height_,
@@ -602,7 +607,7 @@ bool Texture2D::Create()
         levels_ = ((IDirect3DTexture9*)object_.ptr_)->GetLevelCount();
 
         // Create the multisampled rendertarget for rendering to if necessary
-        if (usage_ == TEXTURE_RENDERTARGET && multiSample_ > 1)
+        if (usage_ == TEXTURE_RENDERTARGET && multiSample_ > 1) // 用于多重采样的rendertarget，则创建IDirect3DSurface9
         {
             HRESULT hr = device->CreateRenderTarget(
                 (UINT)width_,

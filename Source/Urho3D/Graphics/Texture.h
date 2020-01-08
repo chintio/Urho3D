@@ -211,7 +211,7 @@ protected:
     /// Texture usage type.
     TextureUsage usage_{TEXTURE_STATIC};
     /// Current mip levels.
-    unsigned levels_{};
+    unsigned levels_{}; // 多级渐进纹理等级
     /// Requested mip levels.
     unsigned requestedLevels_{}; // 0（默认值）根据需要分配尽可能多的mip级别以达到1x1大小。1为禁用mipmapping。
     /// Texture width.
@@ -233,7 +233,7 @@ protected:
     /// Border color.
     Color borderColor_;
     /// Multisampling level.
-    int multiSample_{1};
+    int multiSample_{1}; // 多重采样，见下述MSAA
     /// sRGB sampling and writing mode flag.
     bool sRGB_{};
     /// Parameters dirty flag.
@@ -250,5 +250,13 @@ protected:
 
 // 纹理是类似于表面的一个像素矩阵，与表面不同的是它可被映射到三角形单元中
 // MIP来源于拉丁文中的multum in parvo，意为在一个小空间里的多数
+
+// MSAA（Multi-sample Anti-Alias，是一种抗锯齿的技术）就是把每个pixel(或者说fragment)细分为多个sub - pixel，比如分为4个、8个、16个甚至32个sub - pixel，分别对应MSAA4, MSAA8, MSAA16, MSAA32。
+// 我们知道，图形学里，每个piexl占据屏幕上的一小块矩形网格。比如对于1920 * 1280的显示器，就有1920 * 1280个小的矩形网格，每个网格都是一个pixel。
+// 而MSAA则把每个小的矩形网格再进行细分。比如MSAA4 / MSAA8分别把每个piexl再分为4个或者8个sub - pixel，其中每一个sub - pixel称为一个sample。
+// 而正常pipeline里的所有per - pixel(per - fragment)的操作，打开MSAA后，理论上都可以per - sample来处理。这样，每个pixel里的多个sample, 都可以独立进行插值、独立执行fragment shader，计算出独立的颜色值、深度值。
+// 然后求出同一个pixel的所有sample的算术平均值（也就是resolve to single sample），就得出这个pixel的最终颜色。
+// 通过这种方式，图形边缘的绘制会更精细更平滑。当然，对于1920 * 1280的网格，MSAA4相当于在处理1920 * 1280 * 4个网格，计算量（以及显存里某些变量的存储空间）也是成倍增加。
+// https://blog.csdn.net/yunchao_he/article/details/78354528
 
 }
