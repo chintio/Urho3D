@@ -498,7 +498,7 @@ bool Texture2D::GetData(unsigned level, void* dest) const
 }
 
 // 创建IDirect3DTexture9（object_.ptr）或IDirect3DSurface9（renderSurface_->surface_）对象
-// Device->CreateTexture 可以创建任意大小的纹理，这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
+// Device->CreateTexture 可以创建任意大小的纹理（D3DXCreateTexture创建的是2的n次幂的纹理），这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
 bool Texture2D::Create()
 {
     Release();
@@ -565,7 +565,7 @@ bool Texture2D::Create()
     // If creating a depth-stencil texture, and it is not supported, create a depth-stencil surface instead
     // Multisampled surfaces need also to be created this way
     if (usage_ == TEXTURE_DEPTHSTENCIL && (multiSample_ > 1 || !graphics_->GetImpl()->CheckFormatSupport((D3DFORMAT)format_, 
-        d3dUsage, D3DRTYPE_TEXTURE))) // 创建深度模板，多重采样等级大于1或者纹理格式不被支持，则创建表面
+        d3dUsage, D3DRTYPE_TEXTURE))) // 对于深度模板，多重采样等级大于1或者纹理格式不被支持，则只创建表面
     {
         HRESULT hr = device->CreateDepthStencilSurface(
             (UINT)width_,
@@ -607,7 +607,7 @@ bool Texture2D::Create()
         levels_ = ((IDirect3DTexture9*)object_.ptr_)->GetLevelCount();
 
         // Create the multisampled rendertarget for rendering to if necessary
-        if (usage_ == TEXTURE_RENDERTARGET && multiSample_ > 1) // 用于多重采样的rendertarget，则创建IDirect3DSurface9
+        if (usage_ == TEXTURE_RENDERTARGET && multiSample_ > 1) // 对于需要多重采样的rendertarget，则创建额外的IDirect3DSurface9来支持
         {
             HRESULT hr = device->CreateRenderTarget(
                 (UINT)width_,
@@ -625,7 +625,7 @@ bool Texture2D::Create()
                 return false;
             }
         }
-        else if (usage_ >= TEXTURE_RENDERTARGET)
+        else if (usage_ >= TEXTURE_RENDERTARGET) // 对于其他的非基本纹理，则使用自带的表面
         {
             // Else use the texture surface directly for rendering
             hr = ((IDirect3DTexture9*)object_.ptr_)->GetSurfaceLevel(0, (IDirect3DSurface9**)&renderSurface_->surface_);
