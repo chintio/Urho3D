@@ -895,6 +895,9 @@ bool Graphics::ResolveToTexture(Texture2D* destination, const IntRect& viewport)
         return true;
 }
 
+// texture->GetRenderSurface() -》texture->GetGPUObject()->GetSurfaceLevel
+// Usage为D3DUSAGE_RENDERTARGET的Texture不能进行反锯齿, 而且Pool必须为D3DPOOL_DEFAULT.
+// 如果想利用RenderTarget做为纹理又想反锯齿, 可以先把场景渲染到一个CreateRenderTarget创建的Surface(或BackBuffer)上, 再用IDirect3DDevice9::StretchRect拷贝到纹理关联的Surface上
 bool Graphics::ResolveToTexture(Texture2D* texture)
 {
     if (!texture || !texture->GetRenderSurface() || !texture->GetGPUObject() || texture->GetMultiSample() < 2)
