@@ -1478,6 +1478,7 @@ void Graphics::ClearTransformSources()
     shaderParameterSources_[SP_OBJECT] = (const void*)M_MAX_UNSIGNED;
 }
 
+// 设置设备纹理（SetTexture）和设备纹理状态（SetSamplerState）
 void Graphics::SetTexture(unsigned index, Texture* texture)
 {
     if (index >= MAX_TEXTURE_UNITS)
@@ -1486,11 +1487,13 @@ void Graphics::SetTexture(unsigned index, Texture* texture)
     if (texture)
     {
         // Check if texture is currently bound as a rendertarget. In that case, use its backup texture, or blank if not defined
-        if (renderTargets_[0] && renderTargets_[0]->GetParentTexture() == texture)
+        // 检查纹理当前是否绑定为rendertarget。在这种情况下，使用其备份纹理，如果未定义，则使用空白
+        if (renderTargets_[0] && renderTargets_[0]->GetParentTexture() == texture) // 此时作为输出目标，就不能也作为输入目标了
             texture = texture->GetBackupTexture();
         else
         {
             // Resolve multisampled texture now as necessary
+            // 从render target表面拷贝到texture表面(texture->GetRenderSurface() -》texture->GetGPUObject()->GetSurfaceLevel)
             if (texture->GetMultiSample() > 1 && texture->GetAutoResolve() && texture->IsResolveDirty())
             {
                 if (texture->GetType() == Texture2D::GetTypeStatic())
@@ -1501,6 +1504,7 @@ void Graphics::SetTexture(unsigned index, Texture* texture)
         }
     }
 
+    // 设置设备纹理
     if (texture != textures_[index])
     {
         if (texture)
@@ -1511,6 +1515,7 @@ void Graphics::SetTexture(unsigned index, Texture* texture)
         textures_[index] = texture;
     }
 
+    // 设置纹理相关状态 SetSamplerState
     if (texture)
     {
         TextureFilterMode filterMode = texture->GetFilterMode();
@@ -1615,6 +1620,7 @@ void Graphics::ResetDepthStencil()
     SetDepthStencil((RenderSurface*)nullptr);
 }
 
+// 设置设备表面
 void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
 {
     if (index >= MAX_RENDERTARGETS)
@@ -1630,7 +1636,7 @@ void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
     }
     else
     {
-        if (!index)
+        if (!index) // 设置第一个颜色表面为空表示恢复为设备缺省颜色表面
             newColorSurface = impl_->defaultColorSurface_;
     }
 
@@ -1641,7 +1647,7 @@ void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
         impl_->device_->SetRenderTarget(index, newColorSurface);
         impl_->colorSurfaces_[index] = newColorSurface;
         // Setting the first rendertarget causes viewport to be reset
-        if (!index)
+        if (!index) // 设置第一个颜色表面将导致重设视口
         {
             IntVector2 rtSize = GetRenderTargetDimensions();
             viewport_ = IntRect(0, 0, rtSize.x_, rtSize.y_);
@@ -1653,6 +1659,8 @@ void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
         Texture* parentTexture = renderTarget->GetParentTexture();
 
         // If the rendertarget is also bound as a texture, replace with backup texture or null
+        // 如果rendertarget也绑定为纹理，则替换为backup纹理或null
+        // 此时作为输出目标，就不能也作为输入目标了
         for (unsigned i = 0; i < MAX_TEXTURE_UNITS; ++i)
         {
             if (textures_[i] == parentTexture)
@@ -1660,7 +1668,7 @@ void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
         }
 
         // If multisampled, mark the texture & surface needing resolve
-        if (parentTexture->GetMultiSample() > 1 && parentTexture->GetAutoResolve())
+        if (parentTexture->GetMultiSample() > 1 && parentTexture->GetAutoResolve()) // 需要将采样的表面复制到纹理对应表面
         {
             parentTexture->SetResolveDirty(true);
             renderTarget->SetResolveDirty(true);
@@ -2113,6 +2121,7 @@ RenderSurface* Graphics::GetRenderTarget(unsigned index) const
     return index < MAX_RENDERTARGETS ? renderTargets_[index] : nullptr;
 }
 
+// 取表面尺寸，第一个表面的尺寸或者窗口尺寸
 IntVector2 Graphics::GetRenderTargetDimensions() const
 {
     int width, height;

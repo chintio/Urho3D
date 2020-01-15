@@ -68,9 +68,9 @@ private:
     /// Direct3D device.
     IDirect3DDevice9* device_;
     /// Default color surface.
-    IDirect3DSurface9* defaultColorSurface_;
+    IDirect3DSurface9* defaultColorSurface_; // 设备缺省颜色表面
     /// Default depth-stencil surface.
-    IDirect3DSurface9* defaultDepthStencilSurface_;
+    IDirect3DSurface9* defaultDepthStencilSurface_; // 设备缺省深度模板表面
     /// Frame query for flushing the GPU command queue.
     IDirect3DQuery9* frameQuery_;
     /// Adapter number.
@@ -108,7 +108,7 @@ private:
     /// sRGB write flag.
     bool sRGBWrite_;
     /// Color surfaces in use.
-    IDirect3DSurface9* colorSurfaces_[MAX_RENDERTARGETS];
+    IDirect3DSurface9* colorSurfaces_[MAX_RENDERTARGETS]; // 第0个为屏幕表面
     /// Depth-stencil surface in use.
     IDirect3DSurface9* depthStencilSurface_;
     /// Blending enabled flag.

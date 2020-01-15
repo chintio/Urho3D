@@ -85,7 +85,7 @@ private:
     void HandleRenderSurfaceUpdate(StringHash eventType, VariantMap& eventData);
 
     /// Render surface.
-    SharedPtr<RenderSurface> renderSurface_;
+    SharedPtr<RenderSurface> renderSurface_; // 用作render target的表面
     /// Image file acquired during BeginLoad.
     SharedPtr<Image> loadImage_;
     /// Parameter file acquired during BeginLoad.

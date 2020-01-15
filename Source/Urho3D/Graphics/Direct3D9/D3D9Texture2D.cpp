@@ -330,7 +330,7 @@ bool Texture2D::SetData(Image* image, bool useAlpha)
     return true;
 }
 
-// 从设备（IDirect3DTexture9）对应的mip级别获取数据。目标缓冲区必须足够大
+// 从设备缓存拷贝数据到内存
 bool Texture2D::GetData(unsigned level, void* dest) const
 {
     if (!object_.ptr_)
@@ -382,7 +382,7 @@ bool Texture2D::GetData(unsigned level, void* dest) const
 
         // If multisampled, must copy the surface of the resolve texture instead of the multisampled surface
         IDirect3DSurface9* resolveSurface = nullptr;
-        if (multiSample_ > 1)
+        if (multiSample_ > 1) // 此时，已通过ResolveToTexture拷贝到GetSurfaceLevel(0,)表面
         {
             HRESULT hr = ((IDirect3DTexture9*)object_.ptr_)->GetSurfaceLevel(0, (IDirect3DSurface9**)&resolveSurface);
             if (FAILED(hr))
@@ -395,7 +395,7 @@ bool Texture2D::GetData(unsigned level, void* dest) const
 
         IDirect3DDevice9* device = graphics_->GetImpl()->GetDevice();
         HRESULT hr = device->CreateOffscreenPlainSurface((UINT)width_, (UINT)height_, (D3DFORMAT)format_,
-            D3DPOOL_SYSTEMMEM, &offscreenSurface, nullptr);
+            D3DPOOL_SYSTEMMEM, &offscreenSurface, nullptr); // 在系统内存中创建离屏表面
         if (FAILED(hr))
         {
             URHO3D_LOGD3DERROR("Could not create surface for getting rendertarget data", hr);
@@ -404,6 +404,7 @@ bool Texture2D::GetData(unsigned level, void* dest) const
             return false;
         }
         
+        // 从RenderTarget拷贝到离屏表面
         if (resolveSurface)
             hr = device->GetRenderTargetData(resolveSurface, offscreenSurface);
         else
@@ -497,7 +498,8 @@ bool Texture2D::GetData(unsigned level, void* dest) const
     return true;
 }
 
-// 创建IDirect3DTexture9（object_.ptr）或IDirect3DSurface9（renderSurface_->surface_）对象
+// 创建IDirect3DTexture9（object_.ptr），如果格式不支持或者需要多重采样，则创建IDirect3DSurface9（renderSurface_->surface_）对象
+// IDirect3DTexture9的关联表面或renderSurface_->surface_将用作render target
 // Device->CreateTexture 可以创建任意大小的纹理（D3DXCreateTexture创建的是2的n次幂的纹理），这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
 bool Texture2D::Create()
 {

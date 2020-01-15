@@ -259,4 +259,7 @@ protected:
 // 通过这种方式，图形边缘的绘制会更精细更平滑。当然，对于1920 * 1280的网格，MSAA4相当于在处理1920 * 1280 * 4个网格，计算量（以及显存里某些变量的存储空间）也是成倍增加。
 // https://blog.csdn.net/yunchao_he/article/details/78354528
 
+// 渲染到纹理
+// https://www.cnblogs.com/khacker/p/10359761.html
+
 }
