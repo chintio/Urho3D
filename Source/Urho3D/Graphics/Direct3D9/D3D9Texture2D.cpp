@@ -498,8 +498,8 @@ bool Texture2D::GetData(unsigned level, void* dest) const
     return true;
 }
 
-// 创建IDirect3DTexture9（object_.ptr），如果格式不支持或者需要多重采样，则创建IDirect3DSurface9（renderSurface_->surface_）对象
-// IDirect3DTexture9的关联表面或renderSurface_->surface_将用作render target
+// 创建IDirect3DTexture9（object_.ptr），如果格式不支持或者需要多重采样，则额外创建IDirect3DSurface9对象
+// IDirect3DTexture9的关联表面或额外创建的表面赋值给renderSurface_->surface_并用作render target
 // Device->CreateTexture 可以创建任意大小的纹理（D3DXCreateTexture创建的是2的n次幂的纹理），这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
 bool Texture2D::Create()
 {
