@@ -57,7 +57,7 @@ public:
     const String& GetSourceCode(ShaderType type) const { return type == VS ? vsSourceCode_ : psSourceCode_; }
 
     /// Return the latest timestamp of the shader code and its includes.
-    unsigned GetTimeStamp() const { return timeStamp_; }
+    unsigned GetTimeStamp() const { return timeStamp_; } // 着色器源文件（及其包含文件）的最新时间戳
 
 private:
     /// Process source code and include files. Return true if successful.

@@ -105,6 +105,7 @@ bool ShaderVariation::Create()
     }
 
     // Then create shader from the bytecode
+    // 根据编译好的字节码创建对应的着色器对象（IDirect3DVertexShader9 或者 IDirect3DPixelShader9）
     IDirect3DDevice9* device = graphics_->GetImpl()->GetDevice();
     if (type_ == VS)
     {
@@ -168,6 +169,7 @@ void ShaderVariation::SetDefines(const String& defines)
     defines_ = defines;
 }
 
+// 加载着色器字节码文件（编译后的文件），填充parameters_、useTextureUnits_、byteCode_
 bool ShaderVariation::LoadByteCode(const String& binaryShaderName)
 {
     ResourceCache* cache = owner_->GetSubsystem<ResourceCache>();
@@ -178,6 +180,7 @@ bool ShaderVariation::LoadByteCode(const String& binaryShaderName)
     unsigned sourceTimeStamp = owner_->GetTimeStamp();
     // If source code is loaded from a package, its timestamp will be zero. Else check that binary is not older
     // than source
+    // 如果源文件比字节码文件新，则需要重新编译源文件了
     if (sourceTimeStamp && fileSystem->GetLastModifiedTime(cache->GetResourceFileName(binaryShaderName)) < sourceTimeStamp)
         return false;
 
@@ -232,6 +235,8 @@ bool ShaderVariation::LoadByteCode(const String& binaryShaderName)
     }
 }
 
+// 编译着色器源文件
+// 根据宏定义defines_编译着色器源文件，生成变量表（parameters_、useTextureUnits_）和字节码（byteCode_）
 bool ShaderVariation::Compile()
 {
     const String& sourceCode = owner_->GetSourceCode(type_);
@@ -323,6 +328,7 @@ bool ShaderVariation::Compile()
     return !byteCode_.Empty();
 }
 
+// 把着色器中的常量解析到parameters_、useTextureUnits_
 void ShaderVariation::ParseParameters(unsigned char* bufData, unsigned bufSize)
 {
     MOJOSHADER_parseData const* parseData = MOJOSHADER_parse("bytecode", bufData, bufSize, nullptr, 0, nullptr, 0, nullptr, nullptr, nullptr);
