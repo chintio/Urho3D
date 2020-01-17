@@ -750,7 +750,7 @@ private:
     /// Depth write enable flag.
     bool depthWrite_{};
     /// Line antialiasing enable flag.
-    bool lineAntiAlias_{};
+    bool lineAntiAlias_{}; // ÏßÐÔ¿¹¾â³Ý
     /// Polygon fill mode.
     FillMode fillMode_{};
     /// Scissor test enable flag.

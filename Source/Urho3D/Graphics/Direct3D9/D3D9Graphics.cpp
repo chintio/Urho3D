@@ -1755,6 +1755,7 @@ void Graphics::SetViewport(const IntRect& rect)
     SetScissorTest(false);
 }
 
+// 设置混合相关的渲染状态：D3DRS_ALPHABLENDENABLE、D3DRS_SRCBLEND、D3DRS_DESTBLEND、D3DRS_BLENDOP
 void Graphics::SetBlendMode(BlendMode mode, bool /* alphaToCoverage */)
 {
     if (mode != blendMode_)

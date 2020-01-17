@@ -112,13 +112,13 @@ private:
     /// Depth-stencil surface in use.
     IDirect3DSurface9* depthStencilSurface_;
     /// Blending enabled flag.
-    DWORD blendEnable_;
+    DWORD blendEnable_; // 混合状态D3DRS_ALPHABLENDENABLE
     /// Source blend mode.
-    D3DBLEND srcBlend_;
+    D3DBLEND srcBlend_; // 混合源D3DRS_SRCBLEND，d3dSrcBlend
     /// Destination blend mode.
-    D3DBLEND destBlend_;
+    D3DBLEND destBlend_; // 混合目标D3DRS_DESTBLEND，d3dDestBlend
     /// Blend operation.
-    D3DBLENDOP blendOp_;
+    D3DBLENDOP blendOp_; // 混合操作D3DRS_BLENDOP，d3dBlendOp
     /// Vertex declarations.
     VertexDeclarationMap vertexDeclarations_; // 使用过的顶点描述
     /// Stream frequencies by vertex buffer.
