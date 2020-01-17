@@ -36,6 +36,7 @@
 namespace Urho3D
 {
 
+// 在code中将signature开始的代码段用/* */注释掉
 void CommentOutFunction(String& code, const String& signature)
 {
     unsigned startPos = code.Find(signature);
@@ -125,6 +126,7 @@ ShaderVariation* Shader::GetVariation(ShaderType type, const String& defines)
     return GetVariation(type, defines.CString());
 }
 
+// 根据预定义defines，创建对应的着色器对象（同一源文件）
 ShaderVariation* Shader::GetVariation(ShaderType type, const char* defines)
 {
     StringHash definesHash(defines);
@@ -157,6 +159,7 @@ ShaderVariation* Shader::GetVariation(ShaderType type, const char* defines)
     return i->second_;
 }
 
+// 按行读取文件内容到code，如果include其他文件，则递归读取
 bool Shader::ProcessSource(String& code, Deserializer& source)
 {
     auto* cache = GetSubsystem<ResourceCache>();

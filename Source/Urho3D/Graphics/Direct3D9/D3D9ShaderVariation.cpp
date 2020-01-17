@@ -74,6 +74,7 @@ void ShaderVariation::OnDeviceLost()
     // No-op on Direct3D9, shaders are preserved through a device loss & reset
 }
 
+// 根据着色器二进制文件（从源文件编译生成）创建IDirect3DVertexShader9、IDirect3DPixelShader9对象
 bool ShaderVariation::Create()
 {
     Release();
@@ -94,6 +95,7 @@ bool ShaderVariation::Create()
 
     String binaryShaderName = graphics_->GetShaderCacheDir() + name + "_" + StringHash(defines_).ToString() + extension;
 
+    // 加载二进制文件，如果不存在（或者源文件更新，就重新编译、保存）
     if (!LoadByteCode(binaryShaderName))
     {
         // Compile shader if don't have valid bytecode
@@ -363,6 +365,7 @@ void ShaderVariation::ParseParameters(unsigned char* bufData, unsigned bufSize)
     MOJOSHADER_freeParseData(parseData);
 }
 
+// 保持着色器字节码文件（自定义格式，包括文件头，parameters_，useTextureUnits_，byteCode_）
 void ShaderVariation::SaveByteCode(const String& binaryShaderName)
 {
     ResourceCache* cache = owner_->GetSubsystem<ResourceCache>();
