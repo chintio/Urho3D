@@ -64,9 +64,9 @@ public:
 
 private:
     /// Direct3D interface.
-    IDirect3D9* interface_;
+    IDirect3D9* interface_; // 接口对象，Direct3DCreate9(D3D_SDK_VERSION)
     /// Direct3D device.
-    IDirect3DDevice9* device_;
+    IDirect3DDevice9* device_; // 设备对象，IDirect3D9::CreateDevice
     /// Default color surface.
     IDirect3DSurface9* defaultColorSurface_; // 设备缺省颜色表面
     /// Default depth-stencil surface.
@@ -74,13 +74,13 @@ private:
     /// Frame query for flushing the GPU command queue.
     IDirect3DQuery9* frameQuery_;
     /// Adapter number.
-    DWORD adapter_;
+    DWORD adapter_; // 物理显卡的序号，D3DADAPTER_DEFAULT
     /// Device type.
-    D3DDEVTYPE deviceType_;
+    D3DDEVTYPE deviceType_; // 设备类型，硬件设备D3DDEVTYPE_HAL、软件设备D3DDEVTYPE_REF
     /// Device capabilities.
-    D3DCAPS9 deviceCaps_;
+    D3DCAPS9 deviceCaps_; // 设备性能，IDirect3D9::GetDeviceCaps
     /// Adapter identifier.
-    D3DADAPTER_IDENTIFIER9 adapterIdentifier_;
+    D3DADAPTER_IDENTIFIER9 adapterIdentifier_; // 适配器（显卡）信息，IDirect3D9::GetAdapterIdentifier
     /// Direct3D presentation parameters.
     D3DPRESENT_PARAMETERS presentParams_;
     /// Texture min filter modes in use.

@@ -646,7 +646,7 @@ private:
     /// Window position.
     IntVector2 position_;
     /// Multisampling mode.
-    int multiSample_{1};
+    int multiSample_{1}; // 多重采样模式
     /// Fullscreen flag.
     bool fullscreen_{};
     /// Borderless flag.
@@ -670,13 +670,13 @@ private:
     /// sRGB conversion on write flag for the main window.
     bool sRGB_{};
     /// Light pre-pass rendering support flag.
-    bool lightPrepassSupport_{};
+    bool lightPrepassSupport_{}; // 光照预处理支持，rendertarget>=2 && rendertarget支持格式D3DFMT_R32F
     /// Deferred rendering support flag.
-    bool deferredSupport_{};
+    bool deferredSupport_{}; // 延迟渲染支持，rendertarget>=4
     /// Anisotropic filtering support flag.
-    bool anisotropySupport_{};
+    bool anisotropySupport_{}; // 各向异性支持
     /// DXT format support flag.
-    bool dxtTextureSupport_{};
+    bool dxtTextureSupport_{}; // DXT纹理格式支持
     /// ETC1 format support flag.
     bool etcTextureSupport_{};
     /// ETC2 format support flag.
@@ -684,13 +684,13 @@ private:
     /// PVRTC formats support flag.
     bool pvrtcTextureSupport_{};
     /// Hardware shadow map depth compare support flag.
-    bool hardwareShadowSupport_{};
+    bool hardwareShadowSupport_{}; // 硬件阴影支持（深度模板缓存支持相应格式）
     /// Instancing support flag.
-    bool instancingSupport_{};
+    bool instancingSupport_{}; // 实例化支持，D3DDEVCAPS2_STREAMOFFSET
     /// sRGB conversion on read support flag.
-    bool sRGBSupport_{};
+    bool sRGBSupport_{}; // sRGB读支持
     /// sRGB conversion on write support flag.
-    bool sRGBWriteSupport_{};
+    bool sRGBWriteSupport_{}; // sRGB写支持
     /// Number of primitives this frame.
     unsigned numPrimitives_{};
     /// Number of batches this frame.
@@ -702,11 +702,11 @@ private:
     /// Scratch buffers.
     Vector<ScratchBuffer> scratchBuffers_;
     /// Shadow map dummy color texture format.
-    unsigned dummyColorFormat_{};
+    unsigned dummyColorFormat_{}; // 阴影图rendertarget使用的纹理格式
     /// Shadow map depth texture format.
-    unsigned shadowMapFormat_{};
+    unsigned shadowMapFormat_{}; // 硬件阴影格式（深度模板格式），0为不支持硬件阴影
     /// Shadow map 24-bit depth texture format.
-    unsigned hiresShadowMapFormat_{};
+    unsigned hiresShadowMapFormat_{}; // 24位硬件阴影格式（24位深度模板格式），0为不支持24位硬件阴影
     /// Vertex buffers in use.
     VertexBuffer* vertexBuffers_[MAX_VERTEX_STREAMS]{};
     /// Index buffer in use.

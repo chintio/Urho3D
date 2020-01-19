@@ -281,7 +281,7 @@ static HWND GetWindowHandle(SDL_Window* window)
     return sysInfo.info.win.window;
 }
 
-static unsigned readableDepthFormat = 0;
+static unsigned readableDepthFormat = 0; // 可读的深度格式
 
 const Vector2 Graphics::pixelUVOffset(0.5f, 0.5f);
 bool Graphics::gl3Support = false;
@@ -335,6 +335,7 @@ Graphics::~Graphics()
     context_->ReleaseSDL();
 }
 
+// 设置屏幕模式
 bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, bool resizable, bool highDPI, bool vsync,
     bool tripleBuffer, int multiSample, int monitor, int refreshRate)
 {
@@ -2439,7 +2440,7 @@ void Graphics::AdjustWindow(int& newWidth, int& newHeight, bool& newFullscreen, 
     }
 }
 
-// 创建DX接口（IDirect3D9）及其相关的对象（D3DCAPS9、D3DADAPTER_IDENTIFIER9）
+// 创建DX接口对象（IDirect3D9）及其相关的对象（D3DCAPS9、D3DADAPTER_IDENTIFIER9）
 bool Graphics::CreateInterface()
 {
     impl_->interface_ = Direct3DCreate9(D3D_SDK_VERSION);
@@ -2472,6 +2473,7 @@ bool Graphics::CreateInterface()
     return true;
 }
 
+// 创建设备对象IDirect3DDevice9
 bool Graphics::CreateDevice(unsigned adapter, unsigned deviceType)
 {
 #ifdef URHO3D_LUAJIT
@@ -2510,6 +2512,7 @@ bool Graphics::CreateDevice(unsigned adapter, unsigned deviceType)
     return true;
 }
 
+// 检测需要的特性
 void Graphics::CheckFeatureSupport()
 {
     anisotropySupport_ = true;
@@ -2524,13 +2527,13 @@ void Graphics::CheckFeatureSupport()
 
     // Check hardware shadow map support: prefer NVIDIA style hardware depth compared shadow maps if available
     shadowMapFormat_ = D3DFMT_D16;
-    if (impl_->CheckFormatSupport((D3DFORMAT)shadowMapFormat_, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE))
+    if (impl_->CheckFormatSupport((D3DFORMAT)shadowMapFormat_, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE)) // 深度模板缓存支持D3DFMT_D16
     {
         hardwareShadowSupport_ = true;
 
         // Check for hires depth support
         hiresShadowMapFormat_ = D3DFMT_D24X8;
-        if (!impl_->CheckFormatSupport((D3DFORMAT)hiresShadowMapFormat_, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE))
+        if (!impl_->CheckFormatSupport((D3DFORMAT)hiresShadowMapFormat_, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE)) // 深度模板缓存支持D3DFMT_D24X8
             hiresShadowMapFormat_ = 0;
     }
     else
