@@ -82,7 +82,7 @@ private:
     /// Adapter identifier.
     D3DADAPTER_IDENTIFIER9 adapterIdentifier_; // 适配器（显卡）信息，IDirect3D9::GetAdapterIdentifier
     /// Direct3D presentation parameters.
-    D3DPRESENT_PARAMETERS presentParams_;
+    D3DPRESENT_PARAMETERS presentParams_; // 设备显示参数
     /// Texture min filter modes in use.
     D3DTEXTUREFILTERTYPE minFilters_[MAX_TEXTURE_UNITS];
     /// Texture mag filter modes in use.
@@ -102,7 +102,7 @@ private:
     /// Device lost flag.
     bool deviceLost_;
     /// Frame query issued flag.
-    bool queryIssued_;
+    bool queryIssued_; // 发起查询
     /// sRGB mode in use.
     bool sRGBModes_[MAX_TEXTURE_UNITS];
     /// sRGB write flag.
@@ -167,5 +167,7 @@ private:
 //  例如，我们可能想实现某种效果的两个版本，一种用着色器实现，另一种用固定功能流水线实现。按照这种方式，如果用户的图形卡支持着色器，就可以利用着色器，其余情况则使用固定功能流水线实现。
 // 每种手法都包含了一条或多条路径。路径封装了设备状态、采样器以及（或）用于为该条特定路径绘制几何体的着色器。使用多条路径的原因是由于要想实现某些特效，必须对每条路径，以不同的绘制状态和着色器将同一几何体进行多次绘制。
 //  例如，为了获得镜面反射效果，我们在每帧图像中都用不同的额绘制状态对相同的几何体进行了多次绘制。
+
+// https://user.xmission.com/~legalize/book/preview/poster/pipeline-9.0.png
 
 }

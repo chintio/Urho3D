@@ -698,7 +698,7 @@ private:
     /// Largest scratch buffer request this frame.
     unsigned maxScratchBufferRequest_{};
     /// GPU objects.
-    PODVector<GPUObject*> gpuObjects_;
+    PODVector<GPUObject*> gpuObjects_; // GPU对象集
     /// Scratch buffers.
     Vector<ScratchBuffer> scratchBuffers_;
     /// Shadow map dummy color texture format.
@@ -722,7 +722,7 @@ private:
     /// Textures in use.
     Texture* textures_[MAX_TEXTURE_UNITS]{};
     /// Texture unit mappings.
-    HashMap<String, TextureUnit> textureUnits_;
+    HashMap<String, TextureUnit> textureUnits_; // 名字字符串和枚举TextureUnit的映射
     /// Rendertargets in use.
     RenderSurface* renderTargets_[MAX_RENDERTARGETS]{};
     /// Depth-stencil surface in use.
@@ -792,7 +792,7 @@ private:
     /// Shader precache utility.
     SharedPtr<ShaderPrecache> shaderPrecache_;
     /// Allowed screen orientations.
-    String orientations_;
+    String orientations_; // 屏幕方向
     /// Graphics API name.
     String apiName_;
 

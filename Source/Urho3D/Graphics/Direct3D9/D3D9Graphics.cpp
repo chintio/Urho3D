@@ -335,7 +335,7 @@ Graphics::~Graphics()
     context_->ReleaseSDL();
 }
 
-// 设置屏幕模式
+// D3D初始化
 bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, bool resizable, bool highDPI, bool vsync,
     bool tripleBuffer, int multiSample, int monitor, int refreshRate)
 {
@@ -409,7 +409,7 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
     multiSample_ = multiSample;
 
     // Check fullscreen mode validity. Use a closest match if not found
-    if (fullscreen)
+    if (fullscreen) // 全屏模式时选取最佳分辨率、刷新率
     {
         PODVector<IntVector3> resolutions = GetResolutions(monitor);
         if (resolutions.Size())
@@ -495,6 +495,7 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
         unsigned deviceType = D3DDEVTYPE_HAL;
 
         // Check for PerfHUD adapter
+        // 如果有PerfHUD适配器，则创建软件设备
         for (unsigned i = 0; i < impl_->interface_->GetAdapterCount(); ++i)
         {
             D3DADAPTER_IDENTIFIER9 identifier;
@@ -592,11 +593,13 @@ void Graphics::SetSRGB(bool enable)
     sRGB_ = enable && sRGBWriteSupport_;
 }
 
+// 设置渲染输出是否抖动。OpenGL默认为true。对Direct3D没有影响。
 void Graphics::SetDither(bool enable)
 {
     // No effect on Direct3D9
 }
 
+// 设置是否刷新GPU命令缓冲区，以防止多个帧排队和帧时间步不均匀。默认关闭，如果启用，可能会降低性能。目前没有在OpenGL上实现。
 void Graphics::SetFlushGPU(bool enable)
 {
     flushGPU_ = enable;
@@ -617,6 +620,7 @@ void Graphics::Close()
     }
 }
 
+// RTT如果想保存到文件中, 是不能直接SaveToTexture的. 需要创建一个OffscreenSurface, 拷贝过去, 再保存. 不过N卡好像不支持DXT1格式的OffscreenSurface, 可以创建Texture, 取其level0的surface代替.
 bool Graphics::TakeScreenShot(Image& destImage)
 {
     URHO3D_PROFILE(TakeScreenShot);
@@ -746,6 +750,8 @@ bool Graphics::TakeScreenShot(Image& destImage)
     return true;
 }
 
+// IDirect3DDevice9::BeginScene()
+// 重置Surface、Texture、Viewport
 bool Graphics::BeginFrame()
 {
     if (!IsInitialized())
@@ -764,13 +770,13 @@ bool Graphics::BeginFrame()
     {
         // To prevent a loop of endless device loss and flicker, do not attempt to render when in fullscreen
         // and the window is minimized
-        if (fullscreen_ && (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED))
+        if (fullscreen_ && (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED)) // 全屏最小化时不要渲染，会导致在设备丢失和闪烁之间不停切换
             return false;
     }
 
     // Check for lost device before rendering
     HRESULT hr = impl_->device_->TestCooperativeLevel();
-    if (hr != D3D_OK)
+    if (hr != D3D_OK) // 设备丢失
     {
         URHO3D_PROFILE(DeviceLost);
 
@@ -807,6 +813,8 @@ bool Graphics::BeginFrame()
     return true;
 }
 
+// IDirect3DDevice9::EndScene()
+// IDirect3DDevice9::Present()
 void Graphics::EndFrame()
 {
     if (!IsInitialized())
@@ -829,7 +837,7 @@ void Graphics::EndFrame()
         {
             URHO3D_PROFILE(FlushGPU);
 
-            while (impl_->frameQuery_->GetData(nullptr, 0, D3DGETDATA_FLUSH) == S_FALSE)
+            while (impl_->frameQuery_->GetData(nullptr, 0, D3DGETDATA_FLUSH) == S_FALSE) // 将COMMAND BUFFER中的所有命令清空到DRIVER中去，并等待返回
             {
             }
 
@@ -838,7 +846,7 @@ void Graphics::EndFrame()
 
         if (flushGPU_)
         {
-            impl_->frameQuery_->Issue(D3DISSUE_END);
+            impl_->frameQuery_->Issue(D3DISSUE_END); // 在DX的COMMAND BUFFER中加入一个查询结束的标记
             impl_->queryIssued_ = true;
         }
     }
@@ -847,6 +855,7 @@ void Graphics::EndFrame()
     CleanupScratchBuffers();
 }
 
+// 清除表面
 void Graphics::Clear(ClearTargetFlags flags, const Color& color, float depth, unsigned stencil)
 {
     DWORD d3dFlags = 0;
@@ -1621,7 +1630,7 @@ void Graphics::ResetDepthStencil()
     SetDepthStencil((RenderSurface*)nullptr);
 }
 
-// 设置设备表面
+// IDirect3DDevice9::SetRenderTarget(index, renderTarget->GetSurface())，如果index==0&&!renderTarget，此时，设置缺省值impl_->defaultColorSurface_
 void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
 {
     if (index >= MAX_RENDERTARGETS)
@@ -1697,6 +1706,7 @@ void Graphics::SetRenderTarget(unsigned index, Texture2D* texture)
     SetRenderTarget(index, renderTarget);
 }
 
+// IDirect3DDevice9::SetDepthStencilSurface
 void Graphics::SetDepthStencil(RenderSurface* depthStencil)
 {
     IDirect3DSurface9* newDepthStencilSurface = nullptr;
@@ -1726,6 +1736,7 @@ void Graphics::SetDepthStencil(Texture2D* texture)
     SetDepthStencil(depthStencil);
 }
 
+// IDirect3DDevice9::SetViewport
 void Graphics::SetViewport(const IntRect& rect)
 {
     IntVector2 size = GetRenderTargetDimensions();
@@ -1860,7 +1871,11 @@ void Graphics::SetLineAntiAlias(bool enable)
     }
 }
 
-
+// IDirect3DDevice9::SetScissorRect
+// [Pixel Shader]->[Scissor Test]->[Z Test]->[Stencil Test]->[Specular Add]->[Fog]->[Alpha Blend]->[Write Mask]
+// 剪刀测试剔除剪刀矩形（呈现目标的用户定义的矩形子部分）之外的像素。
+// 剪刀矩形可用于指示绘制游戏世界的渲染目标区域。矩形外的区域被剔除，可以用于游戏的图形用户界面。剪刀测试不能剔除非矩形区域。
+// 剪刀矩形不能设置为大于渲染目标，但可以设置为大于视口。
 void Graphics::SetScissorTest(bool enable, const Rect& rect, bool borderInclusive)
 {
     // During some light rendering loops, a full rect is toggled on/off repeatedly.
@@ -2404,6 +2419,7 @@ bool Graphics::OpenWindow(int width, int height, bool resizable, bool borderless
     return true;
 }
 
+// 调整窗口参数
 void Graphics::AdjustWindow(int& newWidth, int& newHeight, bool& newFullscreen, bool& newBorderless, int& monitor)
 {
     if (!externalWindow_)
