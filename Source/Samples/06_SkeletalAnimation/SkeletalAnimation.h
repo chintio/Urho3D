@@ -47,6 +47,8 @@ public:
     /// Construct.
     explicit SkeletalAnimation(Context* context);
 
+    /// Setup before engine initialization. Modifies the engine parameters.
+    void Setup() override;
     /// Setup after engine initialization and before running the main loop.
     void Start() override;
 

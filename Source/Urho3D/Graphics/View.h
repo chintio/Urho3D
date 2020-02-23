@@ -57,7 +57,7 @@ struct LightQueryResult
     /// Light.
     Light* light_;
     /// Lit geometries.
-    PODVector<Drawable*> litGeometries_;
+    PODVector<Drawable*> litGeometries_; // 受光几何体
     /// Shadow casters.
     PODVector<Drawable*> shadowCasters_;
     /// Shadow cameras.
@@ -323,7 +323,7 @@ private:
     /// Shared source view. Null if this view is using its own culling.
     WeakPtr<View> sourceView_;
     /// Zone the camera is inside, or default zone if not assigned.
-    Zone* cameraZone_{};
+    Zone* cameraZone_{}; // camera所在的优先级最高的区域，如果没分配就是缺省区域
     /// Zone at far clip plane.
     Zone* farClipZone_{};
     /// Occlusion buffer for the main camera.
@@ -363,7 +363,7 @@ private:
     /// Minimum number of instances required in a batch group to render as instanced.
     int minInstances_{};
     /// Highest zone priority currently visible.
-    int highestZonePriority_{};
+    int highestZonePriority_{}; // 当前可见的最高优先级的区域
     /// Geometries updated flag.
     bool geometriesUpdated_{};
     /// Camera zone's override flag.
@@ -389,17 +389,17 @@ private:
     /// Per-thread geometries, lights and Z range collection results.
     Vector<PerThreadSceneResult> sceneResults_;
     /// Visible zones.
-    PODVector<Zone*> zones_;
+    PODVector<Zone*> zones_; // 相机截锥体内或者相交的区域
     /// Visible geometry objects.
-    PODVector<Drawable*> geometries_;
+    PODVector<Drawable*> geometries_; // 相机可见的几何体
     /// Geometry objects that will be updated in the main thread.
     PODVector<Drawable*> nonThreadedGeometries_;
     /// Geometry objects that will be updated in worker threads.
     PODVector<Drawable*> threadedGeometries_;
     /// Occluder objects.
-    PODVector<Drawable*> occluders_;
+    PODVector<Drawable*> occluders_; // 相机截锥体内或者相交的遮挡物
     /// Lights.
-    PODVector<Light*> lights_;
+    PODVector<Light*> lights_; // 相机可见的额光源
     /// Number of active occluders.
     unsigned activeOccluders_{};
 

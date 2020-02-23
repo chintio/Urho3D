@@ -95,7 +95,7 @@ public:
     }
 
     /// Intersection test for drawables.
-    void TestDrawables(Drawable** start, Drawable** end, bool inside) override
+    void TestDrawables(Drawable** start, Drawable** end, bool inside) override // 选出“区域”和“遮挡体”
     {
         while (start != end)
         {
@@ -105,7 +105,7 @@ public:
             if ((flags == DRAWABLE_ZONE || (flags == DRAWABLE_GEOMETRY && drawable->IsOccluder())) &&
                 (drawable->GetViewMask() & viewMask_))
             {
-                if (inside || frustum_.IsInsideFast(drawable->GetWorldBoundingBox()))
+                if (inside || frustum_.IsInsideFast(drawable->GetWorldBoundingBox())) // 八叉树单元在相机截锥体内，或者几何体不在相机截锥体外
                     result_.Push(drawable);
             }
         }
@@ -157,6 +157,7 @@ public:
     OcclusionBuffer* buffer_;
 };
 
+// 将可见几何体压入sceneResults_[].geometries_，可见光源压入sceneResults_[].lights_
 void CheckVisibilityWork(const WorkItem* item, unsigned threadIndex)
 {
     auto* view = reinterpret_cast<View*>(item->aux_);
@@ -219,7 +220,7 @@ void CheckVisibilityWork(const WorkItem* item, unsigned threadIndex)
             {
                 auto* light = static_cast<Light*>(drawable);
                 // Skip lights with zero brightness or black color
-                if (!light->GetEffectiveColor().Equals(Color::BLACK))
+                if (!light->GetEffectiveColor().Equals(Color::BLACK)) // 跳过零亮度或黑色的灯光
                     result.lights_.Push(light);
             }
         }
@@ -781,6 +782,7 @@ void View::SetGBufferShaderParameters(const IntVector2& texSize, const IntRect& 
     graphics_->SetShaderParameter(PSP_GBUFFERINVSIZE, Vector2(invSizeX, invSizeY));
 }
 
+// 可见区域放入zones_，可见遮挡物放入occluders_，遮挡物渲染到occlusionBuffer_（用于后续遮挡剔除），可见几何体放入geometries_，可见光源放入lights_（逐像素光源排前，然后最明亮/最接近相机的额排前）
 void View::GetDrawables()
 {
     if (!octree_ || !cullCamera_)
@@ -792,6 +794,7 @@ void View::GetDrawables()
     PODVector<Drawable*>& tempDrawables = tempDrawables_[0];
 
     // Get zones and occluders first
+    // 选出不在相机截锥体外的“区域”和“遮挡体”
     {
         ZoneOccluderOctreeQuery
             query(tempDrawables, cullCamera_->GetFrustum(), DRAWABLE_GEOMETRY | DRAWABLE_ZONE, cullCamera_->GetViewMask());
@@ -803,6 +806,8 @@ void View::GetDrawables()
     Node* cameraNode = cullCamera_->GetNode();
     Vector3 cameraPos = cameraNode->GetWorldPosition();
 
+    // 将上一步结果中的区域放入zones_，遮挡体放入occluders_
+    auto* renderer = GetSubsystem<Renderer>();
     for (PODVector<Drawable*>::ConstIterator i = tempDrawables.Begin(); i != tempDrawables.End(); ++i)
     {
         Drawable* drawable = *i;
@@ -813,9 +818,9 @@ void View::GetDrawables()
             auto* zone = static_cast<Zone*>(drawable);
             zones_.Push(zone);
             int priority = zone->GetPriority();
-            if (priority > highestZonePriority_)
+            if (priority > highestZonePriority_) // highestZonePriority_设为最高优先级区域的值
                 highestZonePriority_ = priority;
-            if (priority > bestPriority && zone->IsInside(cameraPos))
+            if (priority > bestPriority && zone->IsInside(cameraPos)) // cameraZone_设为相机位置所在的最高优先级区域
             {
                 cameraZone_ = zone;
                 bestPriority = priority;
@@ -826,10 +831,11 @@ void View::GetDrawables()
     }
 
     // Determine the zone at far clip distance. If not found, or camera zone has override mode, use camera zone
+    // farClipZone_设置为相机远剪辑面位置所在的最高优先级区域，如果区域不存在或者cameraZone_不是覆盖模式，则使用cameraZone_
     cameraZoneOverride_ = cameraZone_->GetOverride();
     if (!cameraZoneOverride_)
     {
-        Vector3 farClipPos = cameraPos + cameraNode->GetWorldDirection() * Vector3(0.0f, 0.0f, cullCamera_->GetFarClip());
+        Vector3 farClipPos = cameraPos + cameraNode->GetWorldDirection() * Vector3(0.0f, 0.0f, cullCamera_->GetFarClip()); // 相机位置映射到远剪辑面上的点
         bestPriority = M_MIN_INT;
 
         for (PODVector<Zone*>::Iterator i = zones_.Begin(); i != zones_.End(); ++i)
@@ -862,6 +868,7 @@ void View::GetDrawables()
         occluders_.Clear();
 
     // Get lights and geometries. Coarse occlusion for octants is used at this point
+    // 使用遮挡物和相机截锥体筛选可见的几何体和灯光
     if (occlusionBuffer_)
     {
         OccludedFrustumOctreeQuery query
@@ -875,6 +882,7 @@ void View::GetDrawables()
     }
 
     // Check drawable occlusion, find zones for moved drawables and collect geometries & lights in worker threads
+    // 将可见几何体压入sceneResults_[].geometries_，可见光源压入sceneResults_[].lights_
     {
         for (unsigned i = 0; i < sceneResults_.Size(); ++i)
         {
@@ -918,6 +926,7 @@ void View::GetDrawables()
     minZ_ = M_INFINITY;
     maxZ_ = 0.0f;
 
+    // 可见几何体放入geometries_，可见光源放入lights_
     if (sceneResults_.Size() > 1)
     {
         for (unsigned i = 0; i < sceneResults_.Size(); ++i)
@@ -943,6 +952,7 @@ void View::GetDrawables()
         minZ_ = 0.0f;
 
     // Sort the lights to brightest/closest first, and per-vertex lights first so that per-vertex base pass can be evaluated first
+    // 逐像素光源排前，然后最明亮/最接近相机的额排前
     for (unsigned i = 0; i < lights_.Size(); ++i)
     {
         Light* light = lights_[i];
@@ -2160,6 +2170,7 @@ void View::DrawFullscreenQuad(bool setIdentityProjection)
     geometry->Draw(graphics_);
 }
 
+// 从occluders中移除不可见的遮挡物，并对occluders剩余项排序
 void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
 {
     float occluderSizeThreshold_ = renderer_->GetOccluderSizeThreshold();
@@ -2171,7 +2182,7 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
         Drawable* occluder = *i;
         bool erase = false;
 
-        if (!occluder->IsInView(frame_, true))
+        if (!occluder->IsInView(frame_, true)) // occluder在该帧不可见
             occluder->UpdateBatches(frame_);
 
         // Check occluder's draw distance (in main camera view)
@@ -2180,11 +2191,12 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
         {
             // Check that occluder is big enough on the screen
             const BoundingBox& box = occluder->GetWorldBoundingBox();
-            float diagonal = box.Size().Length();
+            float diagonal = box.Size().Length(); // 包围盒对角线长度
             float compare;
-            if (!camera->IsOrthographic())
+            if (!camera->IsOrthographic()) // 透视投影
             {
                 // Occluders which are near the camera are more useful then occluders at the end of the camera's draw distance
+                // 靠近相机的遮挡比相机绘制距离末端的遮挡更有用
                 float cameraMaxDistanceFraction = occluder->GetDistance() / camera->GetFarClip();
                 compare = diagonal * halfViewSize / (occluder->GetDistance() * cameraMaxDistanceFraction);
 
@@ -2193,7 +2205,7 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
                 if (box.IsInside(cameraPos))
                     compare *= diagonal;    // size^2
             }
-            else
+            else // 正交投影
                 compare = diagonal * invOrthoSize;
 
             if (compare < occluderSizeThreshold_)
@@ -2206,7 +2218,7 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
                 occluder->SetSortValue(density / compare);
             }
         }
-        else
+        else // 遮挡物不可见，需要移除
             erase = true;
 
         if (erase)
@@ -2286,6 +2298,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     PODVector<Drawable*>& tempDrawables = tempDrawables_[threadIndex];
     query.litGeometries_.Clear();
 
+    // 受光几何体压入query.litGeometries
     switch (type)
     {
     case LIGHT_DIRECTIONAL:

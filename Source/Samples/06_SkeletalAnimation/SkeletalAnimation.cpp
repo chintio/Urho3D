@@ -55,6 +55,14 @@ SkeletalAnimation::SkeletalAnimation(Context* context) :
     context->RegisterFactory<Mover>();
 }
 
+void SkeletalAnimation::Setup()
+{
+    // Execute base class Setup
+    Sample::Setup();
+
+    //engineParameters_[EP_RENDER_PATH] = "RenderPaths/Deferred.xml";
+}
+
 void SkeletalAnimation::Start()
 {
     // Execute base class startup
@@ -115,7 +123,7 @@ void SkeletalAnimation::CreateScene()
     light->SetShadowCascade(CascadeParameters(10.0f, 50.0f, 200.0f, 0.0f, 0.8f));
 
     // Create animated models
-    const unsigned NUM_MODELS = 30;
+/*    const unsigned NUM_MODELS = 1;
     const float MODEL_MOVE_SPEED = 2.0f;
     const float MODEL_ROTATE_SPEED = 100.0f;
     const BoundingBox bounds(Vector3(-20.0f, 0.0f, -20.0f), Vector3(20.0f, 0.0f, 20.0f));
@@ -150,7 +158,7 @@ void SkeletalAnimation::CreateScene()
         auto* mover = modelNode->CreateComponent<Mover>();
         mover->SetParameters(MODEL_MOVE_SPEED, MODEL_ROTATE_SPEED, bounds);
     }
-
+*/
     // Create the camera. Limit far clip distance to match the fog
     cameraNode_ = scene_->CreateChild("Camera");
     auto* camera = cameraNode_->CreateComponent<Camera>();

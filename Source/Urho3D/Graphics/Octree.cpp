@@ -230,10 +230,10 @@ void Octant::GetDrawablesInternal(OctreeQuery& query, bool inside) const
 {
     if (this != root_)
     {
-        Intersection res = query.TestOctant(cullingBox_, inside);
-        if (res == INSIDE)
+        Intersection res = query.TestOctant(cullingBox_, inside); // 测试八叉树单元和相机截锥体的位置关系
+        if (res == INSIDE) // 在相机内，则测试其内的几何体及子节点
             inside = true;
-        else if (res == OUTSIDE)
+        else if (res == OUTSIDE) // 完全在相机外，直接返回
         {
             // Fully outside, so cull this octant, its children & drawables
             return;

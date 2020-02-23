@@ -203,31 +203,31 @@ public:
 
 private:
     /// Bounding box.
-    BoundingBox boundingBox_;
+    BoundingBox boundingBox_; // 包围盒
     /// Skeleton.
-    Skeleton skeleton_;
+    Skeleton skeleton_; // 骨骼数据
     /// Vertex buffers.
     Vector<SharedPtr<VertexBuffer> > vertexBuffers_;
     /// Index buffers.
     Vector<SharedPtr<IndexBuffer> > indexBuffers_;
     /// Geometries.
-    Vector<Vector<SharedPtr<Geometry> > > geometries_;
+    Vector<Vector<SharedPtr<Geometry> > > geometries_; // geometries_.Size()表示几何体个数，geometries_[].Size()表示几何体的Lod层级数
     /// Geometry bone mappings.
-    Vector<PODVector<unsigned> > geometryBoneMappings_;
+    Vector<PODVector<unsigned> > geometryBoneMappings_; // 骨头映射数据，每个几何体有一组
     /// Geometry centers.
-    PODVector<Vector3> geometryCenters_;
+    PODVector<Vector3> geometryCenters_; // 几何体的中心点
     /// Vertex morphs.
-    Vector<ModelMorph> morphs_;
+    Vector<ModelMorph> morphs_; // 顶点变形数据
     /// Vertex buffer morph range start.
     PODVector<unsigned> morphRangeStarts_;
     /// Vertex buffer morph range vertex count.
     PODVector<unsigned> morphRangeCounts_;
     /// Vertex buffer data for asynchronous loading.
-    Vector<VertexBufferDesc> loadVBData_;
+    Vector<VertexBufferDesc> loadVBData_; // 异步加载时的顶点数据在BeginLoad中存放于此地，在EndLoad中转入vertexBuffers_。
     /// Index buffer data for asynchronous loading.
-    Vector<IndexBufferDesc> loadIBData_;
+    Vector<IndexBufferDesc> loadIBData_; // 异步加载时的顶点数据在BeginLoad中存放于此地，在EndLoad中转入vertexBuffers_。
     /// Geometry definitions for asynchronous loading.
-    Vector<PODVector<GeometryDesc> > loadGeometries_;
+    Vector<PODVector<GeometryDesc> > loadGeometries_; // 几何体（及其LOD几何体）的描述数据
 };
 
 }

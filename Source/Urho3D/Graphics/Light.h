@@ -395,6 +395,7 @@ private:
     bool usePhysicalValues_;
 };
 
+// 逐像素光源排前，然后最明亮/最接近相机的额排前
 inline bool CompareLights(Light* lhs, Light* rhs)
 {
     // When sorting lights, give priority to per-vertex lights, so that vertex lit base pass can be evaluated first

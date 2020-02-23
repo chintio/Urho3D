@@ -82,7 +82,7 @@ bool Model::BeginLoad(Deserializer& source)
         return false;
     }
 
-    bool hasVertexDeclarations = (fileID == "UMD2");
+    bool hasVertexDeclarations = (fileID == "UMD2"); // UMD2文件带有顶点声明数据
 
     geometries_.Clear();
     geometryBoneMappings_.Clear();
@@ -105,12 +105,12 @@ bool Model::BeginLoad(Deserializer& source)
         VertexBufferDesc& desc = loadVBData_[i];
 
         desc.vertexCount_ = source.ReadUInt();
-        if (!hasVertexDeclarations)
+        if (!hasVertexDeclarations) // 没有顶点声明数据的读取元素掩码再转换成元素数据
         {
             unsigned elementMask = source.ReadUInt();
             desc.vertexElements_ = VertexBuffer::GetElements(elementMask);
         }
-        else
+        else // 有顶点声明数据的直接组装成元素数据
         {
             desc.vertexElements_.Clear();
             unsigned numElements = source.ReadUInt();
@@ -188,7 +188,7 @@ bool Model::BeginLoad(Deserializer& source)
     }
 
     // Read geometries
-    unsigned numGeometries = source.ReadUInt();
+    unsigned numGeometries = source.ReadUInt(); // 几何体个数
     geometries_.Reserve(numGeometries);
     geometryBoneMappings_.Reserve(numGeometries);
     geometryCenters_.Reserve(numGeometries);

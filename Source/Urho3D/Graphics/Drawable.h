@@ -338,9 +338,9 @@ protected:
     /// Shadowcaster flag.
     bool castShadows_;
     /// Occluder flag.
-    bool occluder_;
+    bool occluder_; // ÕÚµ²Îï
     /// Occludee flag.
-    bool occludee_;
+    bool occludee_; // ±»ÕÚµ²Îï
     /// Octree update queued flag.
     bool updateQueued_;
     /// Zone inconclusive or dirtied flag.
