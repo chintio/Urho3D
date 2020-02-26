@@ -57,23 +57,23 @@ struct LightQueryResult
     /// Light.
     Light* light_;
     /// Lit geometries.
-    PODVector<Drawable*> litGeometries_; // 受光几何体
+    PODVector<Drawable*> litGeometries_; // 被本light_照亮的几何体（观察矩阵内）
     /// Shadow casters.
-    PODVector<Drawable*> shadowCasters_;
+    PODVector<Drawable*> shadowCasters_; // 影子投射器（能产生阴影的几何体）
     /// Shadow cameras.
-    Camera* shadowCameras_[MAX_LIGHT_SPLITS];
+    Camera* shadowCameras_[MAX_LIGHT_SPLITS]; // 每个LOD的阴影相机，用于对该区域产生阴影贴图（深度图）
     /// Shadow caster start indices.
-    unsigned shadowCasterBegin_[MAX_LIGHT_SPLITS];
+    unsigned shadowCasterBegin_[MAX_LIGHT_SPLITS]; // 每个LOD区域中投射阴影的几何体的开始id（对应shadowCasters_的索引）
     /// Shadow caster end indices.
-    unsigned shadowCasterEnd_[MAX_LIGHT_SPLITS];
+    unsigned shadowCasterEnd_[MAX_LIGHT_SPLITS]; // 每个LOD区域中投射阴影的几何体的结束id（对应shadowCasters_的索引）
     /// Combined bounding box of shadow casters in light projection space. Only used for focused spot lights.
-    BoundingBox shadowCasterBox_[MAX_LIGHT_SPLITS];
+    BoundingBox shadowCasterBox_[MAX_LIGHT_SPLITS]; // 阴影投射器在灯光投影空间的组合边界框。仅用于聚光灯。
     /// Shadow camera near splits (directional lights only.)
-    float shadowNearSplits_[MAX_LIGHT_SPLITS];
+    float shadowNearSplits_[MAX_LIGHT_SPLITS]; // 每个阴影LOD区域的近值
     /// Shadow camera far splits (directional lights only.)
-    float shadowFarSplits_[MAX_LIGHT_SPLITS];
+    float shadowFarSplits_[MAX_LIGHT_SPLITS]; // 每个阴影LOD区域的远值
     /// Shadow map split count.
-    unsigned numSplits_;
+    unsigned numSplits_; // 阴影的LOD划分，https://blog.csdn.net/qq_29523119/article/details/79266293
 };
 
 /// Scene render pass info.
