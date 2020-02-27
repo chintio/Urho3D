@@ -75,6 +75,8 @@ struct LightQueryResult
     /// Shadow map split count.
     unsigned numSplits_; // 阴影的LOD划分，https://blog.csdn.net/qq_29523119/article/details/79266293
 };
+// 在实时渲染中，存在这样的一个渲染优化手段，也就是“LOD”,level of details,也就是细节等级的意思，总体来说也就是根据我们观察相机距离被观察物体的距离来决定优化被观察物体的渲染细节。
+// CascadeShadowMap其实就是来源于LOD的思想，总体的原理: 将我们观察相机的视截体根据与相机空间的原点的远近距离来划分为多个部分(也就是所谓的层级Cascade)，并将这几个部分的物体渲染到相应的ShadowMap。
 
 /// Scene render pass info.
 struct ScenePassInfo
@@ -408,7 +410,7 @@ private:
     /// Rendertargets defined by the renderpath.
     HashMap<StringHash, Texture*> renderTargets_;
     /// Intermediate light processing results.
-    Vector<LightQueryResult> lightQueryResults_;
+    Vector<LightQueryResult> lightQueryResults_; // 与各光源关联的几何体及阴影信息
     /// Info for scene render passes defined by the renderpath.
     PODVector<ScenePassInfo> scenePasses_;
     /// Per-pixel light queues.

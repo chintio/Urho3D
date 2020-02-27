@@ -976,6 +976,7 @@ void View::GetBatches()
     GetBaseBatches();
 }
 
+// 填充lightQueryResults_成员
 void View::ProcessLights()
 {
     // Process lit geometries and shadow casters for each light
@@ -2277,6 +2278,7 @@ void View::DrawOccluders(OcclusionBuffer* buffer, const PODVector<Drawable*>& oc
     buffer->BuildDepthHierarchy();
 }
 
+// 填充LightQueryResult成员
 void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
 {
     Light* light = query.light_;
@@ -2344,7 +2346,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     }
 
     // Determine number of shadow cameras and setup their initial positions
-    SetupShadowCameras(query);
+    SetupShadowCameras(query); // 根据光源类型创建阴影相机到query.shadowCameras_
 
     // Process each split for shadow casters
     query.shadowCasters_.Clear();
@@ -2523,6 +2525,7 @@ IntRect View::GetShadowMapViewport(Light* light, int splitIndex, Texture2D* shad
     return {};
 }
 
+// 创建阴影相机（1，方向光根据观察相机LOD层级创建3个相机；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
 void View::SetupShadowCameras(LightQueryResult& query)
 {
     Light* light = query.light_;
