@@ -509,6 +509,7 @@ float Camera::GetDistanceSquared(const Vector3& worldPos) const
     }
 }
 
+// 返回场景节点的LOD缩放距离
 float Camera::GetLodDistance(float distance, float scale, float bias) const
 {
     float d = Max(lodBias_ * bias * scale * zoom_, M_EPSILON);

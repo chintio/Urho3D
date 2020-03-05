@@ -129,6 +129,7 @@ void StaticModel::ProcessRayQuery(const RayOctreeQuery& query, PODVector<RayQuer
     }
 }
 
+// 根据几何体与相机的距离，更新批次LOD
 void StaticModel::UpdateBatches(const FrameInfo& frame)
 {
     const BoundingBox& worldBoundingBox = GetWorldBoundingBox();
@@ -417,6 +418,7 @@ void StaticModel::ResetLodLevels()
     lodDistance_ = M_INFINITY;
 }
 
+// 确定LOG层级，并设置当前批次几何体
 void StaticModel::CalculateLodLevels()
 {
     for (unsigned i = 0; i < batches_.Size(); ++i)

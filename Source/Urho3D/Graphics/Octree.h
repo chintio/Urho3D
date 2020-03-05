@@ -133,19 +133,19 @@ protected:
     }
 
     /// World bounding box.
-    BoundingBox worldBoundingBox_;
+    BoundingBox worldBoundingBox_; // 八叉树节点的包围盒
     /// Bounding box used for drawable object fitting.
-    BoundingBox cullingBox_;
+    BoundingBox cullingBox_; // 剔除盒，worldBoundingBox_ * 2，也是节点的逻辑检测包围盒
     /// Drawable objects.
-    PODVector<Drawable*> drawables_;
+    PODVector<Drawable*> drawables_; // 该节点包含的可见物（cullingBox_范围内）
     /// Child octants.
-    Octant* children_[NUM_OCTANTS]{};
+    Octant* children_[NUM_OCTANTS]{}; // 子节点
     /// World bounding box center.
-    Vector3 center_;
+    Vector3 center_; // 节点的中心点，也是分割子节点的位置
     /// World bounding box half size.
-    Vector3 halfSize_;
+    Vector3 halfSize_; // worldBoundingBox_ / 2
     /// Subdivision level.
-    unsigned level_;
+    unsigned level_; // 节点层次
     /// Number of drawable objects in this octant and child octants.
     unsigned numDrawables_{};
     /// Parent octant.

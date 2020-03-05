@@ -37,7 +37,7 @@ class Drawable;
 class Node;
 
 /// Base class for octree queries.
-class URHO3D_API OctreeQuery
+class URHO3D_API OctreeQuery // 用于八叉树的查询（条件和结果返回）
 {
 public:
     /// Construct with query parameters.
@@ -57,9 +57,9 @@ public:
     OctreeQuery& operator =(const OctreeQuery& rhs) = delete;
 
     /// Intersection test for an octant.
-    virtual Intersection TestOctant(const BoundingBox& box, bool inside) = 0;
+    virtual Intersection TestOctant(const BoundingBox& box, bool inside) = 0; // 测试参数box和OctreeQuery对象的位置关系， inside指定参数box是否在OctreeQuery对象的内部
     /// Intersection test for drawables.
-    virtual void TestDrawables(Drawable** start, Drawable** end, bool inside) = 0;
+    virtual void TestDrawables(Drawable** start, Drawable** end, bool inside) = 0; // 如果几何体包围盒在OctreeQuery对象的内部，则将该几何体放入result_
 
     /// Result vector reference.
     PODVector<Drawable*>& result_;

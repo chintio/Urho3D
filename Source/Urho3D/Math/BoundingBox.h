@@ -290,12 +290,12 @@ public:
     Intersection IsInside(const BoundingBox& box) const
     {
         if (box.max_.x_ < min_.x_ || box.min_.x_ > max_.x_ || box.max_.y_ < min_.y_ || box.min_.y_ > max_.y_ ||
-            box.max_.z_ < min_.z_ || box.min_.z_ > max_.z_)
+            box.max_.z_ < min_.z_ || box.min_.z_ > max_.z_) // 完全在外部（box的任何部分都在this的外面）
             return OUTSIDE;
         else if (box.min_.x_ < min_.x_ || box.max_.x_ > max_.x_ || box.min_.y_ < min_.y_ || box.max_.y_ > max_.y_ ||
-                 box.min_.z_ < min_.z_ || box.max_.z_ > max_.z_)
+                 box.min_.z_ < min_.z_ || box.max_.z_ > max_.z_) // 相交且不重合
             return INTERSECTS;
-        else
+        else // 在内部或重合
             return INSIDE;
     }
 

@@ -794,7 +794,7 @@ void View::GetDrawables()
     PODVector<Drawable*>& tempDrawables = tempDrawables_[0];
 
     // Get zones and occluders first
-    // 选出不在相机截锥体外的“区域”和“遮挡体”
+    // 选出裁剪相机可见的“区域”和“遮挡体”
     {
         ZoneOccluderOctreeQuery
             query(tempDrawables, cullCamera_->GetFrustum(), DRAWABLE_GEOMETRY | DRAWABLE_ZONE, cullCamera_->GetViewMask());
@@ -831,11 +831,11 @@ void View::GetDrawables()
     }
 
     // Determine the zone at far clip distance. If not found, or camera zone has override mode, use camera zone
-    // farClipZone_设置为相机远剪辑面位置所在的最高优先级区域，如果区域不存在或者cameraZone_不是覆盖模式，则使用cameraZone_
+    // farClipZone_设为相机（cullCamera_）远裁剪面中心点所在的优先级最高的区域；如果没分配或者cameraZone_为覆盖模式，就设为cameraZone_
     cameraZoneOverride_ = cameraZone_->GetOverride();
     if (!cameraZoneOverride_)
     {
-        Vector3 farClipPos = cameraPos + cameraNode->GetWorldDirection() * Vector3(0.0f, 0.0f, cullCamera_->GetFarClip()); // 相机位置映射到远剪辑面上的点
+        Vector3 farClipPos = cameraPos + cameraNode->GetWorldDirection() * Vector3(0.0f, 0.0f, cullCamera_->GetFarClip()); // 相机远剪辑面中心点的世界坐标
         bestPriority = M_MIN_INT;
 
         for (PODVector<Zone*>::Iterator i = zones_.Begin(); i != zones_.End(); ++i)
@@ -2171,7 +2171,7 @@ void View::DrawFullscreenQuad(bool setIdentityProjection)
     geometry->Draw(graphics_);
 }
 
-// 从occluders中移除不可见的遮挡物，并对occluders剩余项排序
+// 从occluders中移除不合格的遮挡体（不在渲染距离内，遮挡体比较小），并对occluders剩余项排序（遮挡效果好的靠前）
 void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
 {
     float occluderSizeThreshold_ = renderer_->GetOccluderSizeThreshold();
@@ -2188,13 +2188,13 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
 
         // Check occluder's draw distance (in main camera view)
         float maxDistance = occluder->GetDrawDistance();
-        if (maxDistance <= 0.0f || occluder->GetDistance() <= maxDistance)
+        if (maxDistance <= 0.0f || occluder->GetDistance() <= maxDistance) // 在渲染距离内
         {
             // Check that occluder is big enough on the screen
             const BoundingBox& box = occluder->GetWorldBoundingBox();
             float diagonal = box.Size().Length(); // 包围盒对角线长度
-            float compare;
-            if (!camera->IsOrthographic()) // 透视投影
+            float compare; // 遮挡因子
+            if (!camera->IsOrthographic()) // 透视投影，这个分支的计算没有看懂
             {
                 // Occluders which are near the camera are more useful then occluders at the end of the camera's draw distance
                 // 靠近相机的遮挡比相机绘制距离末端的遮挡更有用
@@ -2219,7 +2219,7 @@ void View::UpdateOccluders(PODVector<Drawable*>& occluders, Camera* camera)
                 occluder->SetSortValue(density / compare);
             }
         }
-        else // 遮挡物不可见，需要移除
+        else // 不在渲染距离内，需要移除
             erase = true;
 
         if (erase)
