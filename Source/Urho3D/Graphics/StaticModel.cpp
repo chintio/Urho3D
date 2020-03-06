@@ -187,6 +187,7 @@ unsigned StaticModel::GetNumOccluderTriangles()
     return triangles;
 }
 
+// 将模型的几何数据（三角形）存入buffer->batches_
 bool StaticModel::DrawOcclusion(OcclusionBuffer* buffer)
 {
     for (unsigned i = 0; i < batches_.Size(); ++i)

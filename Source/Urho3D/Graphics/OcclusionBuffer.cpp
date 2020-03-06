@@ -179,6 +179,7 @@ bool OcclusionBuffer::AddTriangles(const Matrix3x4& model, const void* vertexDat
     return numTriangles_ <= maxTriangles_;
 }
 
+// 将批次的几何数据（三角形）存入batches_
 bool OcclusionBuffer::AddTriangles(const Matrix3x4& model, const void* vertexData, unsigned vertexSize, const void* indexData,
     unsigned indexSize, unsigned indexStart, unsigned indexCount)
 {
