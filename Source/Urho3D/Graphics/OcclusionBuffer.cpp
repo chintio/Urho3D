@@ -334,12 +334,14 @@ void OcclusionBuffer::ResetUseTimer()
     useTimer_.Reset();
 }
 
+//对于后续的遮挡，对像素级遮挡缓冲区进行测试，以查看是否需要渲染
 bool OcclusionBuffer::IsVisible(const BoundingBox& worldSpaceBox) const
 {
     if (buffers_.Empty())
         return true;
 
     // Transform corners to projection space
+    // 将世界空间包围盒转换到投影空间
     Vector4 vertices[8];
     vertices[0] = ModelTransform(viewProj_, worldSpaceBox.min_);
     vertices[1] = ModelTransform(viewProj_, Vector3(worldSpaceBox.max_.x_, worldSpaceBox.min_.y_, worldSpaceBox.min_.z_));
@@ -357,6 +359,7 @@ bool OcclusionBuffer::IsVisible(const BoundingBox& worldSpaceBox) const
     // Transform to screen space. If any of the corners cross the near plane, assume visible
     float minX, maxX, minY, maxY, minZ;
 
+    // 视点变后，相机位于原点，朝向z轴负方向，y轴指向上方，x轴指向右边
     if (vertices[0].z_ <= 0.0f)
         return true;
 

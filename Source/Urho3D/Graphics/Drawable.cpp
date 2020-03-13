@@ -294,6 +294,7 @@ void Drawable::SetSortValue(float value)
     sortValue_ = value;
 }
 
+// 添加当前帧的观察相机
 void Drawable::MarkInView(const FrameInfo& frame)
 {
     if (frame.frameNumber_ != viewFrameNumber_)

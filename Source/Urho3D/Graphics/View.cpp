@@ -157,7 +157,7 @@ public:
     OcclusionBuffer* buffer_;
 };
 
-// 将可见几何体压入sceneResults_[].geometries_，可见光源压入sceneResults_[].lights_
+// 将可见几何体（OcclusionBuffer剔除后、在可绘制距离内的几何体）压入sceneResults_[].geometries_，可见光源压入sceneResults_[].lights_，并计算可见几何体在观察空间中的深度范围
 void CheckVisibilityWork(const WorkItem* item, unsigned threadIndex)
 {
     auto* view = reinterpret_cast<View*>(item->aux_);
@@ -175,12 +175,12 @@ void CheckVisibilityWork(const WorkItem* item, unsigned threadIndex)
     {
         Drawable* drawable = *start++;
 
-        if (!buffer || !drawable->IsOccludee() || buffer->IsVisible(drawable->GetWorldBoundingBox()))
+        if (!buffer || !drawable->IsOccludee() || buffer->IsVisible(drawable->GetWorldBoundingBox())) // 不会被buffer遮挡
         {
             drawable->UpdateBatches(view->frame_);
             // If draw distance non-zero, update and check it
             float maxDistance = drawable->GetDrawDistance();
-            if (maxDistance > 0.0f)
+            if (maxDistance > 0.0f) // 检测可绘制距离
             {
                 if (drawable->GetDistance() > maxDistance)
                     continue;
@@ -852,6 +852,7 @@ void View::GetDrawables()
         farClipZone_ = cameraZone_;
 
     // If occlusion in use, get & render the occluders
+    // 将遮挡体深度信息渲染到occlusionBuffer_
     occlusionBuffer_ = nullptr;
     if (maxOccluderTriangles_ > 0)
     {
@@ -868,7 +869,7 @@ void View::GetDrawables()
         occluders_.Clear();
 
     // Get lights and geometries. Coarse occlusion for octants is used at this point
-    // 使用遮挡物和相机截锥体筛选可见的几何体和灯光
+    // 用occlusionBuffer_（若启用）和相机截锥体对八叉树节点进行剔除，用几何体类型和相机掩码对节点中的实体进行剔除
     if (occlusionBuffer_)
     {
         OccludedFrustumOctreeQuery query
@@ -2287,6 +2288,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     const Frustum& frustum = cullCamera_->GetFrustum();
 
     // Check if light should be shadowed
+    // 判断光源自身是否产生影子
     bool isShadowed = drawShadows_ && light->GetCastShadows() && !light->GetPerVertex() && light->GetShadowIntensity() < 1.0f;
     // If shadow distance non-zero, check it
     if (isShadowed && light->GetShadowDistance() > 0.0f && light->GetDistance() > light->GetShadowDistance())

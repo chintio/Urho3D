@@ -186,7 +186,7 @@ public:
     float GetDrawDistance() const { return drawDistance_; }
 
     /// Return shadow draw distance.
-    float GetShadowDistance() const { return shadowDistance_; }
+    float GetShadowDistance() const { return shadowDistance_; } // 与相机距离在此范围内才会产生影子
 
     /// Return LOD bias.
     float GetLodBias() const { return lodBias_; }

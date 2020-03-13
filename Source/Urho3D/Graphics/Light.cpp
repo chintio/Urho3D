@@ -539,6 +539,7 @@ ResourceRef Light::GetShapeTextureAttr() const
     return GetResourceRef(shapeTexture_, lightType_ == LIGHT_POINT ? TextureCube::GetTypeStatic() : Texture2D::GetTypeStatic());
 }
 
+// 为各类光源设置对应的包围盒（八叉树借此确定所处节点）
 void Light::OnWorldBoundingBoxUpdate()
 {
     switch (lightType_)
