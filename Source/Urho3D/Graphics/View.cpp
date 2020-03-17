@@ -2627,8 +2627,8 @@ void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float n
     const FocusParameters& parameters = light->GetShadowFocus();
 
     // Calculate initial position & rotation
-    Vector3 pos = cullCamera_->GetNode()->GetWorldPosition() - extrusionDistance * lightNode->GetWorldDirection();
-    shadowCameraNode->SetTransform(pos, lightNode->GetWorldRotation());
+    Vector3 pos = cullCamera_->GetNode()->GetWorldPosition() - extrusionDistance * lightNode->GetWorldDirection(); // 阴影相机的位置（裁剪相机位置延光源反方向extrusionDistance处）
+    shadowCameraNode->SetTransform(pos, lightNode->GetWorldRotation()); // 设置阴影相机位置及旋转
 
     // Calculate main camera shadowed frustum in light's view space
     farSplit = Min(farSplit, cullCamera_->GetFarClip());
@@ -2652,7 +2652,7 @@ void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float n
         {
             Drawable* drawable = geometries_[i];
             if (drawable->GetMinZ() <= farSplit && drawable->GetMaxZ() >= nearSplit &&
-                (GetLightMask(drawable) & lightMask))
+                (GetLightMask(drawable) & lightMask)) // 在阴影相机裁剪面内
                 litGeometriesBox.Merge(drawable->GetWorldBoundingBox());
         }
 

@@ -388,7 +388,7 @@ private:
     /// Shadow camera near/far clip distance ratio.
     float shadowNearFarRatio_;
     /// Directional shadow max. extrusion distance.
-    float shadowMaxExtrusion_;
+    float shadowMaxExtrusion_; // 方向光阴影影响距离，物体距灯光超过这个距离，就不再计算它的阴影以节省场景运算
     /// Per-vertex lighting flag.
     bool perVertex_;
     /// Use physical light values flag.

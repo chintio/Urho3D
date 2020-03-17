@@ -307,6 +307,7 @@ const Frustum& Camera::GetFrustum() const
     return frustum_;
 }
 
+// 构造世界空间截锥体
 Frustum Camera::GetSplitFrustum(float nearClip, float farClip) const
 {
     if (projectionDirty_)
@@ -572,6 +573,7 @@ Quaternion Camera::GetFaceCameraRotation(const Vector3& position, const Quaterni
     }
 }
 
+// 返回世界变换矩阵，包括平移、旋转、缩放、反射（如果允许）
 Matrix3x4 Camera::GetEffectiveWorldTransform() const
 {
     Matrix3x4 worldTransform = node_ ? Matrix3x4(node_->GetWorldPosition(), node_->GetWorldRotation(), 1.0f) : Matrix3x4::IDENTITY;
