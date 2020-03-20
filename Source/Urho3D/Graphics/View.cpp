@@ -2527,7 +2527,7 @@ IntRect View::GetShadowMapViewport(Light* light, int splitIndex, Texture2D* shad
     return {};
 }
 
-// 创建阴影相机（1，方向光根据观察相机LOD层级创建3个相机；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
+// 创建阴影相机（1，方向光根据观察相机LOD层级创建对应相机数；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
 void View::SetupShadowCameras(LightQueryResult& query)
 {
     Light* light = query.light_;
@@ -2619,6 +2619,7 @@ void View::SetupShadowCameras(LightQueryResult& query)
     query.numSplits_ = splits;
 }
 
+// 安装阴影相机（位置、旋转、截锥体）
 void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float nearSplit, float farSplit)
 {
     Node* shadowCameraNode = shadowCamera->GetNode();
@@ -2639,11 +2640,11 @@ void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float n
         farSplit = Min(maxZ_, farSplit);
     }
 
-    Frustum splitFrustum = cullCamera_->GetSplitFrustum(nearSplit, farSplit);
+    Frustum splitFrustum = cullCamera_->GetSplitFrustum(nearSplit, farSplit); // 裁剪相机使用新的远近裁减面形成的截锥体（世界空间）
     Polyhedron frustumVolume;
     frustumVolume.Define(splitFrustum);
     // If focusing enabled, clip the frustum volume by the combined bounding box of the lit geometries within the frustum
-    if (parameters.focus_)
+    if (parameters.focus_) // 根据裁剪面内几何体的包围盒生成新的截锥体
     {
         BoundingBox litGeometriesBox;
         unsigned lightMask = light->GetLightMask();
@@ -2652,7 +2653,7 @@ void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float n
         {
             Drawable* drawable = geometries_[i];
             if (drawable->GetMinZ() <= farSplit && drawable->GetMaxZ() >= nearSplit &&
-                (GetLightMask(drawable) & lightMask)) // 在阴影相机裁剪面内
+                (GetLightMask(drawable) & lightMask)) // 在裁剪相机（cullCamera_）新的截锥体内
                 litGeometriesBox.Merge(drawable->GetWorldBoundingBox());
         }
 
@@ -2667,7 +2668,7 @@ void View::SetupDirLightShadowCamera(Camera* shadowCamera, Light* light, float n
 
     // Transform frustum volume to light space
     const Matrix3x4& lightView = shadowCamera->GetView();
-    frustumVolume.Transform(lightView);
+    frustumVolume.Transform(lightView); // 截锥体变到阴影相机空间
 
     // Fit the frustum volume inside a bounding box. If uniform size, use a sphere instead
     BoundingBox shadowBox;
