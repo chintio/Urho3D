@@ -414,7 +414,7 @@ private:
     /// Info for scene render passes defined by the renderpath.
     PODVector<ScenePassInfo> scenePasses_;
     /// Per-pixel light queues.
-    Vector<LightBatchQueue> lightQueues_;
+    Vector<LightBatchQueue> lightQueues_; // 每像素光源的批次队列
     /// Per-vertex light queues.
     HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_;
     /// Batch queues by pass index.

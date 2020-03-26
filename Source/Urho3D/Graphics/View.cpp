@@ -1004,6 +1004,7 @@ void View::ProcessLights()
     queue->Complete(M_MAX_UNSIGNED);
 }
 
+// 组织每像素光的批次，填充到lightQueues_
 void View::GetLightBatches()
 {
     BatchQueue* alphaQueue = batchQueues_.Contains(alphaPassIndex_) ? &batchQueues_[alphaPassIndex_] : nullptr;
@@ -1036,7 +1037,7 @@ void View::GetLightBatches()
             Light* light = query.light_;
 
             // Per-pixel light
-            if (!light->GetPerVertex())
+            if (!light->GetPerVertex()) // 组织像素光源的批次数据，存入lightQueues_
             {
                 unsigned shadowSplits = query.numSplits_;
 
@@ -1071,7 +1072,7 @@ void View::GetLightBatches()
 
                 // Setup shadow batch queues
                 lightQueue.shadowSplits_.Resize(shadowSplits);
-                for (unsigned j = 0; j < shadowSplits; ++j)
+                for (unsigned j = 0; j < shadowSplits; ++j) // 组织光源的每个阴影层次的批次数据，填充lightQueues_[].shadowSplits_[]
                 {
                     ShadowBatchQueue& shadowQueue = lightQueue.shadowSplits_[j];
                     Camera* shadowCamera = query.shadowCameras_[j];
@@ -1193,6 +1194,7 @@ void View::GetLightBatches()
     }
 }
 
+// 组织不在每顶点光的批次中的几何体，填充到scenePasses_[].batchQueue_(batchQueues_)
 void View::GetBaseBatches()
 {
     URHO3D_PROFILE(GetBaseBatches);
@@ -1380,6 +1382,7 @@ void View::UpdateGeometries()
     geometriesUpdated_ = true;
 }
 
+// 将drawable加入lightQueue.litBaseBatches_或者lightQueue.litBatches_或者alphaQueue
 void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQueue* alphaQueue)
 {
     Light* light = lightQueue.light_;
