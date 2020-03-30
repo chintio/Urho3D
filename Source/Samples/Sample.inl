@@ -63,8 +63,8 @@ void Sample::Setup()
     engineParameters_[EP_HEADLESS]     = false;
     engineParameters_[EP_SOUND]        = false;
 
-    //engineParameters_[EP_WINDOW_WIDTH] = 1920;
-    //engineParameters_[EP_WINDOW_HEIGHT] = 1200;
+    engineParameters_[EP_WINDOW_WIDTH] = 1440;
+    engineParameters_[EP_WINDOW_HEIGHT] = 900;
 
     // Construct a search path to find the resource prefix with two entries:
     // The first entry is an empty path which will be substituted with program/bin directory -- this entry is for binary when it is still in build tree
@@ -83,10 +83,10 @@ void Sample::Start()
         SubscribeToEvent(E_TOUCHBEGIN, URHO3D_HANDLER(Sample, HandleTouchBegin));
 
     // Create logo
-    CreateLogo();
+    //CreateLogo();
 
     // Set custom window Title & Icon
-    SetWindowTitleAndIcon();
+    //SetWindowTitleAndIcon();
 
     // Create console and debug HUD
     CreateConsoleAndDebugHud();
