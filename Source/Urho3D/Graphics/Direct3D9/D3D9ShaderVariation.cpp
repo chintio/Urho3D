@@ -247,7 +247,8 @@ bool ShaderVariation::Compile()
     // Set the entrypoint, profile and flags according to the shader being compiled
     const char* entryPoint = nullptr;
     const char* profile = nullptr;
-    unsigned flags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
+    // 打开shader调试信息（1）
+    unsigned flags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;// D3DCOMPILE_OPTIMIZATION_LEVEL3;
 
     if (type_ == VS)
     {
@@ -321,7 +322,12 @@ bool ShaderVariation::Compile()
         unsigned char* bufData = (unsigned char*)shaderCode->GetBufferPointer();
         unsigned bufSize = (unsigned)shaderCode->GetBufferSize();
         ParseParameters(bufData, bufSize);
-        CopyStrippedCode(byteCode_, bufData, bufSize);
+        // 打开shader调试信息（2）
+        {
+            //CopyStrippedCode(byteCode_, bufData, bufSize);
+            byteCode_.Resize(bufSize);
+            memcpy(&byteCode_[0], bufData, bufSize);
+        }
     }
 
     URHO3D_SAFE_RELEASE(shaderCode);
