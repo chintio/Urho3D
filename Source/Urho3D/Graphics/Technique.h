@@ -287,4 +287,20 @@ private:
     static HashMap<String, unsigned> passIndices;
 };
 
+/* pass
+- base: 渲染不透明对象的环境光、逐顶点光和雾。
+- litbase: 渲染不透明对象的第一个逐像素光、环境光和雾。这是优化的可选过程。
+- light: 为不透明对象累加渲染一个逐像素光的贡献。
+- alpha: 为透明对象渲染环境光、逐顶点光和雾。
+- litalpha: 为透明对象累加渲染一个逐像素光的贡献。
+- postopaque: 在不透明几何体之后自定义渲染过程。可用于渲染skybox。
+- refract: 在postopaque后的自定义渲染过程。可以从“环境纹理”（environment texture）单元采样“视口纹理”（viewport texture）以渲染折射对象。
+- postalpha: 透明几何体之后的自定义渲染过程。
+- prepass: 仅限灯光预处理-将法线、高光和深度渲染到G-buffer。
+- material: 仅限灯光预处理-通过组合环境光、逐顶点光和逐像素光累积来渲染不透明几何体最终颜色。
+- deferred: 仅延迟渲染-将环境光和逐顶点光渲染到rendertarget，并将漫反射反照率、法线、镜面反射强度+功率和深度渲染到G-buffer。
+- depth: 将线性深度渲染到rendertarget以获得后期处理效果。
+- shadow: 渲染到硬件阴影贴图（仅深度）以生成阴影贴图。
+*/
+
 }

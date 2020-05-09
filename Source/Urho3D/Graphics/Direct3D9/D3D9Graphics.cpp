@@ -1630,7 +1630,9 @@ void Graphics::ResetDepthStencil()
     SetDepthStencil((RenderSurface*)nullptr);
 }
 
-// IDirect3DDevice9::SetRenderTarget(index, renderTarget->GetSurface())，如果index==0&&!renderTarget，此时，设置缺省值impl_->defaultColorSurface_
+// renderTargets_[index] = renderTarget
+// impl_->colorSurfaces_[index] = newColorSurface
+// impl_->device_->SetRenderTarget(index, (IDirect3DSurface9*)renderTarget->GetSurface())
 void Graphics::SetRenderTarget(unsigned index, RenderSurface* renderTarget)
 {
     if (index >= MAX_RENDERTARGETS)
@@ -1706,7 +1708,8 @@ void Graphics::SetRenderTarget(unsigned index, Texture2D* texture)
     SetRenderTarget(index, renderTarget);
 }
 
-// IDirect3DDevice9::SetDepthStencilSurface
+// depthStencil_ = depthStencil
+// impl_->device_->SetDepthStencilSurface((IDirect3DSurface9*)depthStencil->GetSurface())
 void Graphics::SetDepthStencil(RenderSurface* depthStencil)
 {
     IDirect3DSurface9* newDepthStencilSurface = nullptr;
@@ -1736,7 +1739,8 @@ void Graphics::SetDepthStencil(Texture2D* texture)
     SetDepthStencil(depthStencil);
 }
 
-// IDirect3DDevice9::SetViewport
+// viewport_ = rectCopy
+// IDirect3DDevice9::SetViewport(&(D3DVIEWPORT9)rectCopy)
 void Graphics::SetViewport(const IntRect& rect)
 {
     IntVector2 size = GetRenderTargetDimensions();

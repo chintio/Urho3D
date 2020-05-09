@@ -93,7 +93,7 @@ struct URHO3D_API SourceBatch
     /// Distance from camera.
     float distance_{};
     /// Geometry.
-    Geometry* geometry_{};
+    Geometry* geometry_{}; // lod geometry
     /// Material.
     SharedPtr<Material> material_;
     /// World transform(s). For a skinned model, these are the bone transforms.
@@ -330,7 +330,7 @@ protected:
     /// Local-space bounding box.
     BoundingBox boundingBox_;
     /// Draw call source data.
-    Vector<SourceBatch> batches_;
+    Vector<SourceBatch> batches_; // 每个Drawable对应一个材质（Material）和一个模型（Model），模型有多个部件，每个部件有多个LOD，每个LOD数据是一个Geometry结构，batches_[].geometry_是当前LOD数据
     /// Drawable flags.
     unsigned char drawableFlags_;
     /// Bounding box dirty flag.

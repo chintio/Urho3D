@@ -418,7 +418,7 @@ private:
     /// Per-vertex light queues.
     HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_;
     /// Batch queues by pass index.
-    HashMap<unsigned, BatchQueue> batchQueues_;
+    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass"
     /// Index of the GBuffer pass.
     unsigned gBufferPassIndex_{};
     /// Index of the opaque forward base pass.

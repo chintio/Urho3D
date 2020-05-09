@@ -94,6 +94,7 @@ static const char* fillModeNames[] =
     nullptr
 };
 
+// 名称在textureUnitNames中的下标（对应TextureUnit枚举值）
 TextureUnit ParseTextureUnitName(String name)
 {
     name = name.ToLower().Trimmed();

@@ -250,4 +250,16 @@ public:
     Vector<RenderPathCommand> commands_;
 };
 
+/*RenderPath
+- clear: 清除任何颜色、深度和模板。“颜色清除”可以选择使用远剪裁距离内可见区域的雾颜色。
+- scenepass: 渲染其材质“material technology”包含指定过程的场景对象。将使用状态排序从前到后顺序，或使用无状态排序从后到前顺序。
+            对于延迟渲染，可以选择将对象光照掩码(lightmasks)标记到模板缓冲区。如果顶点光具有必要的着色器组合，则可以在过程(pass)中对其进行处理。
+            过程的全局纹理可以绑定到自由纹理单元；这些单元可以是视口、命名的rendertarget或用其路径名标识的纹理资源。
+- quad: 使用指定的着色器渲染一个视口大小的四边形。可以选择指定混合模式（默认值为replace）。
+- forwardlights: 为具有指定过程名称的不透明对象渲染每像素前向光照。阴影贴图也会根据需要进行渲染。
+- lightvolumes: 使用指定的着色器渲染延迟的光体积。G-buffer纹理可以根据需要绑定。
+- renderui: 将UI渲染到rendertarget中。使用此选项将跳过对backbuffer的默认UI渲染。
+- sendevent: 使用指定的字符串参数（“event name”）发送事件。这可用于在renderpath执行过程中调用自定义代码，通常是自定义低级别渲染。
+*/
+
 }

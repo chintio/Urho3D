@@ -489,7 +489,7 @@ private:
     /// Default material.
     SharedPtr<Material> defaultMaterial_;
     /// Default range attenuation texture.
-    SharedPtr<Texture2D> defaultLightRamp_;
+    SharedPtr<Texture2D> defaultLightRamp_; //Ω•±‰Œ∆¿Ì
     /// Default spotlight attenuation texture.
     SharedPtr<Texture2D> defaultLightSpot_;
     /// Face selection cube map for shadowed pointlights.
