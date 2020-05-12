@@ -1004,7 +1004,9 @@ void View::ProcessLights()
     queue->Complete(M_MAX_UNSIGNED);
 }
 
-// 组织每像素光的批次，填充到lightQueues_
+// 填充逐像素光源的批次信息到lightQueues_
+// 对于逐像素光：（1）将其影响到的能产生阴影的几何体，按阴影层级保存批次（pass name="shadow"）到lightQueues_[].shadowSplits_[].shadowBatches_；（2）将受光几何体交由GetLitBatches处理；（3）如果是延迟渲染模式，则将光源几何体信息保存到lightQueues_[].volumeBatches_
+// 对于逐顶点光：将光源保存到Drawable::vertexLights_
 void View::GetLightBatches()
 {
     BatchQueue* alphaQueue = batchQueues_.Contains(alphaPassIndex_) ? &batchQueues_[alphaPassIndex_] : nullptr;
@@ -1016,7 +1018,7 @@ void View::GetLightBatches()
         // Preallocate light queues: per-pixel lights which have lit geometries
         unsigned numLightQueues = 0;
         unsigned usedLightQueues = 0;
-        for (Vector<LightQueryResult>::ConstIterator i = lightQueryResults_.Begin(); i != lightQueryResults_.End(); ++i)
+        for (Vector<LightQueryResult>::ConstIterator i = lightQueryResults_.Begin(); i != lightQueryResults_.End(); ++i) // 统计逐像素光源的个数（并且存中被其照亮的几何体）
         {
             if (!i->light_->GetPerVertex() && i->litGeometries_.Size())
                 ++numLightQueues;
@@ -1037,7 +1039,7 @@ void View::GetLightBatches()
             Light* light = query.light_;
 
             // Per-pixel light
-            if (!light->GetPerVertex()) // 组织像素光源的批次数据，存入lightQueues_
+            if (!light->GetPerVertex()) // 组织逐像素光源的批次数据，存入lightQueues_
             {
                 unsigned shadowSplits = query.numSplits_;
 
@@ -1072,7 +1074,7 @@ void View::GetLightBatches()
 
                 // Setup shadow batch queues
                 lightQueue.shadowSplits_.Resize(shadowSplits);
-                for (unsigned j = 0; j < shadowSplits; ++j) // 组织光源的每个阴影层次的批次数据，填充lightQueues_[].shadowSplits_[]
+                for (unsigned j = 0; j < shadowSplits; ++j) // 组织光源的每个阴影层级的批次数据，填充lightQueues_[].shadowSplits_[].shadowBatches_
                 {
                     ShadowBatchQueue& shadowQueue = lightQueue.shadowSplits_[j];
                     Camera* shadowCamera = query.shadowCameras_[j];
@@ -1132,15 +1134,15 @@ void View::GetLightBatches()
                     drawable->AddLight(light);
 
                     // If drawable limits maximum lights, only record the light, and check maximum count / build batches later
-                    if (!drawable->GetMaxLights())
+                    if (!drawable->GetMaxLights()) // 没有限制逐像素光源个数
                         GetLitBatches(drawable, lightQueue, alphaQueue);
-                    else
+                    else // 有逐像素光源的个数限制，先记录，后面统一处理
                         maxLightsDrawables_.Insert(drawable);
                 }
 
                 // In deferred modes, store the light volume batch now. Since light mask 8 lowest bits are output to the stencil,
                 // lights that have all zeroes in the low 8 bits can be skipped; they would not affect geometry anyway
-                if (deferred_ && (light->GetLightMask() & 0xffu) != 0)
+                if (deferred_ && (light->GetLightMask() & 0xffu) != 0) // 延迟渲染时，保存光源几何体的批次信息到lightQueues_[].volumeBatches_
                 {
                     Batch volumeBatch;
                     volumeBatch.geometry_ = renderer_->GetLightGeometry(light);
@@ -1162,7 +1164,7 @@ void View::GetLightBatches()
             else
             {
                 // Add the vertex light to lit drawables. It will be processed later during base pass batch generation
-                for (PODVector<Drawable*>::ConstIterator j = query.litGeometries_.Begin(); j != query.litGeometries_.End(); ++j)
+                for (PODVector<Drawable*>::ConstIterator j = query.litGeometries_.Begin(); j != query.litGeometries_.End(); ++j) // 保存逐顶点光源到每个受光几何体
                 {
                     Drawable* drawable = *j;
                     drawable->AddVertexLight(light);
@@ -1382,7 +1384,8 @@ void View::UpdateGeometries()
     geometriesUpdated_ = true;
 }
 
-// 将drawable加入lightQueue.litBaseBatches_或者lightQueue.litBatches_或者alphaQueue
+// 将drawable的批次加入lightQueue.litBaseBatches_或者lightQueue.litBatches_或者alphaQueue
+// 如果光源是几何体的第一个逐像素光，且几何体所在区域为非环境渐变模式，则加入批次到lightQueue.litBaseBatches_（pass name="litbase"），否则加入到lightQueue.litBatches_（pass name="light"），如果pass不存在，尝试加入批次到alphaQueue（pass name="litalpha"）
 void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQueue* alphaQueue)
 {
     Light* light = lightQueue.light_;
@@ -1412,14 +1415,14 @@ void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQ
         // Also vertex lighting or ambient gradient require the non-lit base pass, so skip in those cases
         if (i < 32 && allowLitBase)
         {
-            destBatch.pass_ = tech->GetSupportedPass(litBasePassIndex_);
+            destBatch.pass_ = tech->GetSupportedPass(litBasePassIndex_); // pass name="litbase"
             if (destBatch.pass_)
             {
                 destBatch.isBase_ = true;
                 drawable->SetBasePass(i);
             }
             else
-                destBatch.pass_ = tech->GetSupportedPass(lightPassIndex_);
+                destBatch.pass_ = tech->GetSupportedPass(lightPassIndex_); // pass name="light"
         }
         else
             destBatch.pass_ = tech->GetSupportedPass(lightPassIndex_);
@@ -1427,7 +1430,7 @@ void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQ
         // If no lit pass, check for lit alpha
         if (!destBatch.pass_)
         {
-            destBatch.pass_ = tech->GetSupportedPass(litAlphaPassIndex_);
+            destBatch.pass_ = tech->GetSupportedPass(litAlphaPassIndex_); // pass name="litalpha"
             isLitAlpha = true;
         }
 

@@ -298,15 +298,15 @@ struct LightBatchQueue
     /// Shadow map depth texture.
     Texture2D* shadowMap_;
     /// Lit geometry draw calls, base (replace blend mode)
-    BatchQueue litBaseBatches_;
+    BatchQueue litBaseBatches_; // command type="forwardlights" 的批次
     /// Lit geometry draw calls, non-base (additive)
-    BatchQueue litBatches_;
+    BatchQueue litBatches_; // command type="forwardlights" 的批次
     /// Shadow map split queues.
-    Vector<ShadowBatchQueue> shadowSplits_;
+    Vector<ShadowBatchQueue> shadowSplits_; // 各阴影层级的几何体（可投射阴影）批次（pass name="shadow"）
     /// Per-vertex lights.
     PODVector<Light*> vertexLights_;
     /// Light volume draw calls.
-    PODVector<Batch> volumeBatches_;
+    PODVector<Batch> volumeBatches_; // command type="lightvolumes" 的批次
 };
 
 }
