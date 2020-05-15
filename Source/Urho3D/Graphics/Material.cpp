@@ -1364,7 +1364,7 @@ void Material::HandleAttributeAnimationUpdate(StringHash eventType, VariantMap& 
         SetShaderParameterAnimation(finishedNames[i], nullptr);
 }
 
-// 克隆techniques_[].original_到techniques_[].technique_（将vertexShaderDefines_、pixelShaderDefines_附加到techniques_的每个pass的既有定义上）
+// 克隆techniques_[].original_到techniques_[].technique_，并将vertexShaderDefines_、pixelShaderDefines_附加到techniques_的每个pass的既有定义上
 void Material::ApplyShaderDefines(unsigned index)
 {
     if (index == M_MAX_UNSIGNED)
