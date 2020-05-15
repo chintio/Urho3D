@@ -123,7 +123,7 @@ void SkeletalAnimation::CreateScene()
     light->SetShadowCascade(CascadeParameters(10.0f, 50.0f, 200.0f, 0.0f, 0.8f));
 
     // Create animated models
-    const unsigned NUM_MODELS = 30;
+    const unsigned NUM_MODELS = 1; // 30;
     const float MODEL_MOVE_SPEED = 0.0f;// 2.0f;
     const float MODEL_ROTATE_SPEED = 100.0f;
     const BoundingBox bounds(Vector3(-20.0f, 0.0f, -20.0f), Vector3(20.0f, 0.0f, 20.0f));

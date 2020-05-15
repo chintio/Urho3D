@@ -1196,7 +1196,7 @@ void View::GetLightBatches()
     }
 }
 
-// 组织不在每顶点光的批次中的几何体，填充到scenePasses_[].batchQueue_(batchQueues_)
+// 组织不在逐像数光的批次中的几何体，填充到scenePasses_[].batchQueue_(batchQueues_)
 void View::GetBaseBatches()
 {
     URHO3D_PROFILE(GetBaseBatches);

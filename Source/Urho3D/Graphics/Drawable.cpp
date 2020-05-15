@@ -337,6 +337,7 @@ void Drawable::LimitLights()
     lights_.Resize(maxLights_);
 }
 
+// 只保留影响最大的4个顶点光
 void Drawable::LimitVertexLights(bool removeConvertedLights)
 {
     if (removeConvertedLights)
