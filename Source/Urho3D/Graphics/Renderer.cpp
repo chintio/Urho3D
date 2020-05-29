@@ -1159,6 +1159,7 @@ View* Renderer::GetActualView(View* view)
         return view;
 }
 
+// 根据灯光模型从batch.pass_中选择合适的ShaderVariation（在LoadPassShaders中初始化pass的各种可能宏定义的ShaderVariation对象），赋值给batch.vertexShader_、batch.pixelShader_
 void Renderer::SetBatchShaders(Batch& batch, Technique* tech, bool allowShadows, const BatchQueue& queue)
 {
     Pass* pass = batch.pass_;
@@ -1274,6 +1275,7 @@ void Renderer::SetBatchShaders(Batch& batch, Technique* tech, bool allowShadows,
     }
 }
 
+// 确定编译着色器的宏定义，创建ShaderVariation对象
 void Renderer::SetLightVolumeBatchShaders(Batch& batch, Camera* camera, const String& vsName, const String& psName, const String& vsDefines,
     const String& psDefines)
 {
@@ -1429,7 +1431,7 @@ void Renderer::OptimizeLightByStencil(Light* light, Camera* camera)
         graphics_->SetColorWrite(false);
         graphics_->SetDepthWrite(false);
         graphics_->SetStencilTest(true, CMP_ALWAYS, OP_REF, OP_KEEP, OP_KEEP, lightStencilValue_);
-        graphics_->SetShaders(graphics_->GetShader(VS, "Stencil"), graphics_->GetShader(PS, "Stencil"));
+        graphics_->SetShaders(graphics_->GetShader(VS, "Stencil"), graphics_->GetShader(PS, "Stencil")); // 创建Stencil.hlsl(glsl)着色器对象（ShaderVariation），并设置为当前着色器
         graphics_->SetShaderParameter(VSP_VIEW, view);
         graphics_->SetShaderParameter(VSP_VIEWINV, camera->GetEffectiveWorldTransform());
         graphics_->SetShaderParameter(VSP_VIEWPROJ, projection * view);
@@ -1613,6 +1615,7 @@ void Renderer::Initialize()
     URHO3D_LOGINFO("Initialized renderer");
 }
 
+// 延迟光照的编译宏预定义
 void Renderer::LoadShaders()
 {
     URHO3D_LOGDEBUG("Reloading shaders");
@@ -1636,6 +1639,7 @@ void Renderer::LoadShaders()
     shadersDirty_ = false;
 }
 
+// 组合着色器需要的宏定义，依此创建着色器对象ShaderVariation
 void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& vertexShaders, Vector<SharedPtr<ShaderVariation> >& pixelShaders, const BatchQueue& queue)
 {
     URHO3D_PROFILE(LoadPassShaders);
@@ -1673,13 +1677,13 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
         psDefines += "VSM_SHADOW ";
     }
 
-    if (pass->GetLightingMode() == LIGHTING_PERPIXEL)
+    if (pass->GetLightingMode() == LIGHTING_PERPIXEL) // 逐像素光类型
     {
         // Load forward pixel lit variations
         vertexShaders.Resize(MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS);
         pixelShaders.Resize(MAX_LIGHT_PS_VARIATIONS * 2);
 
-        for (unsigned j = 0; j < MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS; ++j)
+        for (unsigned j = 0; j < MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS; ++j) // 顶点着色器的宏由lightVSVariations和geometryVSVariations的交叉组合，再合并Pass宏 组成
         {
             unsigned g = j / MAX_LIGHT_VS_VARIATIONS;
             unsigned l = j % MAX_LIGHT_VS_VARIATIONS;
@@ -1692,13 +1696,13 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
             unsigned l = j % MAX_LIGHT_PS_VARIATIONS;
             unsigned h = j / MAX_LIGHT_PS_VARIATIONS;
 
-            if (l & LPS_SHADOW)
+            if (l & LPS_SHADOW) // 包含阴影类型的像数着色器的宏由lightPSVariations + heightFogVariations + 阴影宏，再合并Pass宏 组成
             {
                 pixelShaders[j] = graphics_->GetShader(PS, pass->GetPixelShader(),
                     psDefines + lightPSVariations[l] + GetShadowVariations() +
                     heightFogVariations[h]);
             }
-            else
+            else // 其他像数着色器的宏由lightPSVariations + heightFogVariations，再合并Pass宏 组成
                 pixelShaders[j] = graphics_->GetShader(PS, pass->GetPixelShader(),
                     psDefines + lightPSVariations[l] + heightFogVariations[h]);
         }
@@ -1706,7 +1710,7 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
     else
     {
         // Load vertex light variations
-        if (pass->GetLightingMode() == LIGHTING_PERVERTEX)
+        if (pass->GetLightingMode() == LIGHTING_PERVERTEX) // 逐顶点光类型
         {
             vertexShaders.Resize(MAX_GEOMETRYTYPES * MAX_VERTEXLIGHT_VS_VARIATIONS);
             for (unsigned j = 0; j < MAX_GEOMETRYTYPES * MAX_VERTEXLIGHT_VS_VARIATIONS; ++j)

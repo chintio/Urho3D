@@ -167,11 +167,11 @@ private:
     /// Pixel shader name.
     String pixelShaderName_;
     /// Vertex shader defines.
-    String vertexShaderDefines_;
+    String vertexShaderDefines_; // 着色器宏定义，如果pass中有"vs"属性，则使用pass中的"vsdefines"，否则使用technique中的"vsdefines"+pass中的"vsdefines"
     /// Pixel shader defines.
     String pixelShaderDefines_;
     /// Vertex shader define excludes.
-    String vertexShaderDefineExcludes_;
+    String vertexShaderDefineExcludes_; // 需要排除的着色器宏定义
     /// Pixel shader define excludes.
     String pixelShaderDefineExcludes_;
     /// Vertex shaders.

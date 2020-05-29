@@ -239,6 +239,10 @@ bool ShaderVariation::LoadByteCode(const String& binaryShaderName)
 
 // 编译着色器源文件
 // 根据宏定义defines_编译着色器源文件，生成变量表（parameters_、useTextureUnits_）和字节码（byteCode_）
+// defines_由以下部分组成：1，程序定义（geometryVSVariations、lightVSVariations、vertexLightVSVariations、deferredLightVSVariations、lightPSVariations、heightFogVariations）
+//              2，RenderPath中<command vsdefines="", psdefines="" />
+//              3，Material中<shader vsdefines="", psdefines="" />
+//              4，Technique中<technique vsdefines="", psdefines="" />、<pass vsdefines="", psdefines="", vsexcludes="", psexcludes="" />
 bool ShaderVariation::Compile()
 {
     const String& sourceCode = owner_->GetSourceCode(type_);

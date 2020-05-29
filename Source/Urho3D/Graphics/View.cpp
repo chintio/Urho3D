@@ -2895,6 +2895,7 @@ void View::CheckMaterialForAuxView(Material* material)
     material->MarkForAuxView(frame_.frameNumber_);
 }
 
+// 将RenderPath中command单元vsdefines的内容（<command vsdefines="" />）赋值给queue.vsExtraDefines_
 void View::SetQueueShaderDefines(BatchQueue& queue, const RenderPathCommand& command)
 {
     String vsDefines = command.vertexShaderDefines_.Trimmed();

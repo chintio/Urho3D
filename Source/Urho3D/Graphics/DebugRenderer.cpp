@@ -496,7 +496,7 @@ void DebugRenderer::Render()
 
     URHO3D_PROFILE(RenderDebugGeometry);
 
-    ShaderVariation* vs = graphics->GetShader(VS, "Basic", "VERTEXCOLOR");
+    ShaderVariation* vs = graphics->GetShader(VS, "Basic", "VERTEXCOLOR"); // 用"VERTEXCOLOR"宏编译着色器Basic.hlsl(glsl)的VS入口
     ShaderVariation* ps = graphics->GetShader(PS, "Basic", "VERTEXCOLOR");
 
     unsigned numVertices = (lines_.Size() + noDepthLines_.Size()) * 2 + (triangles_.Size() + noDepthTriangles_.Size()) * 3;

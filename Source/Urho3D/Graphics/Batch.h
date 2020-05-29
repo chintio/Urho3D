@@ -264,7 +264,7 @@ public:
     /// Whether the pass command contains extra shader defines.
     bool hasExtraDefines_;
     /// Vertex shader extra defines.
-    String vsExtraDefines_;
+    String vsExtraDefines_; // RenderPath÷–<command vsdefines="" />
     /// Pixel shader extra defines.
     String psExtraDefines_;
     /// Hash for vertex shader extra defines.
