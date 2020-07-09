@@ -1627,6 +1627,11 @@ static void ScriptArrayClear(CScriptArray* ptr)
     ptr->Resize(0);
 }
 
+// SetTypeInfoUserDataCleanupCallback：以该类型（参数2）设置的用户数据（asCTypeInfo::SetUserData(, ARRAY_CACHE)）在销毁时将调用此函数（CleanupTypeInfoArrayCache）。函数（CleanupTypeInfoArrayCache）是从类型信息析构函数内部调用的，因此回调不应用于任何操作，只应清理用户数据本身。
+// RegisterObjectType：注册脚本可用的新类型，由应用程序（application）管理其内存的引用类型应注册为asOBJ_REF。由引擎（AngelSccript engine）管理其内存的值类型应注册为asOBJ_VALUE
+// RegisterObjectBehaviour：为类型注册行为函数，虚拟机将调用这些函数来执行某些操作，如内存管理、数学运算、比较等。声明（参数3）必须是函数格式，函数名将不会在应用程序中使用或存储，因此不需要提供有意义的函数名。
+// RegisterObjectMethod：为类型注册成员方法。注册的方法可以是实际的类方法，也可以是将对象指针作为第一个或最后一个参数的全局函数。或者它可能是一个用泛型调用约定实现的全局函数。
+// RegisterDefaultArrayType：注册为缺省的数组类型
 void RegisterArray(asIScriptEngine* engine)
 {
     engine->SetTypeInfoUserDataCleanupCallback(CleanupTypeInfoArrayCache, ARRAY_CACHE);
@@ -2521,6 +2526,8 @@ static void StringSetUTF8FromLatin1(const String& src, String& str)
     str.SetUTF8FromLatin1(src.CString());
 }
 
+// RegisterGlobalProperty：使用此方法注册脚本可以作为全局变量访问的全局属性。如果不允许脚本修改属性，则可以选择将属性注册为const。注册属性时，应用程序必须将地址传递给实际值。应用程序还必须确保此地址在注册的整个生命周期内保持有效，即直到引擎被释放或动态配置组被删除。
+// RegisterStringFactory：使用此函数注册字符串厂，在编译期间将调用该厂以创建字符串常量的实例。字符串厂也将在保存字节码时使用，以便获取用于序列化的原始字符串数据。表示字符串类型的数据类型应该在没有引用或句柄标记的情况下被通知，因为脚本引擎无论如何都会假定一个常量引用。
 void RegisterString(asIScriptEngine *engine)
 {
     static const unsigned NPOS = String::NPOS; // workaround for GCC

@@ -153,3 +153,12 @@ private:
 void URHO3D_API RegisterScriptLibrary(Context* context);
 
 }
+
+// http://www.angelcode.com/angelscript/sdk/docs/manual/doc_as_vs_cpp_types.html
+// 1，对象句柄（Object handles）：
+//      当AngelScript将一个对象句柄按值传递给函数（应用程序）时，它会增加参数实例的引用计数，因此该函数负责在句柄使用后释放引用。同样，AngelScript期望从函数（应用程序）返回的任何句柄都已经增加了引用（因为脚本在结束使用返回的句柄后会释放其引用计数）。
+//      应用程序注册函数时使用+修饰符可以自动管理引用计数（例如，Registered as "obj@+ StoreObject(obj@+)"）。在释放参数的引用计数之前，会增加返回值的引用计数，因此让函数返回参数是可行的。
+// 2，参数引用（Parameter references）：
+//      因为AngelScript需要始终保证指针的有效性，它并不总是将对真实对象的引用传递给函数参数。相反，它创建一个对象的副本，该对象的引用传递给函数，如果引用被标记为返回值，则在函数返回后，副本将被复制回原始对象（如果它仍然存在）。
+//      正因为如此，AngelScript的参数引用大多与C++引用或指针兼容，除了地址通常不应该存储以供以后使用，因为对象可能在函数返回后被销毁。如果需要存储对象的地址，则应使用对象句柄。
+// 3，asSetGlobalMemoryFunctions，注册AngelScript用于内存管理的全局内存分配和释放函数。此函数应在asCreateScriptEngine之前调用。如果不调用，AngelScript将使用标准C库中的malloc和free函数。
