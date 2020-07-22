@@ -162,3 +162,17 @@ void URHO3D_API RegisterScriptLibrary(Context* context);
 //      因为AngelScript需要始终保证指针的有效性，它并不总是将对真实对象的引用传递给函数参数。相反，它创建一个对象的副本，该对象的引用传递给函数，如果引用被标记为返回值，则在函数返回后，副本将被复制回原始对象（如果它仍然存在）。
 //      正因为如此，AngelScript的参数引用大多与C++引用或指针兼容，除了地址通常不应该存储以供以后使用，因为对象可能在函数返回后被销毁。如果需要存储对象的地址，则应使用对象句柄。
 // 3，asSetGlobalMemoryFunctions，注册AngelScript用于内存管理的全局内存分配和释放函数。此函数应在asCreateScriptEngine之前调用。如果不调用，AngelScript将使用标准C库中的malloc和free函数。
+
+// 主要接口
+// asIScriptEngine，通过调用asCreateScriptEngine创建。有三个主要功能：将主程序的接口注册给脚本；编译脚本（通过asIScriptModule）；执行脚本（通过asIScriptContext）。
+// asIScriptModule，通过调用asIScriptEngine::GetModule创建。将脚本文件或代码段编译（或加载已经编译过的字节码）成包含函数、类、全局变量的库。
+// asIScriptContext，通过调用asCScriptEngine::CreateContext创建。为单个脚本执行提供接口。存储调用堆栈，其中保存执行所使用的局部变量，但是它不保留全局变量的副本，因为这些变量存储在asicriptModule中，asIScriptContext只做引用。
+//      全局变量的值在所有上下文之间共享，因为它们都引用同一个内存。这意味着全局变量的生存期比脚本的执行时间长，并且将在执行之间保留它们的值。
+//      很少有必要一次维护多个脚本上下文，唯一的例外是当一个脚本调用一个应用程序函数，而该应用程序函数又在返回之前调用另一个脚本，以及如果多个脚本并行运行。
+//      尽量避免将唯一的上下文与可能需要调用脚本的每个对象相关联。相反，保留一个共享的上下文池，这些上下文可以由对象根据需要请求。
+// 次要接口
+// asIScriptGeneric，通用调用集。
+// asIScriptObject，脚本对象的实例。所有脚本的类（class）和接口（interface）都被应用程序视为asIScriptObject类型。asIScriptObject有确定是类还是接口的方法以及与实际对象实例交互的方法。
+// asITypeInfo，脚本对象的类型信息。可以表示object types, funcdefs, typedefs, and enums。
+// asIScriptFunction，脚本函数描述。
+// asIStringFactory，用于管理脚本使用的字符串常量。

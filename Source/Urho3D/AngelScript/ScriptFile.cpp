@@ -521,6 +521,7 @@ void ScriptFile::ClearDelayedExecute(const String& declaration)
     }
 }
 
+// 创建脚本类（class或interface，由className指定名称）的实例，useInterface指定是否为interface
 asIScriptObject* ScriptFile::CreateObject(const String& className, bool useInterface)
 {
     URHO3D_PROFILE(CreateObject);
@@ -530,7 +531,7 @@ asIScriptObject* ScriptFile::CreateObject(const String& className, bool useInter
 
     asIScriptContext* context = script_->GetScriptFileContext();
     asITypeInfo* type = nullptr;
-    if (useInterface)
+    if (useInterface) // 使用枚举到的第一个扩展类
     {
         asITypeInfo* interfaceType = scriptModule_->GetTypeInfoByDecl(className.CString());
 
@@ -547,7 +548,7 @@ asIScriptObject* ScriptFile::CreateObject(const String& className, bool useInter
             }
         }
     }
-    else
+    else // 使用基类
     {
         type = scriptModule_->GetTypeInfoByDecl(className.CString());
     }
