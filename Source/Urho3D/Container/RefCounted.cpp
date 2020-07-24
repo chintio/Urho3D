@@ -36,6 +36,7 @@ RefCounted::RefCounted() :
     (refCount_->weakRefs_)++;
 }
 
+// 如果强引用计数降到0（refCount_->refs==0）而弱引用计数还有（refCount_->weakRefs_>0），则RefCounted本体会被析构，而RefCount计数块会等到弱引用计数降到0了再析构
 RefCounted::~RefCounted()
 {
     assert(refCount_);

@@ -682,6 +682,7 @@ private:
     }
 };
 
+// PODVector是对POD类型（plain old data，即无需执行自定义构造析构函数，只需memcpy的数据类型）优化版的vector，它在执行大段复制、移动操作时直接调用memcpy memmove，而非在循环里逐个拷贝移动。
 /// %Vector template class for POD types. Does not call constructors or destructors and uses block move. Is intentionally (for performance reasons) unsafe for self-insertion.
 template <class T> class PODVector : public VectorBase
 {

@@ -31,6 +31,14 @@
 
 namespace Urho3D
 {
+// C++指针存在如下问题：
+//    1，忘记释放动态申请的对象从而造成内存泄露；
+//    2，对象在一个地方释放后，又在别的地方被使用，从而引起内存访问错误。
+//    3，虑循环引用（两个强指针对象A和B，A引用了B，B又引用了A，当你去析构A的时候，B的计数减1，然后它试图析构自己，而B析构的时候，需要先去析构A。这样就造成了循环依赖。）
+// 强、弱指针引用的对象都继承于RefCounted类，强指针操作refCount_->refs_，为0时RefCounted本体会被析构，弱指针操作refCount_->weakRefs_，为0时RefCount计数块会被析构
+// 两个强指针不能循环引用，一旦循环引用，那么必须一个是强，一个是弱，或者两个都是弱。弱指针也是针对一个对象而言的，一旦这个对象的强指针引用为0，那么无论弱指针是否为0，该对象会被析构。所以，此时一个对象就有了两个计数，强指针计数和弱指针计数。
+// 强指针SharedPtr解决问题1、2，弱指针WeakPtr解决问题3
+// 把引用计数放到指向对象而不是指针里，好处是可以直接把裸指针赋值给智能指针，而std::shared_ptr的operator=输入参数绝不能是裸指针。
 
 /// Shared pointer template class with intrusive reference counting.
 template <class T> class SharedPtr
@@ -509,6 +517,8 @@ template <class T, class U> WeakPtr<T> DynamicCast(const WeakPtr<U>& ptr)
     return ret;
 }
 
+// 删除一个动态分配的对象时，必须调用它的析构函数。如果这个类型是不完整的，即只有声明没有定义，那么析构函数可能会没被调用。这是一种潜在的危险状态，所以应该避免它。对于类模板及函数模板，风险会更大，因为无法预先知道会使用什么类型。
+// 这里的想法是创建一个char的数组，数组的元素数量为T的大小。如果 CheckedDelete 被一个不完整的类型 T 所实例化，编译将会失败，因为 sizeof(T) 会返回 0, 而创建一个0个元素的(自动)数组是非法的。
 /// Delete object of type T. T must be complete. See boost::checked_delete.
 template<class T> inline void CheckedDelete(T* x)
 {
@@ -518,6 +528,7 @@ template<class T> inline void CheckedDelete(T* x)
     delete x;
 }
 
+// UniquePtr持有对对象的独有权——两个UniquePtr不能指向同一个对象，不能进行复制操作只能进行移动操作。
 /// Unique pointer template class.
 template <class T> class UniquePtr
 {
