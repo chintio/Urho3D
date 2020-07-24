@@ -222,14 +222,18 @@ private:
     /// Set current event handler. Called by Object.
     void SetEventHandler(EventHandler* handler) { eventHandler_ = handler; }
 
+    // 对象工厂。引擎启动时，会按层次将所有ObjectFactory注册到Context，之后通过context_->CreateObject(type)创建新Object（其中type参数是类型名的StringHash）。由于factory有指向Context的指针，这样能保证每个新建对象一上来就获取到Context（Urho3D的Object都有context_成员）
     /// Object factories.
     HashMap<StringHash, SharedPtr<ObjectFactory> > factories_;
+    // 各种功能单例模块，相当于某些引擎的XXXManager。通过context_->GetSubsystem<XXX>获取
     /// Subsystems.
     HashMap<StringHash, SharedPtr<Object> > subsystems_;
+    // Object属性，序列化用
     /// Attribute descriptions per object type.
     HashMap<StringHash, Vector<AttributeInfo> > attributes_;
     /// Network replication attribute descriptions per object type.
     HashMap<StringHash, Vector<AttributeInfo> > networkAttributes_;
+    // 事件通信是Urho3D架构核心思想之一，而Context是事件监听的容器
     /// Event receivers for non-specific events.
     HashMap<StringHash, SharedPtr<EventReceiverGroup> > eventReceivers_;
     /// Event receivers for specific senders' events.
