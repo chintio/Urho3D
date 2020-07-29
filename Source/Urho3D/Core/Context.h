@@ -222,28 +222,30 @@ private:
     /// Set current event handler. Called by Object.
     void SetEventHandler(EventHandler* handler) { eventHandler_ = handler; }
 
-    // 对象工厂。引擎启动时，会按层次将所有ObjectFactory注册到Context，之后通过context_->CreateObject(type)创建新Object（其中type参数是类型名的StringHash）。由于factory有指向Context的指针，这样能保证每个新建对象一上来就获取到Context（Urho3D的Object都有context_成员）
+    // 对象工厂（建立类的反射信息，用于根据字符串创建对象）。
+    // 引擎启动时，会按层次将所有ObjectFactory注册到Context，之后通过context_->CreateObject(type)创建新Object（其中type参数是类型名的StringHash）。由于factory有指向Context的指针，这样能保证每个新建对象一上来就获取到Context（Urho3D的Object都有context_成员）
     /// Object factories.
     HashMap<StringHash, SharedPtr<ObjectFactory> > factories_;
-    // 各种功能单例模块，相当于某些引擎的XXXManager。通过context_->GetSubsystem<XXX>获取
+    // 各种功能单例模块，相当于某些引擎的XXXManager。通过context_->RegisterSubsystem<XXX>()创建，context_->GetSubsystem<XXX>()获取
     /// Subsystems.
     HashMap<StringHash, SharedPtr<Object> > subsystems_;
-    // Object属性，序列化用
+    // Object属性描述，从Serializable派生的类都能自动序列化，场景的保存/加载、网络复制都是通过Node/Component类实现，通过AttributeInfo::accessor_访问属性
     /// Attribute descriptions per object type.
     HashMap<StringHash, Vector<AttributeInfo> > attributes_;
     /// Network replication attribute descriptions per object type.
     HashMap<StringHash, Vector<AttributeInfo> > networkAttributes_;
     // 事件通信是Urho3D架构核心思想之一，而Context是事件监听的容器
     /// Event receivers for non-specific events.
-    HashMap<StringHash, SharedPtr<EventReceiverGroup> > eventReceivers_;
+    HashMap<StringHash, SharedPtr<EventReceiverGroup> > eventReceivers_; // 不限定sender的事件接收者集合
     /// Event receivers for specific senders' events.
-    HashMap<Object*, HashMap<StringHash, SharedPtr<EventReceiverGroup> > > specificEventReceivers_;
+    HashMap<Object*, HashMap<StringHash, SharedPtr<EventReceiverGroup> > > specificEventReceivers_; // 指定sender的事件接收者集合
     /// Event sender stack.
-    PODVector<Object*> eventSenders_;
+    PODVector<Object*> eventSenders_; // Object::SendEvent调用开始时，压入sender，结束时，弹出sender，用于eventDataMaps_分配
     /// Event data stack.
-    PODVector<VariantMap*> eventDataMaps_;
+    PODVector<VariantMap*> eventDataMaps_; // 出于性能原因，事件参数容器是重用的，不必每次分配。
     /// Active event handler. Not stored in a stack for performance reasons; is needed only in esoteric cases.
-    EventHandler* eventHandler_;
+    EventHandler* eventHandler_; // 执行中的事件处理器
+    // 对象分类（例如编辑器中组件的各种类别：Audio、Geometry、Logic等）
     /// Object categories.
     HashMap<String, Vector<StringHash> > objectCategories_;
     /// Variant map for global variables that can persist throughout application execution.

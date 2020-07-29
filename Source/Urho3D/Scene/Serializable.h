@@ -148,6 +148,7 @@ private:
     bool temporary_;
 };
 
+// 属性访问器，保存属性属主的类型信息（TClassType）、访问属性的接口信息（getFunction_、setFunction_）
 /// Template implementation of the variant attribute accessor.
 template <class TClassType, class TGetFunction, class TSetFunction>
 class VariantAttributeAccessorImpl : public AttributeAccessor
@@ -179,6 +180,7 @@ private:
     TSetFunction setFunction_;
 };
 
+// 创建属性访问器对象
 /// Make variant attribute accessor implementation.
 /// \tparam TClassType Serializable class type.
 /// \tparam TGetFunction Functional object with call signature `void getFunction(const TClassType& self, Variant& value)`
@@ -189,6 +191,7 @@ SharedPtr<AttributeAccessor> MakeVariantAttributeAccessor(TGetFunction getFuncti
     return SharedPtr<AttributeAccessor>(new VariantAttributeAccessorImpl<TClassType, TGetFunction, TSetFunction>(getFunction, setFunction));
 }
 
+// 创建属性访问器对象，定义访问属性的Get、Set方法（Lambda）
 /// Make member attribute accessor.
 #define URHO3D_MAKE_MEMBER_ATTRIBUTE_ACCESSOR(typeName, variable) Urho3D::MakeVariantAttributeAccessor<ClassName>( \
     [](const ClassName& self, Urho3D::Variant& value) { value = self.variable; }, \
@@ -236,16 +239,21 @@ namespace AttributeMetadata
 /// Remove attribute by name.
 #define URHO3D_REMOVE_ATTRIBUTE(name) context->RemoveAttribute<ClassName>(name)
 
+// 属性注册相关的帮助宏
+// 对象成员变量注册为属性
 /// Define an object member attribute.
 #define URHO3D_ATTRIBUTE(name, typeName, variable, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::GetVariantType<typeName >(), name, URHO3D_MAKE_MEMBER_ATTRIBUTE_ACCESSOR(typeName, variable), nullptr, defaultValue, mode))
+// 对象成员变量注册为属性，在每次设置该属性值后调用postSetCallback
 /// Define an object member attribute. Post-set member function callback is called when attribute set.
 #define URHO3D_ATTRIBUTE_EX(name, typeName, variable, postSetCallback, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::GetVariantType<typeName >(), name, URHO3D_MAKE_MEMBER_ATTRIBUTE_ACCESSOR_EX(typeName, variable, postSetCallback), nullptr, defaultValue, mode))
+// 对象成员变量注册为属性，通过成员函数getFunction, setFunction访问该属性，而不是直接通过变量
 /// Define an attribute that uses get and set functions.
 #define URHO3D_ACCESSOR_ATTRIBUTE(name, getFunction, setFunction, typeName, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::GetVariantType<typeName >(), name, URHO3D_MAKE_GET_SET_ATTRIBUTE_ACCESSOR(getFunction, setFunction, typeName), nullptr, defaultValue, mode))
 
+// 对象成员变量（枚举类型）注册为属性，基于零的枚举值通过C字符串指针数组（enumNames）映射到名称。
 /// Define an object member attribute. Zero-based enum values are mapped to names through an array of C string pointers.
 #define URHO3D_ENUM_ATTRIBUTE(name, variable, enumNames, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::VAR_INT, name, URHO3D_MAKE_MEMBER_ENUM_ATTRIBUTE_ACCESSOR(variable), enumNames, static_cast<int>(defaultValue), mode))
@@ -256,6 +264,7 @@ namespace AttributeMetadata
 #define URHO3D_ENUM_ACCESSOR_ATTRIBUTE(name, getFunction, setFunction, typeName, enumNames, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::VAR_INT, name, URHO3D_MAKE_GET_SET_ENUM_ATTRIBUTE_ACCESSOR(getFunction, setFunction, typeName), enumNames, static_cast<int>(defaultValue), mode))
 
+// 对象成员变量注册为属性，通过全局函数getFunction, setFunction访问该属性
 /// Define an attribute with custom setter and getter.
 #define URHO3D_CUSTOM_ATTRIBUTE(name, getFunction, setFunction, typeName, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \
     Urho3D::GetVariantType<typeName >(), name, Urho3D::MakeVariantAttributeAccessor<ClassName>(getFunction, setFunction), nullptr, defaultValue, mode))

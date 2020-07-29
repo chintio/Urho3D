@@ -58,6 +58,7 @@ URHO3D_FLAGSET(AttributeMode, AttributeModeFlags);
 
 class Serializable;
 
+// 属性访问器基类
 /// Abstract base class for invoking attribute accessors.
 class URHO3D_API AttributeAccessor : public RefCounted
 {
@@ -68,6 +69,7 @@ public:
     virtual void Set(Serializable* ptr, const Variant& src) = 0;
 };
 
+// 属性信息描述（名称、数据类型、缺省值、等等），用于数据序列化（Serializable），属性的值通过accessor_访问
 /// Description of an automatically serializable variable.
 struct AttributeInfo
 {
@@ -99,21 +101,21 @@ struct AttributeInfo
     }
 
     /// Attribute type.
-    VariantType type_ = VAR_NONE;
+    VariantType type_ = VAR_NONE; // 属性的数据类型，枚举类属性为Urho3D::VAR_INT
     /// Name.
-    String name_;
+    String name_; // 属性的名称
     /// Enum names.
-    const char** enumNames_ = nullptr;
+    const char** enumNames_ = nullptr; // 枚举类属性的值名称集
     /// Helper object for accessor mode.
-    SharedPtr<AttributeAccessor> accessor_;
+    SharedPtr<AttributeAccessor> accessor_; // 属性访问器，通过accessor_->Get、accessor_->Set访问Serializable系列类的属性
     /// Default value for network replication.
-    Variant defaultValue_;
+    Variant defaultValue_; // 该属性的缺省值
     /// Attribute mode: whether to use for serialization, network replication, or both.
     AttributeModeFlags mode_ = AM_DEFAULT;
     /// Attribute metadata.
-    VariantMap metadata_;
+    VariantMap metadata_; // 属性元数据，通过AttributeHandle::SetMetadata设置
     /// Attribute data pointer if elsewhere than in the Serializable.
-    void* ptr_ = nullptr;
+    void* ptr_ = nullptr; // 属性数据指针，用于在Serializable类之外的数据
 };
 
 /// Attribute handle returned by Context::RegisterAttribute and used to chain attribute setup calls.

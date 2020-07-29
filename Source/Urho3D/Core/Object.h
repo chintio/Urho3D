@@ -66,6 +66,7 @@ private:
     const TypeInfo* baseTypeInfo_;
 };
 
+// Object类的派生类必需包含的宏，通过成员函数GetTypeInfoStatic定义静态变量Urho3D::TypeInfo typeInfoStatic（包含本类的类型信息，子类的TypeInfo），保存类型信息及类的父子关系（可用于“对象工厂”相关功能（Context::CreateObject））
 #define URHO3D_OBJECT(typeName, baseTypeName) \
     public: \
         using ClassName = typeName; \
@@ -186,6 +187,7 @@ private:
     /// Remove event handlers related to a specific sender.
     void RemoveEventSender(Object* sender);
 
+    // 事件处理器单向链表
     /// Event handlers. Sender is null for non-specific handlers.
     LinkedList<EventHandler> eventHandlers_;
 
@@ -243,6 +245,7 @@ public:
     SharedPtr<Object> CreateObject() override { return SharedPtr<Object>(new T(context_)); }
 };
 
+// 事件处理器基类，辅助调用事件处理函数
 /// Internal helper class for invoking event handler functions.
 class URHO3D_API EventHandler : public LinkedListNode
 {
@@ -284,15 +287,16 @@ public:
 
 protected:
     /// Event receiver.
-    Object* receiver_;
+    Object* receiver_; // 事件消费者
     /// Event sender.
-    Object* sender_;
+    Object* sender_; // 事件生产者
     /// Event type.
-    StringHash eventType_;
+    StringHash eventType_; // 事件类型
     /// Userdata.
     void* userData_;
 };
 
+// 事件处理器，辅助调用事件处理函数
 /// Template implementation of the event handler invoke helper (stores a function pointer of specific class.)
 template <class T> class EventHandlerImpl : public EventHandler
 {
@@ -323,7 +327,7 @@ public:
 
 private:
     /// Class-specific pointer to handler function.
-    HandlerFunctionPtr function_;
+    HandlerFunctionPtr function_; // 事件处理函数
 };
 
 /// Template implementation of the event handler invoke helper (std::function instance).
@@ -358,10 +362,14 @@ private:
 /// Get register of event names.
 URHO3D_API StringHashRegister& GetEventNameRegister();
 
+// 事件相关的宏：URHO3D_EVENT、URHO3D_PARAM定义事件ID及其需要的参数ID（事件生产SendEvent、消费SubscribeToEvent时，需要使用这两个ID），Object在订阅事件时（SubscribeToEvent）使用URHO3D_HANDLER、URHO3D_HANDLER_USERDATA指定事件回调函数
+// 定义事件ID，用于SendEvent、SubscribeToEvent时标识事件
 /// Describe an event's hash ID and begin a namespace in which to define its parameters.
 #define URHO3D_EVENT(eventID, eventName) static const Urho3D::StringHash eventID(Urho3D::GetEventNameRegister().RegisterString(#eventName)); namespace eventName
+// 定义事件参数ID，用于发送、处理事件时携带数据
 /// Describe an event's parameter hash ID. Should be used inside an event namespace.
 #define URHO3D_PARAM(paramID, paramName) static const Urho3D::StringHash paramID(#paramName)
+// 包装事件处理函数
 /// Convenience macro to construct an EventHandler that points to a receiver object and its member function.
 #define URHO3D_HANDLER(className, function) (new Urho3D::EventHandlerImpl<className>(this, &className::function))
 /// Convenience macro to construct an EventHandler that points to a receiver object and its member function, and also defines a userdata pointer.

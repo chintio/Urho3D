@@ -160,6 +160,7 @@ SharedPtr<Object> Context::CreateObject(StringHash objectType)
         return SharedPtr<Object>();
 }
 
+// 建立厂对象的索引
 void Context::RegisterFactory(ObjectFactory* factory)
 {
     if (!factory)
@@ -231,6 +232,7 @@ void Context::RemoveAllAttributes(StringHash objectType)
     networkAttributes_.Erase(objectType);
 }
 
+// 设置objectType属性名为name的缺省值
 void Context::UpdateAttributeDefaultValue(StringHash objectType, const char* name, const Variant& defaultValue)
 {
     AttributeInfo* info = GetAttribute(objectType, name);
@@ -329,6 +331,7 @@ void Context::ReleaseIK()
 #endif // ifdef URHO3D_IK
 #endif // ifndef MINI_URHO
 
+// 将baseType的属性列表加入derivedType的属性列表中
 void Context::CopyBaseAttributes(StringHash baseType, StringHash derivedType)
 {
     // Prevent endless loop if mistakenly copying attributes from same class as derived

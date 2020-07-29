@@ -40,8 +40,8 @@ class Vector2;
 class Vector3;
 class Vector4;
 
+// 序列化基类，用于写入的抽象流。扩展类实现Write接口
 /// Abstract stream for writing.
-// 序列化基类，用于写入的抽象流。
 class URHO3D_API Serializer
 {
 public:

@@ -42,6 +42,7 @@ TypeInfo::TypeInfo(const char* typeName, const TypeInfo* baseTypeInfo) :
 
 TypeInfo::~TypeInfo() = default;
 
+// 本类型及其基类是否是type
 bool TypeInfo::IsTypeOf(StringHash type) const
 {
     const TypeInfo* current = this;
@@ -56,6 +57,7 @@ bool TypeInfo::IsTypeOf(StringHash type) const
     return false;
 }
 
+// 本类型及其基类是否是typeInfo
 bool TypeInfo::IsTypeOf(const TypeInfo* typeInfo) const
 {
     if (typeInfo == nullptr)
@@ -86,6 +88,7 @@ Object::~Object()
     context_->RemoveEventSender(this);
 }
 
+// 查找事件回调，优先执行指定发送者的回调
 void Object::OnEvent(Object* sender, StringHash eventType, VariantMap& eventData)
 {
     if (blockEvents_)
@@ -139,6 +142,7 @@ bool Object::IsInstanceOf(const TypeInfo* typeInfo) const
     return GetTypeInfo()->IsTypeOf(typeInfo);
 }
 
+// 订阅事件：事件回调函数注册到eventHandlers_，事件接收者注册到context_->eventReceivers_
 void Object::SubscribeToEvent(StringHash eventType, EventHandler* handler)
 {
     if (!handler)
@@ -160,6 +164,7 @@ void Object::SubscribeToEvent(StringHash eventType, EventHandler* handler)
     }
 }
 
+// 订阅事件：事件回调函数注册到eventHandlers_，事件接收者注册到context_->specificEventReceivers_
 void Object::SubscribeToEvent(Object* sender, StringHash eventType, EventHandler* handler)
 {
     // If a null sender was specified, the event can not be subscribed to. Delete the handler in that case
@@ -297,6 +302,7 @@ void Object::SendEvent(StringHash eventType)
     SendEvent(eventType, noEventData);
 }
 
+// 分别查找context->specificEventReceivers_、context->eventReceivers_中的接收者，调用其OnEvent执行事件回调
 void Object::SendEvent(StringHash eventType, VariantMap& eventData)
 {
     if (!Thread::IsMainThread())
