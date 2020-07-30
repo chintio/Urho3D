@@ -71,6 +71,7 @@ Thread::~Thread()
     Stop();
 }
 
+// 创建操作系统线程，执行this->ThreadFunction
 bool Thread::Run()
 {
 #ifdef URHO3D_THREADING

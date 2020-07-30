@@ -69,12 +69,12 @@ public:
 
 protected:
     /// Thread handle.
-    void* handle_;
+    void* handle_; // 线程内核对象的句柄
     /// Running flag.
     volatile bool shouldRun_;
 
     /// Main thread's thread ID.
-    static ThreadID mainThreadID;
+    static ThreadID mainThreadID; // 主线程ID，在Context::Context()中设置
 };
 
 }

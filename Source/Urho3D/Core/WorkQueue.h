@@ -37,6 +37,7 @@ URHO3D_EVENT(E_WORKITEMCOMPLETED, WorkItemCompleted)
 
 class WorkerThread;
 
+// 线程任务项
 /// Work queue item.
 struct WorkItem : public RefCounted
 {
@@ -56,12 +57,13 @@ public:
     /// Whether to send event on completion.
     bool sendEvent_{};
     /// Completed flag.
-    volatile bool completed_{};
+    volatile bool completed_{}; // 任务完成标识
 
 private:
-    bool pooled_{};
+    bool pooled_{}; // 属于池WorkQueue::poolItems_
 };
 
+// 基于任务的多线程模型
 /// Work queue subsystem for multithreading.
 class URHO3D_API WorkQueue : public Object
 {
@@ -127,11 +129,11 @@ private:
     /// Worker threads.
     Vector<SharedPtr<WorkerThread> > threads_;
     /// Work item pool for reuse to cut down on allocation. The bool is a flag for item pooling and whether it is available or not.
-    List<SharedPtr<WorkItem> > poolItems_;
+    List<SharedPtr<WorkItem> > poolItems_; // 空闲队列
     /// Work item collection. Accessed only by the main thread.
-    List<SharedPtr<WorkItem> > workItems_;
+    List<SharedPtr<WorkItem> > workItems_; // 工作队列
     /// Work item prioritized queue for worker threads. Pointers are guaranteed to be valid (point to workItems.)
-    List<WorkItem*> queue_;
+    List<WorkItem*> queue_; // 对workItems_中的项，按优先级排序，线程按此顺序执行
     /// Worker queue mutex.
     Mutex queueMutex_;
     /// Shutting down flag.

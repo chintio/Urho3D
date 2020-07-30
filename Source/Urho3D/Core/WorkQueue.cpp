@@ -304,6 +304,7 @@ bool WorkQueue::IsCompleted(unsigned priority) const
     return true;
 }
 
+// CreateThreads创建的工作线程会调用该函数
 void WorkQueue::ProcessItems(unsigned threadIndex)
 {
     bool wasActive = false;
@@ -339,6 +340,7 @@ void WorkQueue::ProcessItems(unsigned threadIndex)
     }
 }
 
+//清除已完成的且优先级低于priority的工作项（workItems_->poolItems_）并发送完成事件。
 void WorkQueue::PurgeCompleted(unsigned priority)
 {
     // Purge completed work items and send completion events. Do not signal items lower than priority threshold,
@@ -365,6 +367,7 @@ void WorkQueue::PurgeCompleted(unsigned priority)
     }
 }
 
+// 减少不需要的分配
 void WorkQueue::PurgePool()
 {
     unsigned currentSize = poolItems_.Size();
@@ -377,6 +380,7 @@ void WorkQueue::PurgePool()
     lastSize_ = currentSize;
 }
 
+// 如果工作项来源于poolItems_，则归还
 void WorkQueue::ReturnToPool(SharedPtr<WorkItem>& item)
 {
     // Check if this was a pooled item and set it to usable
@@ -398,6 +402,7 @@ void WorkQueue::ReturnToPool(SharedPtr<WorkItem>& item)
     }
 }
 
+// 由主线程调用，清除已经完成的任务，如果没有副线程，则先执行任务
 void WorkQueue::HandleBeginFrame(StringHash eventType, VariantMap& eventData)
 {
     // If no worker threads, complete low-priority work here
