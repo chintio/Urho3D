@@ -42,9 +42,9 @@ struct BackgroundLoadItem
     /// Resource.
     SharedPtr<Resource> resource_;
     /// Resources depended on for loading.
-    HashSet<Pair<StringHash, StringHash> > dependencies_;
+    HashSet<Pair<StringHash, StringHash> > dependencies_; // resource_依赖的Resources
     /// Resources that depend on this resource's loading.
-    HashSet<Pair<StringHash, StringHash> > dependents_;
+    HashSet<Pair<StringHash, StringHash> > dependents_; // 依赖resource_的Resources
     /// Whether to send failure event.
     bool sendEventOnFailure_;
 };
@@ -81,7 +81,7 @@ private:
     /// Mutex for thread-safe access to the background load queue.
     mutable Mutex backgroundLoadMutex_;
     /// Resources that are queued for background loading.
-    HashMap<Pair<StringHash, StringHash>, BackgroundLoadItem> backgroundLoadQueue_;
+    HashMap<Pair<StringHash, StringHash>, BackgroundLoadItem> backgroundLoadQueue_; // 后台加载队列，按Pair<资源类的名称hash, 文件名hash>索引
 };
 
 }

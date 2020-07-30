@@ -48,6 +48,7 @@ BackgroundLoader::~BackgroundLoader()
     backgroundLoadQueue_.Clear();
 }
 
+// 执行多线程加载资源
 void BackgroundLoader::ThreadFunction()
 {
     while (shouldRun_)
@@ -109,6 +110,7 @@ void BackgroundLoader::ThreadFunction()
     }
 }
 
+// 排队加载资源。多线程加载
 bool BackgroundLoader::QueueResource(StringHash type, const String& name, bool sendEventOnFailure, Resource* caller)
 {
     StringHash nameHash(name);
@@ -256,6 +258,7 @@ unsigned BackgroundLoader::GetNumQueuedResources() const
     return backgroundLoadQueue_.Size();
 }
 
+// 如果资源（Resource::BeginLoad()，加载资源文件及其关联文件）加载成功，则进行资源加载的后续处理（Resource::EndLoad()，创建GPU对象），最后放入ResourceCache
 void BackgroundLoader::FinishBackgroundLoading(BackgroundLoadItem& item)
 {
     Resource* resource = item.resource_;

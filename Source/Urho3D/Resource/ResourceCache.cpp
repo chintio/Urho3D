@@ -635,6 +635,7 @@ Resource* ResourceCache::GetResource(StringHash type, const String& name, bool s
     return resource;
 }
 
+// 后台（多线程）加载资源
 bool ResourceCache::BackgroundLoadResource(StringHash type, const String& name, bool sendEventOnFailure, Resource* caller)
 {
 #ifdef URHO3D_THREADING
@@ -838,6 +839,7 @@ String ResourceCache::GetPreferredResourceDir(const String& path) const
     return fixedPath;
 }
 
+// 从资源名称中删除不受支持的格式以防止歧义，如果可能，将绝对文件名规范化为相对资源路径。
 String ResourceCache::SanitateResourceName(const String& name) const
 {
     // Sanitate unsupported constructs from the resource name
@@ -1030,6 +1032,7 @@ void ResourceCache::ReleasePackageResources(PackageFile* package, bool force)
         UpdateResourceGroup(*i);
 }
 
+// 更新资源组。重新计算内存使用并释放超出内存预算的资源。
 void ResourceCache::UpdateResourceGroup(StringHash type)
 {
     HashMap<StringHash, ResourceGroup>::Iterator i = resourceGroups_.Find(type);

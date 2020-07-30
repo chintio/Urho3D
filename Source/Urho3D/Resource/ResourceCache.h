@@ -55,7 +55,7 @@ struct ResourceGroup
     /// Current memory use.
     unsigned long long memoryUse_;
     /// Resources.
-    HashMap<StringHash, SharedPtr<Resource> > resources_;
+    HashMap<StringHash, SharedPtr<Resource> > resources_; // 按文件名索引
 };
 
 /// Resource request types.
@@ -231,7 +231,7 @@ private:
     /// Mutex for thread-safe access to the resource directories, resource packages and resource dependencies.
     mutable Mutex resourceMutex_;
     /// Resources by type.
-    HashMap<StringHash, ResourceGroup> resourceGroups_;
+    HashMap<StringHash, ResourceGroup> resourceGroups_; // 已缓存的资源，按类名hash索引
     /// Resource load directories.
     Vector<String> resourceDirs_;
     /// File watchers for resource directories, if automatic reloading enabled.
@@ -241,7 +241,7 @@ private:
     /// Dependent resources. Only used with automatic reload to eg. trigger reload of a cube texture when any of its faces change.
     HashMap<StringHash, HashSet<StringHash> > dependentResources_;
     /// Resource background loader.
-    SharedPtr<BackgroundLoader> backgroundLoader_;
+    SharedPtr<BackgroundLoader> backgroundLoader_; // 资源后台加载器（多线程加载）
     /// Resource routers.
     Vector<SharedPtr<ResourceRouter> > resourceRouters_;
     /// Automatic resource reloading flag.
