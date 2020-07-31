@@ -80,6 +80,7 @@ struct URHO3D_API AnimationControl
     bool removeOnCompletion_;
 };
 
+// 自动驱动动画前进并控制动画淡入/淡出。
 /// %Component that drives an AnimatedModel's animations.
 class URHO3D_API AnimationController : public Component
 {

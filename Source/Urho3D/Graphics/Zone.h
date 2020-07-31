@@ -29,6 +29,7 @@
 namespace Urho3D
 {
 
+// 为区域内的对象定义环境光和雾设置。
 /// %Component that describes global rendering properties.
 class URHO3D_API Zone : public Drawable
 {

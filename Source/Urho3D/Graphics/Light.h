@@ -146,6 +146,7 @@ struct URHO3D_API FocusParameters
     float minView_;
 };
 
+// 照亮场景。可以选择投射阴影。
 /// %Light component.
 class URHO3D_API Light : public Drawable
 {

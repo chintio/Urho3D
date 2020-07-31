@@ -156,6 +156,7 @@ protected:
     unsigned index_;
 };
 
+// 用于加速可见性查询的Drawable空间划分。需要创建到Scene（根节点）
 /// %Octree component. Should be added only to the root scene node
 class URHO3D_API Octree : public Component, public Octant
 {

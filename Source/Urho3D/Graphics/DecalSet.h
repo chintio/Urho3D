@@ -99,6 +99,7 @@ struct Decal
     PODVector<unsigned short> indices_;
 };
 
+// 在对象顶部渲染的贴花几何体。
 /// %Decal renderer component.
 class URHO3D_API DecalSet : public Drawable
 {

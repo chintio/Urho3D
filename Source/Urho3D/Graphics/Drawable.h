@@ -106,6 +106,7 @@ struct URHO3D_API SourceBatch
     GeometryType geometryType_{GEOM_STATIC};
 };
 
+// 任何可见对象的基类
 /// Base class for visible components.
 class URHO3D_API Drawable : public Component
 {

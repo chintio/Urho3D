@@ -34,6 +34,7 @@ class Material;
 class Node;
 class TerrainPatch;
 
+// 渲染高度图地形。
 /// Heightmap terrain component.
 class URHO3D_API Terrain : public Component
 {

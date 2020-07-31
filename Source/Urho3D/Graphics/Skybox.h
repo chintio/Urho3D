@@ -27,6 +27,7 @@
 namespace Urho3D
 {
 
+// StaticModel的一个子类，总是呆在原地。
 /// Static model component with fixed position in relation to the camera.
 class URHO3D_API Skybox : public StaticModel
 {

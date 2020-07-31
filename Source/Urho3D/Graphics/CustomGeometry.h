@@ -44,6 +44,7 @@ struct CustomGeometryVertex
 
 class VertexBuffer;
 
+// 运行时定义的未编制索引的几何体。几何数据不会在网络上序列化或复制。
 /// Custom geometry component.
 class URHO3D_API CustomGeometry : public Drawable
 {

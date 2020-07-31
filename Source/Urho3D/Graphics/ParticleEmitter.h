@@ -50,6 +50,7 @@ struct Particle
     unsigned texIndex_;
 };
 
+// BillboardSet的一个子类，它发射粒子广告牌。
 /// %Particle emitter component.
 class URHO3D_API ParticleEmitter : public BillboardSet
 {

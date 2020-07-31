@@ -171,6 +171,7 @@ enum DeferredLightPSVariation
     MAX_DEFERRED_LIGHT_PS_VARIATIONS
 };
 
+// 实现每帧三维视图的实际渲染，并控制全局设置，如纹理质量、材质质量、镜面反射照明和阴影贴图基础分辨率。
 /// High-level rendering subsystem. Manages drawing of 3D views.
 class URHO3D_API Renderer : public Object
 {

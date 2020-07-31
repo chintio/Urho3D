@@ -27,6 +27,7 @@
 namespace Urho3D
 {
 
+// 渲染多个对象实例，同时作为一个单元对灯光进行消隐和接收。
 /// Renders several object instances while culling and receiving light as one unit. Can be used as a CPU-side optimization, but note that also regular StaticModels will use instanced rendering if possible.
 class URHO3D_API StaticModelGroup : public StaticModel
 {

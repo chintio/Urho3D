@@ -32,6 +32,7 @@ namespace Urho3D
 class Animation;
 class AnimationState;
 
+// 可以执行骨骼（skeletal）和顶点变形（vertex morph）动画的蒙皮几何体（skinned geometry）。
 /// Animated model component.
 class URHO3D_API AnimatedModel : public StaticModel
 {

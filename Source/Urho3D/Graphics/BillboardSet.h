@@ -57,6 +57,7 @@ struct URHO3D_API Billboard
     float screenScaleFactor_;
 };
 
+// 一组面向摄像头的广告牌，可以有不同的大小、旋转和纹理坐标。
 /// %Billboard component.
 class URHO3D_API BillboardSet : public Drawable
 {

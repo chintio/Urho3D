@@ -61,6 +61,7 @@ struct URHO3D_API TrailPoint
     float sortDistance_{};
 };
 
+// 沿对象创建尾部几何体。
 /// Drawable component that creates a tail.
 class URHO3D_API RibbonTrail : public Drawable
 {

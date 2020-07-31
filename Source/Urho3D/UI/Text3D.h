@@ -32,6 +32,7 @@ namespace Urho3D
 
 class Text;
 
+// 渲染到三维视图中的文本。
 /// 3D text component.
 class URHO3D_API Text3D : public Drawable
 {

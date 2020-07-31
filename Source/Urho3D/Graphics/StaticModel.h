@@ -38,6 +38,7 @@ struct StaticModelGeometryData
     unsigned lodLevel_;
 };
 
+// 非蒙皮几何体。可以根据距离进行LOD转换。
 /// Static model component.
 class URHO3D_API StaticModel : public Drawable
 {
