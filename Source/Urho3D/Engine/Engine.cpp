@@ -719,6 +719,7 @@ void Engine::Render()
     graphics->EndFrame();
 }
 
+// 根据fps计算本帧时间是否用完，如果没有就sleep。然后，实时计算平均帧时长timeStep_（秒)
 void Engine::ApplyFrameLimit()
 {
     if (!initialized_)
@@ -743,7 +744,7 @@ void Engine::ApplyFrameLimit()
     {
         URHO3D_PROFILE(ApplyFrameLimit);
 
-        long long targetMax = 1000000LL / maxFps;
+        long long targetMax = 1000000LL / maxFps; // 每帧的微秒数
 
         for (;;)
         {
@@ -752,15 +753,16 @@ void Engine::ApplyFrameLimit()
                 break;
 
             // Sleep if 1 ms or more off the frame limiting goal
-            if (targetMax - elapsed >= 1000LL)
+            if (targetMax - elapsed >= 1000LL) // 大于等于1ms，需要sleep
             {
-                auto sleepTime = (unsigned)((targetMax - elapsed) / 1000LL);
+                auto sleepTime = (unsigned)((targetMax - elapsed) / 1000LL); // 可以sleep的毫秒数
                 Time::Sleep(sleepTime);
             }
         }
     }
 #endif
 
+    // 得到从上次执行该行代码到本次的时间差（微秒），然后重置计时起点
     elapsed = frameTimer_.GetUSec(true);
 #ifdef URHO3D_TESTING
     if (timeOut_ > 0)
@@ -779,6 +781,7 @@ void Engine::ApplyFrameLimit()
             elapsed = targetMin;
     }
 
+    // timeStep_ = lastTimeSteps_各元素和/timeStepSmoothing_
     // Perform timestep smoothing
     timeStep_ = 0.0f;
     lastTimeSteps_.Push(elapsed / 1000000.0f);

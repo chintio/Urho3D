@@ -118,13 +118,13 @@ public:
 
 private:
     /// Elapsed time since program start.
-    Timer elapsedTime_;
+    Timer elapsedTime_; // 用于计算程序启动到当前的时间GetElapsedTime()
     /// Frame number.
-    unsigned frameNumber_;
+    unsigned frameNumber_; // 当前帧数
     /// Timestep in seconds.
-    float timeStep_;
+    float timeStep_; // 每帧的时长（秒）
     /// Low-resolution timer period.
-    unsigned timerPeriod_;
+    unsigned timerPeriod_; // 时钟间隔，表示系统产生时钟中断的频率
 };
 
 }

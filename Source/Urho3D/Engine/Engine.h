@@ -127,19 +127,19 @@ private:
     void DoExit();
 
     /// Frame update timer.
-    HiresTimer frameTimer_;
+    HiresTimer frameTimer_; // 保存上一帧的时刻，用于计算帧耗时
     /// Previous timesteps for smoothing.
-    PODVector<float> lastTimeSteps_;
+    PODVector<float> lastTimeSteps_; // 过去各帧的耗时（秒），对元素求和，再除以timeStepSmoothing_，将得到实时的平均帧时长timeStep_（秒)
     /// Next frame timestep in seconds.
-    float timeStep_;
+    float timeStep_; // 实时的平均帧时长（秒)，1/maxFps_ <= timeStep_ <= 1/minFps_
     /// How many frames to average for the smoothed timestep.
-    unsigned timeStepSmoothing_;
+    unsigned timeStepSmoothing_; // 保存的帧耗时的个数，用于和lastTimeSteps_计算平均帧时长timeStep_（秒)
     /// Minimum frames per second.
-    unsigned minFps_;
+    unsigned minFps_; // 最小帧，每秒
     /// Maximum frames per second.
-    unsigned maxFps_;
+    unsigned maxFps_; // 最大帧，每秒
     /// Maximum frames per second when the application does not have input focus.
-    unsigned maxInactiveFps_;
+    unsigned maxInactiveFps_; // 程序失去焦点时的最大帧
     /// Pause when minimized flag.
     bool pauseMinimized_;
 #ifdef URHO3D_TESTING
