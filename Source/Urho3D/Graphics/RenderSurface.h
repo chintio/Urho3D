@@ -159,5 +159,6 @@ private:
 };
 
 // 纹理是类似于表面的一个像素矩阵，与表面不同的是它可被映射到三角形单元中
+// https://blog.csdn.net/yinhaijing123/article/details/46446017/
 
 }

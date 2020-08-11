@@ -800,6 +800,7 @@ void Renderer::QueueRenderSurface(RenderSurface* renderTarget)
     }
 }
 
+// viewport排入queuedViewports_
 void Renderer::QueueViewport(RenderSurface* renderTarget, Viewport* viewport)
 {
     if (viewport)
@@ -1474,6 +1475,7 @@ const Rect& Renderer::GetLightScissor(Light* light, Camera* camera)
     }
 }
 
+// 1，根据Viewport定义View；2，更新Viewport关联场景的八叉树（用于Drawables位置更新，updatedOctrees_控制每次Update只更新一次八叉树）；3，执行View::Update准备渲染需要的批次
 void Renderer::UpdateQueuedViewport(unsigned index)
 {
     WeakPtr<RenderSurface>& renderTarget = queuedViewports_[index].first_;
