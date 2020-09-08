@@ -139,7 +139,7 @@ struct URHO3D_API RenderPathCommand
     /// Command type.
     RenderCommandType type_{};
     /// Sorting mode.
-    RenderCommandSortMode sortMode_{};
+    RenderCommandSortMode sortMode_{}; // command type="scenepass"时的排序模式，缺省值SORT_FRONTTOBACK，通常在alpha相关的pass中指定SORT_BACKTOFRONT
     /// Scene pass name.
     String pass_;
     /// Scene pass index. Filled by View.
@@ -155,11 +155,11 @@ struct URHO3D_API RenderPathCommand
     /// Pixel shader defines.
     String pixelShaderDefines_;
     /// Textures.
-    String textureNames_[MAX_TEXTURE_UNITS];
+    String textureNames_[MAX_TEXTURE_UNITS]; // 指定使用的纹理，Graphics::SetTexture
     /// %Shader parameters.
     HashMap<StringHash, Variant> shaderParameters_;
     /// Output rendertarget names and faces.
-    Vector<Pair<String, CubeMapFace> > outputs_;
+    Vector<Pair<String, CubeMapFace> > outputs_; // 通过属性或者子项定义的渲染目标，缺省值<"viewport",FACE_POSITIVE_X>，Graphics::SetRenderTarget
     /// Depth-stencil output name.
     String depthStencilName_;
     /// Clear flags. Affects clear command only.
@@ -177,11 +177,11 @@ struct URHO3D_API RenderPathCommand
     /// Use fog color for clearing.
     bool useFogColor_{};
     /// Mark to stencil flag.
-    bool markToStencil_{};
+    bool markToStencil_{}; // command type="scenepass"时是否标志到模板，默认值false，通常在pass="deferred"中指定为true
     /// Use lit base pass optimization for forward per-pixel lights.
     bool useLitBase_{true};
     /// Vertex lights flag.
-    bool vertexLights_{};
+    bool vertexLights_{}; // command type="scenepass"时的顶点光标志，默认值false，在需要时指定
     /// Event name.
     String eventName_;
 };

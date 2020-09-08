@@ -95,7 +95,7 @@ public:
     }
 
     /// Intersection test for drawables.
-    void TestDrawables(Drawable** start, Drawable** end, bool inside) override // 选出“区域”和“遮挡体”
+    void TestDrawables(Drawable** start, Drawable** end, bool inside) override // 选出“区域”和“遮挡物”
     {
         while (start != end)
         {
@@ -302,10 +302,12 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
     drawDebug_ = viewport->GetDrawDebug();
 
     // Validate the rect and calculate size. If zero rect, use whole rendertarget size
+    // renderTarget为空表示后台缓冲
     int rtWidth = renderTarget ? renderTarget->GetWidth() : graphics_->GetWidth();
     int rtHeight = renderTarget ? renderTarget->GetHeight() : graphics_->GetHeight();
     const IntRect& rect = viewport->GetRect();
 
+    // 计算视口范围
     if (rect != IntRect::ZERO)
     {
         viewRect_.left_ = Clamp(rect.left_, 0, rtWidth - 1);
@@ -554,7 +556,7 @@ void View::Update(const FrameInfo& frame)
     if (cullCamera_ && cullCamera_->GetAutoAspectRatio())
         cullCamera_->SetAspectRatioInternal((float)frame_.viewSize_.x_ / (float)frame_.viewSize_.y_);
 
-    GetDrawables();
+    GetDrawables(); // 将八叉树中相机可见的DRAWABLE_GEOMETRY放入geometries_、DRAWABLE_LIGHT放入lights_
     GetBatches();
     renderer_->StorePreparedView(this, cullCamera_);
 
@@ -782,7 +784,8 @@ void View::SetGBufferShaderParameters(const IntVector2& texSize, const IntRect& 
     graphics_->SetShaderParameter(PSP_GBUFFERINVSIZE, Vector2(invSizeX, invSizeY));
 }
 
-// 可见区域放入zones_，可见遮挡物放入occluders_，遮挡物渲染到occlusionBuffer_（用于后续遮挡剔除），可见几何体放入geometries_，可见光源放入lights_（逐像素光源排前，然后最明亮/最接近相机的额排前）
+// 归类相机可见的Drawable
+// 区域（DRAWABLE_ZONE）放入zones_，遮挡物（Drawable::occluder_为真的DRAWABLE_GEOMETRY）放入occluders_，遮挡物渲染到occlusionBuffer_（用于后续遮挡剔除），几何体放入geometries_，光源放入lights_（顶点光排在前，像素光排在后（对于像素光sortValue_小的（最明亮/最接近相机）排在前））
 void View::GetDrawables()
 {
     if (!octree_ || !cullCamera_)
@@ -870,6 +873,7 @@ void View::GetDrawables()
 
     // Get lights and geometries. Coarse occlusion for octants is used at this point
     // 用occlusionBuffer_（若启用）和相机截锥体对八叉树节点进行剔除，用几何体类型和相机掩码对节点中的实体进行剔除
+    // 选出相机可见（且经过occlusionBuffer_剔除）的DRAWABLE_GEOMETRY和DRAWABLE_LIGHT
     if (occlusionBuffer_)
     {
         OccludedFrustumOctreeQuery query
@@ -953,7 +957,7 @@ void View::GetDrawables()
         minZ_ = 0.0f;
 
     // Sort the lights to brightest/closest first, and per-vertex lights first so that per-vertex base pass can be evaluated first
-    // 逐像素光源排前，然后最明亮/最接近相机的额排前
+    // 顶点光排在前，像素光排在后（对于像素光sortValue_小的（最明亮/最接近相机）排在前）
     for (unsigned i = 0; i < lights_.Size(); ++i)
     {
         Light* light = lights_[i];
@@ -972,9 +976,9 @@ void View::GetBatches()
     nonThreadedGeometries_.Clear();
     threadedGeometries_.Clear();
 
-    ProcessLights();
-    GetLightBatches();
-    GetBaseBatches();
+    ProcessLights(); // 根据geometries_、lights_填充lightQueryResults_（每个Light及其影响的Drawable为一组）
+    GetLightBatches(); // 将lightQueryResults_的像素光填充到lightQueues_；顶点光保存到Drawable::vertexLights_
+    GetBaseBatches(); // 将geometries_中符合条件的批次（不在LightBatchQueue::litBaseBatches_中的批次），加入scenePasses_[].batchQueue_
 }
 
 // 填充lightQueryResults_成员
@@ -1004,9 +1008,9 @@ void View::ProcessLights()
     queue->Complete(M_MAX_UNSIGNED);
 }
 
-// 填充逐像素光源的批次信息到lightQueues_
-// 对于逐像素光：（1）将其影响到的能产生阴影的几何体，按阴影层级保存批次（pass name="shadow"）到lightQueues_[].shadowSplits_[].shadowBatches_；（2）将受光几何体交由GetLitBatches处理；（3）如果是延迟渲染模式，则将光源几何体信息保存到lightQueues_[].volumeBatches_
-// 对于逐顶点光：将光源保存到Drawable::vertexLights_
+// 将lightQueryResults_中的按类型处理
+// 对于逐像素光，保存批次信息到lightQueues_：（1）将其影响到的能产生阴影的几何体，按阴影层级保存批次（pass name="shadow"）到lightQueues_[].shadowSplits_[].shadowBatches_；（2）将受光几何体交由GetLitBatches处理；（3）如果是延迟渲染模式，则将光源几何体信息保存到lightQueues_[].volumeBatches_
+// 对于逐顶点光，将光源保存到Drawable::vertexLights_
 void View::GetLightBatches()
 {
     BatchQueue* alphaQueue = batchQueues_.Contains(alphaPassIndex_) ? &batchQueues_[alphaPassIndex_] : nullptr;
@@ -1018,9 +1022,10 @@ void View::GetLightBatches()
         // Preallocate light queues: per-pixel lights which have lit geometries
         unsigned numLightQueues = 0;
         unsigned usedLightQueues = 0;
-        for (Vector<LightQueryResult>::ConstIterator i = lightQueryResults_.Begin(); i != lightQueryResults_.End(); ++i) // 统计逐像素光源的个数（并且存中被其照亮的几何体）
+        // 统计像素光源的个数
+        for (Vector<LightQueryResult>::ConstIterator i = lightQueryResults_.Begin(); i != lightQueryResults_.End(); ++i) // 统计逐像素光源的个数（lightQueryResults_根据lights_数目分配）
         {
-            if (!i->light_->GetPerVertex() && i->litGeometries_.Size())
+            if (!i->light_->GetPerVertex() && i->litGeometries_.Size()) // 像素光源，且存在被其照亮的几何体
                 ++numLightQueues;
         }
 
@@ -1033,7 +1038,7 @@ void View::GetLightBatches()
             LightQueryResult& query = *i;
 
             // If light has no affected geometries, no need to process further
-            if (query.litGeometries_.Empty())
+            if (query.litGeometries_.Empty()) // 没有受光源影响的几何体
                 continue;
 
             Light* light = query.light_;
@@ -1051,6 +1056,7 @@ void View::GetLightBatches()
                 lightQueue.shadowMap_ = nullptr;
                 lightQueue.litBaseBatches_.Clear(maxSortedInstances);
                 lightQueue.litBatches_.Clear(maxSortedInstances);
+                // 将RenderPath中<command type="forwardlights"的着色器参数填充到批次中
                 if (forwardLightsCommand_)
                 {
                     SetQueueShaderDefines(lightQueue.litBaseBatches_, *forwardLightsCommand_);
@@ -1073,8 +1079,9 @@ void View::GetLightBatches()
                 }
 
                 // Setup shadow batch queues
+                // 组织投射阴影的批次
                 lightQueue.shadowSplits_.Resize(shadowSplits);
-                for (unsigned j = 0; j < shadowSplits; ++j) // 组织光源的每个阴影层级的批次数据，填充lightQueues_[].shadowSplits_[].shadowBatches_
+                for (unsigned j = 0; j < shadowSplits; ++j) // 组织光源的各阴影层级的批次数据（填充lightQueues_[].shadowSplits_），用于后续阶段生成阴影深度图存入lightQueue.shadowMap_
                 {
                     ShadowBatchQueue& shadowQueue = lightQueue.shadowSplits_[j];
                     Camera* shadowCamera = query.shadowCameras_[j];
@@ -1084,10 +1091,12 @@ void View::GetLightBatches()
                     shadowQueue.shadowBatches_.Clear(maxSortedInstances);
 
                     // Setup the shadow split viewport and finalize shadow camera parameters
+                    // 设置本阴影层级的视口并最终确定阴影相机机参数
                     shadowQueue.shadowViewport_ = GetShadowMapViewport(light, j, lightQueue.shadowMap_);
                     FinalizeShadowCamera(shadowCamera, light, shadowQueue.shadowViewport_, query.shadowCasterBox_[j]);
 
                     // Loop through shadow casters
+                    // 遍历能投射阴影的几何体，将批次添加到shadowQueue.shadowBatches_
                     for (PODVector<Drawable*>::ConstIterator k = query.shadowCasters_.Begin() + query.shadowCasterBegin_[j];
                          k < query.shadowCasters_.Begin() + query.shadowCasterEnd_[j]; ++k)
                     {
@@ -1105,6 +1114,7 @@ void View::GetLightBatches()
 
                         const Vector<SourceBatch>& batches = drawable->GetBatches();
 
+                        // 将批次放入shadowQueue.shadowBatches_
                         for (unsigned l = 0; l < batches.Size(); ++l)
                         {
                             const SourceBatch& srcBatch = batches[l];
@@ -1128,6 +1138,7 @@ void View::GetLightBatches()
                 }
 
                 // Process lit geometries
+                // 组织受光物体的批次
                 for (PODVector<Drawable*>::ConstIterator j = query.litGeometries_.Begin(); j != query.litGeometries_.End(); ++j)
                 {
                     Drawable* drawable = *j;
@@ -1142,7 +1153,7 @@ void View::GetLightBatches()
 
                 // In deferred modes, store the light volume batch now. Since light mask 8 lowest bits are output to the stencil,
                 // lights that have all zeroes in the low 8 bits can be skipped; they would not affect geometry anyway
-                if (deferred_ && (light->GetLightMask() & 0xffu) != 0) // 延迟渲染时，保存光源几何体的批次信息到lightQueues_[].volumeBatches_
+                if (deferred_ && (light->GetLightMask() & 0xffu) != 0) // 延迟渲染时，保存光源几何体及批次信息到lightQueues_[].volumeBatches_
                 {
                     Batch volumeBatch;
                     volumeBatch.geometry_ = renderer_->GetLightGeometry(light);
@@ -1196,12 +1207,12 @@ void View::GetLightBatches()
     }
 }
 
-// 组织不在逐像数光的批次中的几何体，填充到scenePasses_[].batchQueue_(batchQueues_)
+// 遍历geometries_，将不属于LightBatchQueue::litBaseBatches_（litbase pass）的各批次加入到scenePasses_[].batchQueue_
 void View::GetBaseBatches()
 {
     URHO3D_PROFILE(GetBaseBatches);
 
-    for (PODVector<Drawable*>::ConstIterator i = geometries_.Begin(); i != geometries_.End(); ++i)
+    for (PODVector<Drawable*>::ConstIterator i = geometries_.Begin(); i != geometries_.End(); ++i) // 遍历相机可见几何体
     {
         Drawable* drawable = *i;
         UpdateGeometryType type = drawable->GetUpdateGeometryType();
@@ -1213,7 +1224,7 @@ void View::GetBaseBatches()
         const Vector<SourceBatch>& batches = drawable->GetBatches();
         bool vertexLightsProcessed = false;
 
-        for (unsigned j = 0; j < batches.Size(); ++j)
+        for (unsigned j = 0; j < batches.Size(); ++j) // 遍历几何体各部分（批次）
         {
             const SourceBatch& srcBatch = batches[j];
 
@@ -1231,7 +1242,7 @@ void View::GetBaseBatches()
             {
                 ScenePassInfo& info = scenePasses_[k];
                 // Skip forward base pass if the corresponding litbase pass already exists
-                if (info.passIndex_ == basePassIndex_ && j < 32 && drawable->HasBasePass(j))
+                if (info.passIndex_ == basePassIndex_ && j < 32 && drawable->HasBasePass(j)) //如果相应的litbase过程已存在，则跳过前向基本过程
                     continue;
 
                 Pass* pass = tech->GetSupportedPass(info.passIndex_);
@@ -1244,7 +1255,7 @@ void View::GetBaseBatches()
                 destBatch.isBase_ = true;
                 destBatch.lightMask_ = (unsigned char)GetLightMask(drawable);
 
-                if (info.vertexLights_)
+                if (info.vertexLights_) // 将drawable的顶点光列表放入vertexLightQueues_[x].vertexLights_，将destBatch.lightQueue_指向vertexLightQueues_[x]
                 {
                     const PODVector<Light*>& drawableVertexLights = drawable->GetVertexLights();
                     if (drawableVertexLights.Size() && !vertexLightsProcessed)
@@ -1285,6 +1296,8 @@ void View::GetBaseBatches()
     }
 }
 
+// 对顶点光照队列（batchQueues_）和像素光照队列（lightQueues_）进行批次排序，
+// 更新Drawable（Drawable::UpdateGeometry）
 void View::UpdateGeometries()
 {
     // Update geometries in the source view if necessary (prepare order may differ from render order)
@@ -1384,14 +1397,14 @@ void View::UpdateGeometries()
     geometriesUpdated_ = true;
 }
 
-// 将drawable的批次加入lightQueue.litBaseBatches_或者lightQueue.litBatches_或者alphaQueue
-// 如果光源是几何体的第一个逐像素光，且几何体所在区域为非环境渐变模式，则加入批次到lightQueue.litBaseBatches_（pass name="litbase"），否则加入到lightQueue.litBatches_（pass name="light"），如果pass不存在，尝试加入批次到alphaQueue（pass name="litalpha"）
+// 如果光源是几何体的第一个像素光，加入lightQueue.litBaseBatches_（pass name="litbase"）；后续的像素光，加入lightQueue.litBatches_（pass name="light"）；否则尝试加入批次到alphaQueue（pass name="litalpha"）
 void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQueue* alphaQueue)
 {
     Light* light = lightQueue.light_;
     Zone* zone = GetZone(drawable);
     const Vector<SourceBatch>& batches = drawable->GetBatches();
 
+    // 1，使用灯光基本过程；2，灯光为正颜色；3，灯光为drawable的第一个像素光；4，drawable没有顶点光；5，区域启用环境渐变模式
     bool allowLitBase =
         useLitBase_ && !lightQueue.negative_ && light == drawable->GetFirstLight() && drawable->GetVertexLights().Empty() &&
         !zone->GetAmbientGradient();
@@ -1413,6 +1426,7 @@ void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQ
 
         // Check for lit base pass. Because it uses the replace blend mode, it must be ensured to be the first light
         // Also vertex lighting or ambient gradient require the non-lit base pass, so skip in those cases
+        // 检查litbase pass（光照基础过程）。因为它使用“替换混合”模式，所以必须确保它是第一个灯光。此外，顶点光照或环境渐变需要base pass（基础过程），因此跳过这些情况
         if (i < 32 && allowLitBase)
         {
             destBatch.pass_ = tech->GetSupportedPass(litBasePassIndex_); // pass name="litbase"
@@ -1504,6 +1518,7 @@ void View::ExecuteRenderPathCommands()
             bool beginPingpong = actualView->CheckPingpong(i);
 
             // Has the viewport been modified and will be read as a texture by the current command?
+            // 如果当前命令需要读取视口（并且上次命令后，视口也被修改），则将前次的渲染输出设置到currentViewportTexture_
             if (viewportRead && viewportModified)
             {
                 // Start pingponging without a blit if already rendering to the substitute render target
@@ -1552,6 +1567,7 @@ void View::ExecuteRenderPathCommands()
                 isPingponging = true;
 
             // Determine viewport write target
+            // 确定视口写入目标，设置到currentRenderTarget_
             if (viewportWrite)
             {
                 if (isPingponging)
@@ -1736,6 +1752,7 @@ void View::ExecuteRenderPathCommands()
     }
 }
 
+// 为当前渲染命令设置rendertargets，如果outputs_为"viewport"，则使用currentRenderTarget_，否则使用该名称表示的纹理（表面）
 void View::SetRenderTargets(RenderPathCommand& command)
 {
     unsigned index = 0;
@@ -1807,6 +1824,8 @@ void View::SetRenderTargets(RenderPathCommand& command)
     graphics_->SetColorWrite(useColorWrite);
 }
 
+// 将渲染命令指定的纹理设置到显示设备（如果是"viewport"纹理，则使用currentViewportTexture_，否则读取该文件名指定的纹理）
+// 返回是否允许深度写入（深度模具未绑定为纹理。）
 bool View::SetTextures(RenderPathCommand& command)
 {
     bool allowDepthWrite = true;
@@ -1906,12 +1925,15 @@ void View::RenderQuad(RenderPathCommand& command)
     DrawFullscreenQuad(false);
 }
 
+// 检查命令是否有内容需要渲染
 bool View::IsNecessary(const RenderPathCommand& command)
 {
     return command.enabled_ && command.outputs_.Size() &&
            (command.type_ != CMD_SCENEPASS || !batchQueues_[command.passIndex_].IsEmpty());
 }
 
+// 检测命令是否读取viewport
+// <texture unit="xxx" name="viewport" />
 bool View::CheckViewportRead(const RenderPathCommand& command)
 {
     for (const auto& textureName : command.textureNames_)
@@ -1923,6 +1945,7 @@ bool View::CheckViewportRead(const RenderPathCommand& command)
     return false;
 }
 
+// 检测命令是否写入viewport
 bool View::CheckViewportWrite(const RenderPathCommand& command)
 {
     for (unsigned i = 0; i < command.outputs_.Size(); ++i)
@@ -1934,16 +1957,18 @@ bool View::CheckViewportWrite(const RenderPathCommand& command)
     return false;
 }
 
-
+// 检测命令是否使用pingponging
+// 否则就从render target解析到viewport texture
 bool View::CheckPingpong(unsigned index)
 {
     // Current command must be a viewport-reading & writing quad to begin the pingpong chain
     RenderPathCommand& current = renderPath_->commands_[index];
-    if (current.type_ != CMD_QUAD || !CheckViewportRead(current) || !CheckViewportWrite(current))
+    if (current.type_ != CMD_QUAD || !CheckViewportRead(current) || !CheckViewportWrite(current)) // 如果当前命令不是CMD_QUAD，或者不读取viewport，或者不写入viewport，则不使用pingpong
         return false;
 
     // If there are commands other than quads that target the viewport, we must keep rendering to the final target and resolving
     // to a viewport texture when necessary instead of pingponging, as a scene pass is not guaranteed to fill the entire viewport
+    // 如果后续有除CMD_QUAD以外的命令以viewport为渲染目标，则不使用pingpong，而是先渲染到最终目标并在需要时解析到viewport texture，因为场景过程不能保证填充整个视口
     for (unsigned i = index + 1; i < renderPath_->commands_.Size(); ++i)
     {
         RenderPathCommand& command = renderPath_->commands_[i];
@@ -1959,6 +1984,7 @@ bool View::CheckPingpong(unsigned index)
     return true;
 }
 
+// 根据RenderPath中的<texture unit="environment" name="viewport" />、<output index="0" name="viewport" />等信息，分配RenderTarget：substituteRenderTarget_、viewportTextures_、renderTargets_
 void View::AllocateScreenBuffers()
 {
     View* actualView = sourceView_ ? sourceView_ : this;
@@ -2107,6 +2133,7 @@ void View::AllocateScreenBuffers()
     }
 }
 
+// 将source作为四边形的纹理渲染到destination表面
 void View::BlitFramebuffer(Texture* source, RenderSurface* destination, bool depthWrite)
 {
     if (!source)
@@ -2285,7 +2312,7 @@ void View::DrawOccluders(OcclusionBuffer* buffer, const PODVector<Drawable*>& oc
     buffer->BuildDepthHierarchy();
 }
 
-// 填充LightQueryResult成员
+// 填充LightQueryResult成员（lightQueryResults_）
 void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
 {
     Light* light = query.light_;
@@ -2294,10 +2321,10 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     const Frustum& frustum = cullCamera_->GetFrustum();
 
     // Check if light should be shadowed
-    // 判断光源自身是否产生影子
+    // 判断光源是否能投射影子（让被照的物体产生影子）
     bool isShadowed = drawShadows_ && light->GetCastShadows() && !light->GetPerVertex() && light->GetShadowIntensity() < 1.0f;
     // If shadow distance non-zero, check it
-    if (isShadowed && light->GetShadowDistance() > 0.0f && light->GetDistance() > light->GetShadowDistance())
+    if (isShadowed && light->GetShadowDistance() > 0.0f && light->GetDistance() > light->GetShadowDistance()) // 光源与相机的距离（light->GetDistance()）大于投射影子需要的距离（light->GetShadowDistance()）
         isShadowed = false;
     // OpenGL ES can not support point light shadows
 #ifdef GL_ES_VERSION_2_0
@@ -2311,7 +2338,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     // 受光几何体压入query.litGeometries
     switch (type)
     {
-    case LIGHT_DIRECTIONAL:
+    case LIGHT_DIRECTIONAL: // 平行光照亮一切
         for (unsigned i = 0; i < geometries_.Size(); ++i)
         {
             if (GetLightMask(geometries_[i]) & lightMask)
@@ -2319,7 +2346,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         }
         break;
 
-    case LIGHT_SPOT:
+    case LIGHT_SPOT: // 聚光灯照亮截锥体内的一切
         {
             FrustumOctreeQuery octreeQuery(tempDrawables, light->GetFrustum(), DRAWABLE_GEOMETRY,
                 cullCamera_->GetViewMask());
@@ -2332,7 +2359,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         }
         break;
 
-    case LIGHT_POINT:
+    case LIGHT_POINT: // 聚光灯照亮圆内的一切
         {
             SphereOctreeQuery octreeQuery(tempDrawables, Sphere(light->GetNode()->GetWorldPosition(), light->GetRange()),
                 DRAWABLE_GEOMETRY, cullCamera_->GetViewMask());
@@ -2347,6 +2374,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
     }
 
     // If no lit geometries or not shadowed, no need to process shadow cameras
+    // 没有几何体被照亮，或者光源不投射阴影，则返回
     if (query.litGeometries_.Empty() || !isShadowed)
     {
         query.numSplits_ = 0;
@@ -2533,7 +2561,7 @@ IntRect View::GetShadowMapViewport(Light* light, int splitIndex, Texture2D* shad
     return {};
 }
 
-// 创建阴影相机（1，方向光根据观察相机LOD层级创建对应相机数；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
+// 创建阴影相机（1，平行光，根据阴影层级参数创建对应相机数；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
 void View::SetupShadowCameras(LightQueryResult& query)
 {
     Light* light = query.light_;
@@ -2542,13 +2570,13 @@ void View::SetupShadowCameras(LightQueryResult& query)
 
     switch (light->GetLightType())
     {
-    case LIGHT_DIRECTIONAL:
+    case LIGHT_DIRECTIONAL: // 平行光（可以产生层级阴影），根据层级参数（light->GetShadowCascade()）划分阴影精度层级，设置阴影相机，用于产生阴影相机空间的深度图，以此深度图就可以产生屏幕相机空间的阴影了
         {
             const CascadeParameters& cascade = light->GetShadowCascade();
 
             float nearSplit = cullCamera_->GetNearClip();
             float farSplit;
-            int numSplits = light->GetNumShadowSplits();
+            int numSplits = light->GetNumShadowSplits(); //
 
             while (splits < numSplits)
             {
@@ -2573,7 +2601,7 @@ void View::SetupShadowCameras(LightQueryResult& query)
         }
         break;
 
-    case LIGHT_SPOT:
+    case LIGHT_SPOT: // 根据聚光灯参数，设置阴影相机参数
         {
             Camera* shadowCamera = renderer_->GetShadowCamera();
             query.shadowCameras_[0] = shadowCamera;
@@ -2590,7 +2618,7 @@ void View::SetupShadowCameras(LightQueryResult& query)
         }
         break;
 
-    case LIGHT_POINT:
+    case LIGHT_POINT: // 根据点光源参数，设置阴影相机参数（将点光源按立方体的六个面划分成六个阴影相机）
         {
             static const Vector3* directions[] =
             {
@@ -2794,6 +2822,7 @@ void View::QuantizeDirLightShadowCamera(Camera* shadowCamera, Light* light, cons
     }
 }
 
+// 设置drawable所在的最高优先级区域（包围盒中心点在区域内，且是相机可见的区域）
 void View::FindZone(Drawable* drawable)
 {
     Vector3 center = drawable->GetWorldBoundingBox().Center();
@@ -2912,16 +2941,17 @@ void View::SetQueueShaderDefines(BatchQueue& queue, const RenderPathCommand& com
         queue.hasExtraDefines_ = false;
 }
 
+// 实例渲染的批次添加到queue.batchGroups_，非实例渲染的批次添加到queue.batches_
 void View::AddBatchToQueue(BatchQueue& queue, Batch& batch, Technique* tech, bool allowInstancing, bool allowShadows)
 {
     if (!batch.material_)
         batch.material_ = renderer_->GetDefaultMaterial();
 
     // Convert to instanced if possible
-    if (allowInstancing && batch.geometryType_ == GEOM_STATIC && batch.geometry_->GetIndexBuffer())
+    if (allowInstancing && batch.geometryType_ == GEOM_STATIC && batch.geometry_->GetIndexBuffer()) // 可按实例渲染
         batch.geometryType_ = GEOM_INSTANCED;
 
-    if (batch.geometryType_ == GEOM_INSTANCED)
+    if (batch.geometryType_ == GEOM_INSTANCED) // 实例渲染，添加到queue.batchGroups_
     {
         BatchGroupKey key(batch);
 
@@ -2947,7 +2977,7 @@ void View::AddBatchToQueue(BatchQueue& queue, Batch& batch, Technique* tech, boo
             i->second_.CalculateSortKey();
         }
     }
-    else
+    else // 非实例渲染，添加到queue.batches_
     {
         renderer_->SetBatchShaders(batch, tech, allowShadows, queue);
         batch.CalculateSortKey();
@@ -2969,6 +2999,7 @@ void View::AddBatchToQueue(BatchQueue& queue, Batch& batch, Technique* tech, boo
     }
 }
 
+// 填充实例化数据（将batchQueues_、lightQueues_批次中的实例化数据填充到Renderer::instancingBuffer_）
 void View::PrepareInstancingBuffer()
 {
     // Prepare instancing buffer from the source view

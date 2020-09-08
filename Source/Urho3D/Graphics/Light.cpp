@@ -472,6 +472,7 @@ Frustum Light::GetViewSpaceFrustum(const Matrix3x4& view) const
     return ret;
 }
 
+// 返回阴影层级数（阴影分成几个精度层级）
 int Light::GetNumShadowSplits() const
 {
     unsigned ret = 1;
@@ -564,17 +565,19 @@ void Light::OnWorldBoundingBoxUpdate()
     }
 }
 
+// 根据强度和视距设置排序值。
+// 平行负光源-非平行负光源-平行正光源-非平行正光源
 void Light::SetIntensitySortValue(float distance)
 {
     // When sorting lights globally, give priority to directional lights so that they will be combined into the ambient pass
-    if (!IsNegative())
+    if (!IsNegative()) // 正（变亮）颜色光源。
     {
         if (lightType_ != LIGHT_DIRECTIONAL)
             sortValue_ = Max(distance, M_MIN_NEARCLIP) / GetIntensityDivisor();
         else
             sortValue_ = M_EPSILON / GetIntensityDivisor();
     }
-    else
+    else // 负（变暗）颜色光源。
     {
         // Give extra priority to negative lights in the global sorting order so that they're handled first, right after ambient.
         // Positive lights are added after them

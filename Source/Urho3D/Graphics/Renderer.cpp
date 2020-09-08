@@ -994,6 +994,8 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
     return newShadowMap;
 }
 
+// 根据cubemap参数分配Texture2D或者TextureCube对象，并压入screenBuffers_（width、height、format、multiSample、persistentKey组成的key做索引）
+// 如果是depth-stencil缓冲，则重用（screenBufferAllocations_控制是新分配还是重用）
 Texture* Renderer::GetScreenBuffer(int width, int height, unsigned format, int multiSample, bool autoResolve, bool cubemap, bool filtered, bool srgb,
     unsigned persistentKey)
 {
@@ -1346,6 +1348,7 @@ void Renderer::SetCullMode(CullMode mode, Camera* camera)
     graphics_->SetCullMode(mode);
 }
 
+// 分配实例缓冲区（instancingBuffer_）的大小
 bool Renderer::ResizeInstancingBuffer(unsigned numInstances)
 {
     if (!instancingBuffer_ || !dynamicInstancing_)

@@ -134,6 +134,7 @@ template <class T> void Sort(RandomAccessIterator<T> begin, RandomAccessIterator
     InsertionSort(begin, end);
 }
 
+// compare(lhs, rhs)，如果返回值为true，则lhs在左侧（Left Hand Side），rhs在右侧（Right Hand Side）；如果返回值为false，则相反
 /// Sort in ascending order using quicksort for initial passes, then an insertion sort to finalize, using a compare function.
 template <class T, class U> void Sort(RandomAccessIterator<T> begin, RandomAccessIterator<T> end, U compare)
 {

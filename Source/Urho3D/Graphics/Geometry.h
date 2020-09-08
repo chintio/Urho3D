@@ -35,6 +35,7 @@ class Graphics;
 class VertexBuffer;
 
 /// Defines one or more vertex buffers, an index buffer and a draw range.
+// 每个模型有多个部分（换装），每个部分有多个模型精度（LOD），每个LOD用几何体（Geometry）表示
 class URHO3D_API Geometry : public Object
 {
     URHO3D_OBJECT(Geometry, Object);
@@ -113,10 +114,11 @@ public:
     bool IsEmpty() const { return indexCount_ == 0 && vertexCount_ == 0; }
 
 private:
+    // 以下字段从模型文件（Model）中读取
     /// Vertex buffers.
-    Vector<SharedPtr<VertexBuffer> > vertexBuffers_;
+    Vector<SharedPtr<VertexBuffer> > vertexBuffers_; // 指向Model::vertexBuffers_
     /// Index buffer.
-    SharedPtr<IndexBuffer> indexBuffer_;
+    SharedPtr<IndexBuffer> indexBuffer_; // 指向Model::indexBuffers_
     /// Primitive type.
     PrimitiveType primitiveType_;
     /// Start index.
@@ -131,6 +133,9 @@ private:
     float lodDistance_;
     /// Raw vertex data elements.
     PODVector<VertexElement> rawElements_;
+    //
+
+    // 以下字段用于重新生成几何体数据
     /// Raw vertex data override.
     SharedArrayPtr<unsigned char> rawVertexData_;
     /// Raw index data override.
@@ -139,6 +144,7 @@ private:
     unsigned rawVertexSize_;
     /// Raw index data override size.
     unsigned rawIndexSize_;
+    //
 };
 
 }

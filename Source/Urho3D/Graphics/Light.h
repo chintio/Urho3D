@@ -301,7 +301,7 @@ public:
     int GetNumShadowSplits() const;
 
     /// Return whether light has negative (darkening) color.
-    bool IsNegative() const { return GetEffectiveColor().SumRGB() < 0.0f; }
+    bool IsNegative() const { return GetEffectiveColor().SumRGB() < 0.0f; } // 返回灯光是否为负（变暗）颜色。
 
     /// Set sort value based on intensity and view distance.
     void SetIntensitySortValue(float distance);
@@ -367,7 +367,7 @@ private:
     /// Spotlight attenuation texture.
     SharedPtr<Texture> shapeTexture_;
     /// Light queue.
-    LightBatchQueue* lightQueue_;
+    LightBatchQueue* lightQueue_; // 该灯光的批次（像素光）
     /// Specular intensity.
     float specularIntensity_;
     /// Brightness multiplier.
@@ -396,7 +396,7 @@ private:
     bool usePhysicalValues_;
 };
 
-// 逐像素光源排前，然后最明亮/最接近相机的额排前
+// 顶点光排在前，像素光排在后（对于像素光sortValue_小的（最明亮/最接近相机）排在前）
 inline bool CompareLights(Light* lhs, Light* rhs)
 {
     // When sorting lights, give priority to per-vertex lights, so that vertex lit base pass can be evaluated first

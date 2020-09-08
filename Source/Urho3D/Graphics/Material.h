@@ -286,9 +286,9 @@ private:
     /// Textures.
     HashMap<TextureUnit, SharedPtr<Texture> > textures_;
     /// %Shader parameters.
-    HashMap<StringHash, MaterialShaderParameter> shaderParameters_;
+    HashMap<StringHash, MaterialShaderParameter> shaderParameters_; // 材质对光照颜色的定义
     /// %Shader parameters animation infos.
-    HashMap<StringHash, SharedPtr<ShaderParameterAnimationInfo> > shaderParameterAnimationInfos_;
+    HashMap<StringHash, SharedPtr<ShaderParameterAnimationInfo> > shaderParameterAnimationInfos_; // 动画信息
     /// Vertex shader defines.
     String vertexShaderDefines_;
     /// Pixel shader defines.

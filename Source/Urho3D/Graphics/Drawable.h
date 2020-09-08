@@ -32,10 +32,10 @@ namespace Urho3D
 {
 
 static const unsigned DRAWABLE_UNDEFINED = 0x0;
-static const unsigned DRAWABLE_GEOMETRY = 0x1;
-static const unsigned DRAWABLE_LIGHT = 0x2;
-static const unsigned DRAWABLE_ZONE = 0x4;
-static const unsigned DRAWABLE_GEOMETRY2D = 0x8;
+static const unsigned DRAWABLE_GEOMETRY = 0x1; // BillboardSet, CustomGeometry, DecalSet, RibbonTrail, StaticModel, TerrainPatch, Text3D, Renderer2D
+static const unsigned DRAWABLE_LIGHT = 0x2; // Light
+static const unsigned DRAWABLE_ZONE = 0x4; // Zone
+static const unsigned DRAWABLE_GEOMETRY2D = 0x8; // Drawable2D
 static const unsigned DRAWABLE_ANY = 0xff;
 static const unsigned DEFAULT_VIEWMASK = M_MAX_UNSIGNED;
 static const unsigned DEFAULT_LIGHTMASK = M_MAX_UNSIGNED;
@@ -91,11 +91,11 @@ struct URHO3D_API SourceBatch
     SourceBatch& operator =(const SourceBatch& rhs);
 
     /// Distance from camera.
-    float distance_{};
+    float distance_{}; // 与相机的距离
     /// Geometry.
     Geometry* geometry_{}; // lod geometry
     /// Material.
-    SharedPtr<Material> material_;
+    SharedPtr<Material> material_; // 材质
     /// World transform(s). For a skinned model, these are the bone transforms.
     const Matrix3x4* worldTransform_{&Matrix3x4::IDENTITY};
     /// Number of world transforms.
@@ -331,7 +331,7 @@ protected:
     /// Local-space bounding box.
     BoundingBox boundingBox_;
     /// Draw call source data.
-    Vector<SourceBatch> batches_; // 每个Drawable对应一个材质（Material）和一个模型（Model），模型有多个部件，每个部件有多个LOD，每个LOD数据是一个Geometry结构，batches_[].geometry_是当前LOD数据
+    Vector<SourceBatch> batches_; // 每个Drawable对应一个模型（Model），模型有多个部件（batches_[x]，每个部件拥有一个材质（Material）或共用一个），每个部件有多个LOD（每个LOD数据是一个Geometry结构），batches_[].geometry_是当前LOD模型（根据与相机的距离计算）
     /// Drawable flags.
     unsigned char drawableFlags_;
     /// Bounding box dirty flag.
@@ -361,7 +361,7 @@ protected:
     /// Last visible frame number.
     unsigned viewFrameNumber_;
     /// Current distance to camera.
-    float distance_;
+    float distance_; // 包围盒中心点到相机的距离
     /// LOD scaled distance.
     float lodDistance_;
     /// Draw distance.
@@ -381,13 +381,13 @@ protected:
     /// Maximum per-pixel lights.
     unsigned maxLights_;
     /// List of cameras from which is seen on the current frame.
-    PODVector<Camera*> viewCameras_;
+    PODVector<Camera*> viewCameras_; // 当前帧可以看到this的相机列表
     /// First per-pixel light added this frame.
     Light* firstLight_;
     /// Per-pixel lights affecting this drawable.
-    PODVector<Light*> lights_;
+    PODVector<Light*> lights_; // 在像素光个数有限制时（maxLights_ > 0）记录相关的像素光（maxLights_ = 0则不记录），用于后续将多余的像素光转为顶点光（LimitLights()）
     /// Per-vertex lights affecting this drawable.
-    PODVector<Light*> vertexLights_;
+    PODVector<Light*> vertexLights_; // 相关的顶点光
 };
 
 inline bool CompareDrawables(Drawable* lhs, Drawable* rhs)

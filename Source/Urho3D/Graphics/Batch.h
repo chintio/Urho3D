@@ -245,7 +245,7 @@ public:
     bool IsEmpty() const { return batches_.Empty() && batchGroups_.Empty(); }
 
     /// Instanced draw calls.
-    HashMap<BatchGroupKey, BatchGroup> batchGroups_;
+    HashMap<BatchGroupKey, BatchGroup> batchGroups_; // 实例渲染的批次
     /// Shader remapping table for 2-pass state and distance sort.
     HashMap<unsigned, unsigned> shaderRemapping_;
     /// Material remapping table for 2-pass state and distance sort.
@@ -254,7 +254,7 @@ public:
     HashMap<unsigned short, unsigned short> geometryRemapping_;
 
     /// Unsorted non-instanced draw calls.
-    PODVector<Batch> batches_;
+    PODVector<Batch> batches_; // 非实例渲染的批次
     /// Sorted non-instanced draw calls.
     PODVector<Batch*> sortedBatches_;
     /// Sorted instanced draw calls.
@@ -273,6 +273,7 @@ public:
     StringHash psExtraDefinesHash_;
 };
 
+// 用于生成阴影深度图的批次
 /// Queue for shadow map draw calls
 struct ShadowBatchQueue
 {
@@ -281,7 +282,7 @@ struct ShadowBatchQueue
     /// Shadow map viewport.
     IntRect shadowViewport_;
     /// Shadow caster draw calls.
-    BatchQueue shadowBatches_;
+    BatchQueue shadowBatches_; // 用于投射阴影的几何体批次
     /// Directional light cascade near split distance.
     float nearSplit_{};
     /// Directional light cascade far split distance.
@@ -292,21 +293,21 @@ struct ShadowBatchQueue
 struct LightBatchQueue
 {
     /// Per-pixel light.
-    Light* light_;
+    Light* light_; // 像素光
     /// Light negative flag.
-    bool negative_;
+    bool negative_; // 灯光是否为负（变暗）颜色
     /// Shadow map depth texture.
-    Texture2D* shadowMap_;
+    Texture2D* shadowMap_; // 阴影深度贴图
     /// Lit geometry draw calls, base (replace blend mode)
-    BatchQueue litBaseBatches_; // command type="forwardlights" 的批次
+    BatchQueue litBaseBatches_; // 像素光的基础批次，如果light_是几何体的第一个像素光源，则批次就放到这里
     /// Lit geometry draw calls, non-base (additive)
-    BatchQueue litBatches_; // command type="forwardlights" 的批次
+    BatchQueue litBatches_; // 像素光的附加批次，如果light_是几何体的后续像素光源（不是第一个），则批次就放到这里
     /// Shadow map split queues.
-    Vector<ShadowBatchQueue> shadowSplits_; // 各阴影层级的几何体（可投射阴影）批次（pass name="shadow"）
+    Vector<ShadowBatchQueue> shadowSplits_; // 各阴影层级的几何体（可投射阴影）批次（用于产生阴影深度图）
     /// Per-vertex lights.
-    PODVector<Light*> vertexLights_;
+    PODVector<Light*> vertexLights_; // 顶点光列表
     /// Light volume draw calls.
-    PODVector<Batch> volumeBatches_; // command type="lightvolumes" 的批次
+    PODVector<Batch> volumeBatches_; // 如果是延迟渲染路径，则通过该变量进入批次（volumeBatches_[].lightQueue_）
 };
 
 }

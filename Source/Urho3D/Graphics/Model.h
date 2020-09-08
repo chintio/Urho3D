@@ -211,9 +211,9 @@ private:
     /// Index buffers.
     Vector<SharedPtr<IndexBuffer> > indexBuffers_;
     /// Geometries.
-    Vector<Vector<SharedPtr<Geometry> > > geometries_; // geometries_.Size()表示几何体个数，geometries_[].Size()表示几何体的Lod层级数
+    Vector<Vector<SharedPtr<Geometry> > > geometries_; // 每个模型有多个部分（换装），每个部分有多个模型精度（LOD），每个LOD用几何体（Geometry）表示，geometries_.Size()表示模型有几部分，geometries_[].Size()表示该部分的Lod层级数
     /// Geometry bone mappings.
-    Vector<PODVector<unsigned> > geometryBoneMappings_; // 骨头映射数据，每个几何体有一组
+    Vector<PODVector<unsigned> > geometryBoneMappings_; // 骨头映射数据，每个模型部分有一组
     /// Geometry centers.
     PODVector<Vector3> geometryCenters_; // 几何体的中心点
     /// Vertex morphs.
@@ -225,7 +225,7 @@ private:
     /// Vertex buffer data for asynchronous loading.
     Vector<VertexBufferDesc> loadVBData_; // 异步加载时的顶点数据在BeginLoad中存放于此地，在EndLoad中转入vertexBuffers_。
     /// Index buffer data for asynchronous loading.
-    Vector<IndexBufferDesc> loadIBData_; // 异步加载时的顶点数据在BeginLoad中存放于此地，在EndLoad中转入vertexBuffers_。
+    Vector<IndexBufferDesc> loadIBData_; // 异步加载时的索引数据在BeginLoad中存放于此地，在EndLoad中转入indexBuffers_。
     /// Geometry definitions for asynchronous loading.
     Vector<PODVector<GeometryDesc> > loadGeometries_; // 几何体（及其LOD几何体）的描述数据
 };

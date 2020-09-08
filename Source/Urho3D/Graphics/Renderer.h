@@ -518,11 +518,11 @@ private:
     /// Cache for light scissor queries.
     HashMap<Pair<Light*, Camera*>, Rect> lightScissorCache_;
     /// Backbuffer viewports.
-    Vector<SharedPtr<Viewport> > viewports_;
+    Vector<SharedPtr<Viewport> > viewports_; // 后台缓冲区（窗口渲染缓冲区）视口，通过SetViewport填充
     /// Render surface viewports queued for update.
-    Vector<Pair<WeakPtr<RenderSurface>, WeakPtr<Viewport> > > queuedViewports_;
+    Vector<Pair<WeakPtr<RenderSurface>, WeakPtr<Viewport> > > queuedViewports_; // 临时保存（每帧更新）Backbuffer和RenderSurface的Viewport，将Viewport定义到views_
     /// Views that have been processed this frame.
-    Vector<WeakPtr<View> > views_;
+    Vector<WeakPtr<View> > views_; // 帧中需要渲染的View
     /// Prepared views by culling camera.
     HashMap<Camera*, WeakPtr<View> > preparedViews_;
     /// Octrees that have been updated during the frame.

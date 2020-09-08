@@ -321,6 +321,7 @@ void Drawable::MarkInView(unsigned frameNumber)
     }
 }
 
+// 如果像素光个数超出，则排序并将多余的像素灯光放到顶点光队列vertexLights_。
 void Drawable::LimitLights()
 {
     // Maximum lights value 0 means unlimited
@@ -340,7 +341,7 @@ void Drawable::LimitLights()
 // 只保留影响最大的4个顶点光
 void Drawable::LimitVertexLights(bool removeConvertedLights)
 {
-    if (removeConvertedLights)
+    if (removeConvertedLights) // 移除其中的像素光源（LimitLights()中加入）
     {
         for (unsigned i = vertexLights_.Size() - 1; i < vertexLights_.Size(); --i)
         {

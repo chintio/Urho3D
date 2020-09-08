@@ -101,9 +101,9 @@ struct PerThreadSceneResult
     /// Lights.
     PODVector<Light*> lights_;
     /// Scene minimum Z value.
-    float minZ_;
+    float minZ_; // 观察空间的深度值
     /// Scene maximum Z value.
-    float maxZ_;
+    float maxZ_; // 观察空间的深度值
 };
 
 static const unsigned MAX_VIEWPORT_TEXTURES = 2;
@@ -321,17 +321,17 @@ private:
     /// Viewport (rendering) camera.
     Camera* camera_{};
     /// Culling camera. Usually same as the viewport camera.
-    Camera* cullCamera_{};
+    Camera* cullCamera_{}; // 立体渲染时，两个渲染相机（模拟双眼），将其中一个设为裁剪相机（提供同一可见场景给渲染相机）
     /// Shared source view. Null if this view is using its own culling.
-    WeakPtr<View> sourceView_;
+    WeakPtr<View> sourceView_; // 立体渲染时，cullCamera_对应的View
     /// Zone the camera is inside, or default zone if not assigned.
     Zone* cameraZone_{}; // 相机（cullCamera_）所在的优先级最高的区域，如果没分配就是缺省区域
     /// Zone at far clip plane.
     Zone* farClipZone_{}; // 相机（cullCamera_）远裁剪面中心点所在的优先级最高的区域；如果没分配或者cameraZone_为覆盖模式，就设为cameraZone_
     /// Occlusion buffer for the main camera.
-    OcclusionBuffer* occlusionBuffer_{};
+    OcclusionBuffer* occlusionBuffer_{}; // 根据遮挡体生成，用于可见物剔除
     /// Destination color rendertarget.
-    RenderSurface* renderTarget_{};
+    RenderSurface* renderTarget_{}; // 目标RT，Define()中定义
     /// Substitute rendertarget for deferred rendering. Allocated if necessary.
     RenderSurface* substituteRenderTarget_{};
     /// Texture(s) for sampling the viewport contents. Allocated if necessary.
@@ -341,15 +341,15 @@ private:
     /// Last used custom depth render surface.
     RenderSurface* lastCustomDepthSurface_{};
     /// Texture containing the latest viewport texture.
-    Texture* currentViewportTexture_{};
+    Texture* currentViewportTexture_{}; // 从当前视口取得的纹理
     /// Dummy texture for D3D9 depth only rendering.
     Texture* depthOnlyDummyTexture_{};
     /// Viewport rectangle.
     IntRect viewRect_;
     /// Viewport size.
-    IntVector2 viewSize_;
+    IntVector2 viewSize_; // 视口尺寸
     /// Destination rendertarget size.
-    IntVector2 rtSize_;
+    IntVector2 rtSize_; // 渲染目标（rendertarget）尺寸
     /// Information of the frame being rendered.
     FrameInfo frame_{};
     /// View aspect ratio.
@@ -365,7 +365,7 @@ private:
     /// Minimum number of instances required in a batch group to render as instanced.
     int minInstances_{};
     /// Highest zone priority currently visible.
-    int highestZonePriority_{}; // 相机可见的最高优先级区域的值
+    int highestZonePriority_{}; // 相机可见区域的优先级（Zone::GetPriority()）的最大值
     /// Geometries updated flag.
     bool geometriesUpdated_{};
     /// Camera zone's override flag.
@@ -381,7 +381,7 @@ private:
     /// Has scene passes flag. If no scene passes, view can be defined without a valid scene or camera to only perform quad rendering.
     bool hasScenePasses_{};
     /// Whether is using a custom readable depth texture without a stencil channel.
-    bool noStencil_{};
+    bool noStencil_{}; // 是否使用不带模板通道的自定义可读深度纹理。
     /// Draw debug geometry flag. Copied from the viewport.
     bool drawDebug_{};
     /// Renderpath.
@@ -389,19 +389,19 @@ private:
     /// Per-thread octree query results.
     Vector<PODVector<Drawable*> > tempDrawables_;
     /// Per-thread geometries, lights and Z range collection results.
-    Vector<PerThreadSceneResult> sceneResults_;
+    Vector<PerThreadSceneResult> sceneResults_; // 用于多线程收集Drawable、Light，以及确定观察空间中的深度范围
     /// Visible zones.
     PODVector<Zone*> zones_; // 相机（cullCamera_）可见的区域
     /// Visible geometry objects.
-    PODVector<Drawable*> geometries_; // 相机可见的几何体
+    PODVector<Drawable*> geometries_; // 相机可见的几何体（DRAWABLE_GEOMETRY）
     /// Geometry objects that will be updated in the main thread.
-    PODVector<Drawable*> nonThreadedGeometries_;
+    PODVector<Drawable*> nonThreadedGeometries_; // 在主线程中更新的几何体
     /// Geometry objects that will be updated in worker threads.
-    PODVector<Drawable*> threadedGeometries_;
+    PODVector<Drawable*> threadedGeometries_; // 在工作线程中更新的几何体
     /// Occluder objects.
-    PODVector<Drawable*> occluders_; // 相机（cullCamera_）可见的遮挡体
+    PODVector<Drawable*> occluders_; // 相机（cullCamera_）可见的遮挡物（Drawable::occluder_为真）
     /// Lights.
-    PODVector<Light*> lights_; // 相机可见的额光源
+    PODVector<Light*> lights_; // 相机可见的光源（DRAWABLE_LIGHT）
     /// Number of active occluders.
     unsigned activeOccluders_{};
 
@@ -410,25 +410,25 @@ private:
     /// Rendertargets defined by the renderpath.
     HashMap<StringHash, Texture*> renderTargets_;
     /// Intermediate light processing results.
-    Vector<LightQueryResult> lightQueryResults_; // 与各光源关联的几何体及阴影信息
+    Vector<LightQueryResult> lightQueryResults_; // 与各光源关联的几何体及阴影信息（lights_中每个光源及其影响的几何体为一组）
     /// Info for scene render passes defined by the renderpath.
-    PODVector<ScenePassInfo> scenePasses_;
+    PODVector<ScenePassInfo> scenePasses_; // 保存renderpath中command type="scenepass"的各个pass信息
     /// Per-pixel light queues.
-    Vector<LightBatchQueue> lightQueues_; // command type="forwardlights"或者"lightvolumes" 的批次，逐像素光源的批次队列
+    Vector<LightBatchQueue> lightQueues_; // 逐像素光源的批次队列
     /// Per-vertex light queues.
-    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_;
+    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 逐顶点光源的批次队列
     /// Batch queues by pass index.
-    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass" 的批次
+    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass" 的各个pass的批次
     /// Index of the GBuffer pass.
     unsigned gBufferPassIndex_{};
     /// Index of the opaque forward base pass.
-    unsigned basePassIndex_{};
+    unsigned basePassIndex_{}; // pass name="base"
     /// Index of the alpha pass.
     unsigned alphaPassIndex_{};
     /// Index of the forward light pass.
-    unsigned lightPassIndex_{};
+    unsigned lightPassIndex_{}; // pass name="light"
     /// Index of the litbase pass.
-    unsigned litBasePassIndex_{};
+    unsigned litBasePassIndex_{}; // pass name="litbase"
     /// Index of the litalpha pass.
     unsigned litAlphaPassIndex_{};
     /// Pointer to the light volume command if any.
@@ -462,5 +462,10 @@ private:
 // 2，硬件实例（Hardware instancing）：具有相同几何体、材质和灯光的渲染操作将组合在一起并作为一个draw call执行（如果支持）。请注意，即使实例不可用，它们仍然可以从分组中获益，因为渲染状态只需在渲染每个组之前检查和设置一次，从而降低了CPU成本。
 // 3，灯光模板遮罩（Light stencil masking）：在正向渲染中，在附加重新渲染由聚光灯或点光源照亮的对象之前，灯光的边界形状将渲染到模板缓冲区，以确保不处理灯光范围之外的像素。
 // 请注意，在内容级别可以有更多的优化机会，例如使用几何体和材质LOD，将许多静态对象分组到一个对象中以减少绘制调用，最小化每个对象的子几何体（子网格）数量以减少绘制调用，使用纹理贴图集避免渲染状态更改，使用压缩（和较小）纹理，并设置对象、灯光和阴影的最大绘制距离。
+
+// pingpong：
+// 在两个模块间交换数据时，上一级处理的结果不能马上被下一级所处理完成，这样上一级必须等待下一级处理完成才可以送新的数据，这样就会对性能产生很大的损失。
+// 引入pingpong后我们可以不去等待下一级处理结束，而是将结果保存在pong路的缓存中，pong路的数据准备好的时刻，ping路的数据也处理完毕（下一级），然后无需等待直接处理pong路数据，上一级也无需等待，转而将结果存储在ping路。这样便提高了处理效率。
+// 所谓ping-pong buffer，也就是定义两个buffer，当有数据进来的时候，负责写入buffer的进程就寻找第一个没有被占用而且可写的buffer，进行写入，写好之后，将占用flag释放，同时设置一个flag提示此buffer已经可读，然后再接下去找另外一个可写的buffer，写入新的数据。而读入的进程也是一直对buffer状态进行检测，一旦发现没有被占用，而且已经可以被读，就把这个buffer的数据取出来，然后标志为可写。
 
 }

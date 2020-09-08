@@ -689,6 +689,7 @@ unsigned GetStringListIndex(const char* value, const String* strings, unsigned d
     return defaultIndex;
 }
 
+// 返回字符串value在字符串数组strings中的索引，如果没找到，返回defaultIndex
 unsigned GetStringListIndex(const char* value, const char** strings, unsigned defaultIndex, bool caseSensitive)
 {
     unsigned i = 0;

@@ -129,7 +129,7 @@ void StaticModel::ProcessRayQuery(const RayOctreeQuery& query, PODVector<RayQuer
     }
 }
 
-// 根据几何体与相机的距离，更新批次LOD
+// 根据几何体与相机的距离，更新批次信息（根据与相机的距离，选择对应的模型数据（Geometry），然后设置到batches_[x].geometry_）
 void StaticModel::UpdateBatches(const FrameInfo& frame)
 {
     const BoundingBox& worldBoundingBox = GetWorldBoundingBox();
