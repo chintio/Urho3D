@@ -46,7 +46,7 @@ enum ViewOverride : unsigned
 };
 URHO3D_FLAGSET(ViewOverride, ViewOverrideFlags);
 
-// 描述用于渲染的视点，包括投影参数（FOV、近/远裁剪面、透视/正交）
+// 描述用于渲染的视点(viewpoint)，包括投影参数（FOV、近/远裁剪面、透视/正交）
 /// %Camera component.
 class URHO3D_API Camera : public Component
 {

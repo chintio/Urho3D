@@ -145,7 +145,7 @@ private:
     };
 
     /// Viewports.
-    Vector<SharedPtr<Viewport> > viewports_;
+    Vector<SharedPtr<Viewport> > viewports_; // 辅助视口，用于实现render to texture
     /// Linked color buffer.
     WeakPtr<RenderSurface> linkedRenderTarget_;
     /// Linked depth buffer.

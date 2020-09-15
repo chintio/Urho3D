@@ -245,7 +245,7 @@ protected:
     /// Mipmap levels regeneration needed -flag.
     bool levelsDirty_{};
     /// Backup texture.
-    SharedPtr<Texture> backupTexture_;
+    SharedPtr<Texture> backupTexture_; // 因为对同时被渲染到的纹理进行采样是非法的（此时纹理在辅助视口中是交替可见的），可以使用备份纹理来指定应该就地使用哪个纹理。
 };
 
 // 纹理是类似于表面的一个像素矩阵，与表面不同的是它可被映射到三角形单元中
