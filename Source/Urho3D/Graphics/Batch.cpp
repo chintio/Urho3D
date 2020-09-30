@@ -251,10 +251,11 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
             graphics->SetShaderParameter(VSP_MODEL, *worldTransform_);
 
         // Set the orientation for billboards, either from the object itself or from the camera
+        // 从对象本身或从摄影机设置公告牌的方向
         if (geometryType_ == GEOM_BILLBOARD)
         {
             if (numWorldTransforms_ > 1)
-                graphics->SetShaderParameter(VSP_BILLBOARDROT, worldTransform_[1].RotationMatrix());
+                graphics->SetShaderParameter(VSP_BILLBOARDROT, worldTransform_[1].RotationMatrix()); // worldTransform_[1]为广告牌的世界空间的旋转矩阵
             else
                 graphics->SetShaderParameter(VSP_BILLBOARDROT, cameraNode->GetWorldRotation().RotationMatrix());
         }

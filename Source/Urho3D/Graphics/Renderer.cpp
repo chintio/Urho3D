@@ -1653,6 +1653,7 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
     vertexShaders.Clear();
     pixelShaders.Clear();
 
+    // technique及pass中的着色器宏定义
     String vsDefines = pass->GetEffectiveVertexShaderDefines();
     String psDefines = pass->GetEffectivePixelShaderDefines();
 
@@ -1663,6 +1664,7 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
         psDefines += ' ';
 
     // Append defines from batch queue (renderpath command) if needed
+    // RenderPath中的着色器宏定义（<command vsdefines="" />）
     if (queue.vsExtraDefines_.Length())
     {
         vsDefines += queue.vsExtraDefines_;
@@ -1675,6 +1677,7 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
     }
 
     // Add defines for VSM in the shadow pass if necessary
+    // “VSM_SHADOW”宏定义，如果是阴影过程（pass），且阴影质量为VSM类
     if (pass->GetName() == "shadow"
         && (shadowQuality_ == SHADOWQUALITY_VSM || shadowQuality_ == SHADOWQUALITY_BLUR_VSM))
     {
@@ -1688,11 +1691,12 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
         vertexShaders.Resize(MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS);
         pixelShaders.Resize(MAX_LIGHT_PS_VARIATIONS * 2);
 
-        for (unsigned j = 0; j < MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS; ++j) // 顶点着色器的宏由lightVSVariations和geometryVSVariations的交叉组合，再合并Pass宏 组成
+        for (unsigned j = 0; j < MAX_GEOMETRYTYPES * MAX_LIGHT_VS_VARIATIONS; ++j)
         {
             unsigned g = j / MAX_LIGHT_VS_VARIATIONS;
             unsigned l = j % MAX_LIGHT_VS_VARIATIONS;
 
+            // 顶点着色器的宏由lightVSVariations和geometryVSVariations的交叉组合，再合并vsDefines组成
             vertexShaders[j] = graphics_->GetShader(VS, pass->GetVertexShader(),
                 vsDefines + lightVSVariations[l] + geometryVSVariations[g]);
         }
@@ -1701,18 +1705,18 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
             unsigned l = j % MAX_LIGHT_PS_VARIATIONS;
             unsigned h = j / MAX_LIGHT_PS_VARIATIONS;
 
-            if (l & LPS_SHADOW) // 包含阴影类型的像数着色器的宏由lightPSVariations + heightFogVariations + 阴影宏，再合并Pass宏 组成
+            if (l & LPS_SHADOW) // 包含阴影类型的像数着色器的宏由lightPSVariations + heightFogVariations + 阴影质量的宏，再合并psDefines组成
             {
                 pixelShaders[j] = graphics_->GetShader(PS, pass->GetPixelShader(),
                     psDefines + lightPSVariations[l] + GetShadowVariations() +
                     heightFogVariations[h]);
             }
-            else // 其他像数着色器的宏由lightPSVariations + heightFogVariations，再合并Pass宏 组成
+            else // 其他像数着色器的宏由lightPSVariations + heightFogVariations，再合并psDefines组成
                 pixelShaders[j] = graphics_->GetShader(PS, pass->GetPixelShader(),
                     psDefines + lightPSVariations[l] + heightFogVariations[h]);
         }
     }
-    else
+    else // 逐顶点光和无光照
     {
         // Load vertex light variations
         if (pass->GetLightingMode() == LIGHTING_PERVERTEX) // 逐顶点光类型
@@ -1726,7 +1730,7 @@ void Renderer::LoadPassShaders(Pass* pass, Vector<SharedPtr<ShaderVariation> >& 
                     vsDefines + vertexLightVSVariations[l] + geometryVSVariations[g]);
             }
         }
-        else
+        else // 无光照
         {
             vertexShaders.Resize(MAX_GEOMETRYTYPES);
             for (unsigned j = 0; j < MAX_GEOMETRYTYPES; ++j)

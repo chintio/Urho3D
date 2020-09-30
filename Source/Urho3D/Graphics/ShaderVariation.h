@@ -176,4 +176,8 @@ private:
     String compilerOutput_;
 };
 
+// 着色器编译后，生成二进制文件，通过解析函数（ShaderVariation::ParseParameters）记录其寄存器信息：
+//     1，将其中的uniform（Uniforms.hlsl）变量信息（名称、寄存器索引（用于IDirect3DDevice9::SetVertexShaderConstantF））存放于parameters_。
+//     2，sampler（Samplers.hlsl）寄存器是否定义，通过useTextureUnits_标识，索引用于IDirect3DDevice9::SetTexture。
+
 }

@@ -181,7 +181,8 @@ void Pass::MarkShadersLoaded(unsigned frameNumber)
     shadersLoadedFrameNumber_ = frameNumber;
 }
 
-// pass中着色器宏定义（如果pass中有"*s"属性，则使用pass中的"*sdefines"，否则使用technique中的"*sdefines"+pass中的"*sdefines"）
+// 返回有效的顶点着色器宏定义
+// 如果没有"vsexcludes"，则返回vertexShaderDefines_；否则返回排除vsexcludes后的vertexShaderDefines_
 String Pass::GetEffectiveVertexShaderDefines() const
 {
     // Prefer to return just the original defines if possible

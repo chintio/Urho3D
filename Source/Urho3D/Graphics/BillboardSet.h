@@ -187,7 +187,7 @@ private:
     /// Index buffer.
     SharedPtr<IndexBuffer> indexBuffer_;
     /// Transform matrices for position and billboard orientation.
-    Matrix3x4 transforms_[2];
+    Matrix3x4 transforms_[2]; //位置[0]和广告牌方向[1]的变换矩阵。
     /// Buffers need resize flag.
     bool bufferSizeDirty_;
     /// Vertex buffer needs rewrite flag.

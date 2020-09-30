@@ -81,11 +81,11 @@ private:
     unsigned numVariations_;
 };
 
-// Urho3D使用类似ubershader的方法：每个着色器的排列将使用不同的编译宏定义构建，以生成静态（static）或蒙皮（skinned）、延迟（deferred）或正向（forward）或阴影/非阴影（shadowed/unshadowed）渲染。
+// Urho3D使用类似ubershader的方法：每个着色器的排列（permutations）将使用不同的编译宏定义构建，以生成静态（static）或蒙皮（skinned）、延迟（deferred）或正向（forward）或阴影/非阴影（shadowed/unshadowed）渲染。
 // 这些排列的构建是按需进行的：technique和renderpath定义文件都引用了着色器以及与它们一起使用的编译宏定义。此外，引擎将添加与几何体类型和照明相关的内置定义。通常不可能预先枚举可以由单个着色器构建的所有可能的排列。
 // 在Direct3D上，编译的着色器字节码保存到磁盘的“Cache”子目录中（每个编译宏定义组合生成一个着色器字节码文件），以便下次需要着色器排列时跳过可能耗时的编译。在OpenGL上，这种机制是不可用的。
 
-// 内置编译宏定义（compilation defines）
+// 内置编译宏定义（Inbuilt compilation defines）
 // 渲染场景对象时，引擎希望针对不同的几何体类型和照明条件存在特定的着色器排列。这些对应于以下编译宏定义：
 // Vertex shader:
 //     NUMVERTEXLIGHTS=1,2,3 or 4:影响对象的顶点灯光数
@@ -106,7 +106,7 @@ private:
 // 一个统一值在一个图元的绘制过程中是不变的，所以其值不能在glBegin和glEnd之间设置的
 // uniform限定了表示一个变量的值将由应用程序在着色器执行之前指定，并且在图元的处理过程中不会发生变化。
 // uniform变量是由顶点着色器和片段着色器共享的，他们必须声明为全局变量。
-// 当渲染对象或四边形passes时，将设置各种引擎内置统一值以协助渲染。以下是作为HLSL数据类型列出的制服的部分列表。查看Uniforms.glsl获取相应的GLSL Uniforms。
+// 当渲染对象或四边形passes时，将设置各种引擎内置统一值以协助渲染。以下是作为HLSL数据类型列出的uniforms的部分列表。查看Uniforms.glsl获取相应的GLSL Uniforms。
 // Vertex shader uniforms:
 //     float3 cAmbientStartColor:区域环境光渐变的开始颜色值
 //     float3 cAmbientEndColor:区域环境光渐变的结束颜色值

@@ -414,11 +414,11 @@ private:
     /// Info for scene render passes defined by the renderpath.
     PODVector<ScenePassInfo> scenePasses_; // 保存renderpath中command type="scenepass"的各个pass信息
     /// Per-pixel light queues.
-    Vector<LightBatchQueue> lightQueues_; // 逐像素光源的批次队列
+    Vector<LightBatchQueue> lightQueues_; // 逐像素光源的批次队列（受lightQueues_[x].light_影响的Drawable，生成Batch，放入lightQueues_[x]）
     /// Per-vertex light queues.
-    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 逐顶点光源的批次队列
+    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 逐顶点光源的批次队列（只受顶点）
     /// Batch queues by pass index.
-    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass" 的各个pass的批次
+    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass" 的各个pass的批次（不受光照影响）
     /// Index of the GBuffer pass.
     unsigned gBufferPassIndex_{};
     /// Index of the opaque forward base pass.
