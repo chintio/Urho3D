@@ -35,7 +35,7 @@ namespace Urho3D
 class Matrix3x4;
 
 /// 4x4 matrix for arbitrary linear transforms including projection.
-class URHO3D_API Matrix4
+class URHO3D_API Matrix4 // 4x4矩阵用于任意线性变换，包括投影。
 {
 public:
     /// Construct an identity matrix.
@@ -479,7 +479,7 @@ public:
     Matrix4 operator *(const Matrix3x4& rhs) const;
 
     /// Set translation elements.
-    void SetTranslation(const Vector3& translation)
+    void SetTranslation(const Vector3& translation) // 设置平移分量
     {
         m03_ = translation.x_;
         m13_ = translation.y_;
@@ -487,7 +487,7 @@ public:
     }
 
     /// Set rotation elements from a 3x3 matrix.
-    void SetRotation(const Matrix3& rotation)
+    void SetRotation(const Matrix3& rotation) // 设置旋转分量
     {
         m00_ = rotation.m00_;
         m01_ = rotation.m01_;
@@ -501,7 +501,7 @@ public:
     }
 
     /// Set scaling elements.
-    void SetScale(const Vector3& scale)
+    void SetScale(const Vector3& scale) // 设置缩放分量
     {
         m00_ = scale.x_;
         m11_ = scale.y_;
@@ -509,7 +509,7 @@ public:
     }
 
     /// Set uniform scaling elements.
-    void SetScale(float scale)
+    void SetScale(float scale) // 设置缩放分量
     {
         m00_ = scale;
         m11_ = scale;
@@ -517,7 +517,7 @@ public:
     }
 
     /// Return the combined rotation and scaling matrix.
-    Matrix3 ToMatrix3() const
+    Matrix3 ToMatrix3() const // 返回3X3矩阵（旋转和缩放分量）
     {
         return Matrix3(
             m00_,
@@ -533,7 +533,7 @@ public:
     }
 
     /// Return the rotation matrix with scaling removed.
-    Matrix3 RotationMatrix() const
+    Matrix3 RotationMatrix() const // 返回旋转矩阵（析出缩放因子，缩放因子为列向量的长度）
     {
         Vector3 invScale(
             1.0f / sqrtf(m00_ * m00_ + m10_ * m10_ + m20_ * m20_),
@@ -545,7 +545,7 @@ public:
     }
 
     /// Return the translation part.
-    Vector3 Translation() const
+    Vector3 Translation() const // 返回矩阵的平移部分
     {
         return Vector3(
             m03_,
@@ -555,10 +555,10 @@ public:
     }
 
     /// Return the rotation part.
-    Quaternion Rotation() const { return Quaternion(RotationMatrix()); }
+    Quaternion Rotation() const { return Quaternion(RotationMatrix()); } // 返回旋转部分的四元数形式
 
     /// Return the scaling part.
-    Vector3 Scale() const
+    Vector3 Scale() const // 返回缩放部分（缩放因子为列向量的长度）
     {
         return Vector3(
             sqrtf(m00_ * m00_ + m10_ * m10_ + m20_ * m20_),
@@ -578,7 +578,7 @@ public:
     }
 
     /// Return transposed.
-    Matrix4 Transpose() const
+    Matrix4 Transpose() const // 转置
     {
 #ifdef URHO3D_SSE
         __m128 m0 = _mm_loadu_ps(&m00_);
@@ -668,7 +668,7 @@ public:
     float m33_;
 
     /// Bulk transpose matrices.
-    static void BulkTranspose(float* dest, const float* src, unsigned count)
+    static void BulkTranspose(float* dest, const float* src, unsigned count) // src有count个4x4矩阵，转置后保存到dest
     {
         for (unsigned i = 0; i < count; ++i)
         {

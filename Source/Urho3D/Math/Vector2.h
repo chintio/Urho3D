@@ -286,7 +286,7 @@ public:
     }
 
     /// Normalize to unit length.
-    void Normalize()
+    void Normalize() // 将本向量标准化（归一化）
     {
         float lenSquared = LengthSquared();
         if (!Urho3D::Equals(lenSquared, 1.0f) && lenSquared > 0.0f)
@@ -310,25 +310,25 @@ public:
     float AbsDotProduct(const Vector2& rhs) const { return Urho3D::Abs(x_ * rhs.x_) + Urho3D::Abs(y_ * rhs.y_); }
 
     /// Project vector onto axis.
-    float ProjectOntoAxis(const Vector2& axis) const { return DotProduct(axis.Normalized()); }
+    float ProjectOntoAxis(const Vector2& axis) const { return DotProduct(axis.Normalized()); } // this在axis向量上投影的长度
 
     /// Returns the angle between this vector and another vector in degrees.
-    float Angle(const Vector2& rhs) const { return Urho3D::Acos(DotProduct(rhs) / (Length() * rhs.Length())); }
+    float Angle(const Vector2& rhs) const { return Urho3D::Acos(DotProduct(rhs) / (Length() * rhs.Length())); } // 两向量的夹角度数
 
     /// Return absolute vector.
     Vector2 Abs() const { return Vector2(Urho3D::Abs(x_), Urho3D::Abs(y_)); }
 
     /// Linear interpolation with another vector.
-    Vector2 Lerp(const Vector2& rhs, float t) const { return *this * (1.0f - t) + rhs * t; }
+    Vector2 Lerp(const Vector2& rhs, float t) const { return *this * (1.0f - t) + rhs * t; } // this和rhs间的线性插值，https://www.cnblogs.com/noluye/p/12255135.html
 
     /// Test for equality with another vector with epsilon.
     bool Equals(const Vector2& rhs) const { return Urho3D::Equals(x_, rhs.x_) && Urho3D::Equals(y_, rhs.y_); }
 
     /// Return whether is NaN.
-    bool IsNaN() const { return Urho3D::IsNaN(x_) || Urho3D::IsNaN(y_); }
+    bool IsNaN() const { return Urho3D::IsNaN(x_) || Urho3D::IsNaN(y_); } // NaN（not a number，非法数字），https://blog.csdn.net/techx/article/details/43830781
 
     /// Return normalized to unit length.
-    Vector2 Normalized() const
+    Vector2 Normalized() const // 将本向量标准化（归一化），并返回
     {
         float lenSquared = LengthSquared();
         if (!Urho3D::Equals(lenSquared, 1.0f) && lenSquared > 0.0f)

@@ -357,7 +357,7 @@ public:
     }
 
     /// Project direction vector onto axis.
-    float ProjectOntoAxis(const Vector3& axis) const { return DotProduct(axis.Normalized()); }
+    float ProjectOntoAxis(const Vector3& axis) const { return DotProduct(axis.Normalized()); } // this点在axis上投影的投影
 
     /// Project position vector onto plane with given origin and normal.
     Vector3 ProjectOntoPlane(const Vector3& origin, const Vector3& normal) const
@@ -367,11 +367,11 @@ public:
     }
 
     /// Project position vector onto line segment.
-    Vector3 ProjectOntoLine(const Vector3& from, const Vector3& to, bool clamped = false) const
+    Vector3 ProjectOntoLine(const Vector3& from, const Vector3& to, bool clamped = false) const // this点在目标线段上的投影
     {
-        const Vector3 direction = to - from;
+        const Vector3 direction = to - from; // 投影目标的向量
         const float lengthSquared = direction.LengthSquared();
-        float factor = (*this - from).DotProduct(direction) / lengthSquared;
+        float factor = (*this - from).DotProduct(direction) / lengthSquared; // 投影长度（*this - from在direction上的投影长度）与投影目标长度（direction长度）的比值
 
         if (clamped)
             factor = Clamp(factor, 0.0f, 1.0f);
@@ -383,10 +383,10 @@ public:
     float DistanceToPoint(const Vector3& point) const { return (*this - point).Length(); }
 
     /// Calculate distance to the plane with given origin and normal.
-    float DistanceToPlane(const Vector3& origin, const Vector3& normal) const { return (*this - origin).ProjectOntoAxis(normal); }
+    float DistanceToPlane(const Vector3& origin, const Vector3& normal) const { return (*this - origin).ProjectOntoAxis(normal); } // this到面的距离
 
     /// Make vector orthogonal to the axis.
-    Vector3 Orthogonalize(const Vector3& axis) const { return axis.CrossProduct(*this).CrossProduct(axis).Normalized(); }
+    Vector3 Orthogonalize(const Vector3& axis) const { return axis.CrossProduct(*this).CrossProduct(axis).Normalized(); } // 根据axis，返回this的正交基
 
     /// Calculate cross product.
     Vector3 CrossProduct(const Vector3& rhs) const

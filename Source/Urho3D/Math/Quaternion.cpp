@@ -33,10 +33,11 @@ namespace Urho3D
 
 const Quaternion Quaternion::IDENTITY;
 
+// 轴角对转四元数
 void Quaternion::FromAngleAxis(float angle, const Vector3& axis)
 {
-    Vector3 normAxis = axis.Normalized();
-    angle *= M_DEGTORAD_2;
+    Vector3 normAxis = axis.Normalized(); // 旋转轴标准化
+    angle *= M_DEGTORAD_2; // 角度转为弧度
     float sinAngle = sinf(angle);
     float cosAngle = cosf(angle);
 
@@ -46,9 +47,12 @@ void Quaternion::FromAngleAxis(float angle, const Vector3& axis)
     z_ = normAxis.z_ * sinAngle;
 }
 
+// 欧拉角（Y*X*Z，度）转四元数
 void Quaternion::FromEulerAngles(float x, float y, float z)
 {
     // Order of rotations: Z first, then X, then Y (mimics typical FPS camera with gimbal lock at top/bottom)
+    // 旋转顺序：先Z，然后X，然后Y（模仿典型的FPS摄影机，顶部/底部带有万向锁）
+    // 角度转化为弧度
     x *= M_DEGTORAD_2;
     y *= M_DEGTORAD_2;
     z *= M_DEGTORAD_2;
@@ -59,39 +63,48 @@ void Quaternion::FromEulerAngles(float x, float y, float z)
     float sinZ = sinf(z);
     float cosZ = cosf(z);
 
+    // 将三个旋转分别转换为四元数，再将这三个四元数连乘
+    // |   cosY   ||   cosX   ||   cosZ   |
+    // | |   0  | || | sinX | || |   0  | |
+    // | | sinY | || |   0  | || |   0  | |
+    // | |   0  | || |   0  | || | sinZ | |
     w_ = cosY * cosX * cosZ + sinY * sinX * sinZ;
     x_ = cosY * sinX * cosZ + sinY * cosX * sinZ;
     y_ = sinY * cosX * cosZ - cosY * sinX * sinZ;
     z_ = cosY * cosX * sinZ - sinY * sinX * cosZ;
 }
 
+// 从两个向量（start，end）构造四元数
 void Quaternion::FromRotationTo(const Vector3& start, const Vector3& end)
 {
     Vector3 normStart = start.Normalized();
     Vector3 normEnd = end.Normalized();
-    float d = normStart.DotProduct(normEnd);
+    float d = normStart.DotProduct(normEnd); // = |normStart||normEnd|cos(theta) = cos(theta)
 
     if (d > -1.0f + M_EPSILON)
     {
-        Vector3 c = normStart.CrossProduct(normEnd);
-        float s = sqrtf((1.0f + d) * 2.0f);
-        float invS = 1.0f / s;
+        Vector3 c = normStart.CrossProduct(normEnd); // 计算旋转轴
+        float s = sqrtf((1.0f + d) * 2.0f); // = sqrtf((1.0f + cos(theta)) * 2.0f)，根据半倍角公式cos(theta/2) = √((1+cos(theta))/2)，所以s=2cos(theta/2)
+        float invS = 1.0f / s; // = 1/2cos(theta/2)，根据二倍角公司sin(2*theta)=2sin(theta)*cos(theta)，invS=sin(theta/2)/sin(theta)
 
+        // |c|=|normStart|*|normEnd|*sin(theta)=sin(theta)
+        // 所以c*invS=c*sin(theta/2)/sin(theta)=(c/sin(theta))*sin(theta/2)，即先将c标准化，再乘以sin(theta/2)
         x_ = c.x_ * invS;
         y_ = c.y_ * invS;
         z_ = c.z_ * invS;
         w_ = 0.5f * s;
     }
-    else
+    else // cos(theta) == -1，夹角为180度
     {
         Vector3 axis = Vector3::RIGHT.CrossProduct(normStart);
-        if (axis.Length() < M_EPSILON)
+        if (axis.Length() < M_EPSILON) // sin(theta) == 0，夹角为0度（normStart和x轴重合）
             axis = Vector3::UP.CrossProduct(normStart);
 
         FromAngleAxis(180.f, axis);
     }
 }
 
+// 从正交轴构造四元数
 void Quaternion::FromAxes(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis)
 {
     Matrix3 matrix(
@@ -103,8 +116,21 @@ void Quaternion::FromAxes(const Vector3& xAxis, const Vector3& yAxis, const Vect
     FromRotationMatrix(matrix);
 }
 
+// 旋转矩阵转四元数
 void Quaternion::FromRotationMatrix(const Matrix3& matrix)
 {
+    // 用矩阵和四元数分别表示绕单位向量n旋转theta，依此解出四元数(w,x,y,z)的矩阵表示：
+    // | 1-2y^2-2z^2 2xy+2wz         2xz-2wy     |
+    // | 2xy-2wz     1-2x^2-2z^2     2yz+2wx     |
+    // | 2xz+2wy     2yz-2wx         1-2x^2-2y^2 |
+    // 所以：
+    //      m00_ + m11_ + m22_ = (1-2y^2-2z^2)+(1-2x^2-2z^2)+(1-2x^2-2y^2) = 3-4(x^2+y^2+z^2) = 3-4(1-w^2) = 4w^2-1
+    //      m00_ - m11_ - m22_ = 4x^2-1
+    //      -m00_ + m11_ - m22_ = 4y^2-1
+    //      -m00_ - m11_ + m22_ = 4z^2-1
+    //      m12_ - m21_ = 4wx
+    //      m20_ - m02_ = 4wy
+    //      m01_ - m10_ = 4wz
     float t = matrix.m00_ + matrix.m11_ + matrix.m22_;
 
     if (t > 0.0f)

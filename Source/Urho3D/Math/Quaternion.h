@@ -32,7 +32,7 @@ namespace Urho3D
 {
 
 /// Rotation represented as a four-dimensional normalized vector.
-class URHO3D_API Quaternion
+class URHO3D_API Quaternion // 以四维标准化向量表示的旋转。
 {
 public:
     /// Construct an identity quaternion.
@@ -93,37 +93,37 @@ public:
     }
 
     /// Construct from an angle (in degrees) and axis.
-    Quaternion(float angle, const Vector3& axis) noexcept
+    Quaternion(float angle, const Vector3& axis) noexcept // 轴（axis）角（angle，度）对转四元数
     {
         FromAngleAxis(angle, axis);
     }
 
     /// Construct from an angle (in degrees, for Urho2D).
-    explicit Quaternion(float angle) noexcept
+    explicit Quaternion(float angle) noexcept // 轴（Vector3::FORWARD）角（angle，度）对转四元数
     {
         FromAngleAxis(angle, Vector3::FORWARD);
     }
 
     /// Construct from Euler angles (in degrees.) Equivalent to Y*X*Z.
-    Quaternion(float x, float y, float z) noexcept
+    Quaternion(float x, float y, float z) noexcept // 从欧拉角（Y*X*Z，度为单位）构造
     {
         FromEulerAngles(x, y, z);
     }
 
     /// Construct from the rotation difference between two direction vectors.
-    Quaternion(const Vector3& start, const Vector3& end) noexcept
+    Quaternion(const Vector3& start, const Vector3& end) noexcept // 从两个方向向量之间的旋转差构造。
     {
         FromRotationTo(start, end);
     }
 
     /// Construct from orthonormal axes.
-    Quaternion(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis) noexcept
+    Quaternion(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis) noexcept // 从正交轴构造
     {
         FromAxes(xAxis, yAxis, zAxis);
     }
 
     /// Construct from a rotation matrix.
-    explicit Quaternion(const Matrix3& matrix) noexcept
+    explicit Quaternion(const Matrix3& matrix) noexcept // 从旋转矩阵构造
     {
         FromRotationMatrix(matrix);
     }
@@ -234,7 +234,7 @@ public:
     }
 
     /// Multiply a quaternion.
-    Quaternion operator *(const Quaternion& rhs) const
+    Quaternion operator *(const Quaternion& rhs) const // 四元数叉乘
     {
 #ifdef URHO3D_SSE
         __m128 q1 = _mm_loadu_ps(&w_);

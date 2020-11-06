@@ -137,6 +137,7 @@ float Color::Lightness() const
     return (max + min) * 0.5f;
 }
 
+// 将RGB分量的最小值和最大值存储在指定的指针地址，可以选择将这些值剪裁到[0，1]范围内。
 void Color::Bounds(float* min, float* max, bool clipped) const
 {
     assert(min && max);

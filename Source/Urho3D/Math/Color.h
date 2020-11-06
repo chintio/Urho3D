@@ -211,11 +211,11 @@ public:
     /// Opaque blue color.
     static const Color BLUE;
     /// Opaque cyan color.
-    static const Color CYAN;
+    static const Color CYAN; // 青色、蓝绿色
     /// Opaque magenta color.
-    static const Color MAGENTA;
+    static const Color MAGENTA; // 品红、洋红
     /// Opaque yellow color.
-    static const Color YELLOW;
+    static const Color YELLOW; // 黄色
     /// Transparent black color (black with no alpha).
     static const Color TRANSPARENT_BLACK;
 
@@ -232,5 +232,18 @@ protected:
 
 /// Multiply Color with a scalar.
 inline Color operator *(float lhs, const Color& rhs) { return rhs * lhs; }
+
+// HSB 和 HSV 是同一个东西，只是名称不同
+// HSB（HSV）和HSL在字面意思上是一样的：
+// H 指的是色相（Hue），就是颜色名称，例如“红色”、“蓝色”；
+// S 指的是饱和度（Saturation），即颜色的纯度；
+// L（Lightness） 和 B（Brightness）是明度，颜色的明亮程度
+// HSL 和 HSB 中的 H（色相） 完全一致，但二者的 S（饱和度）不一样， L 和 B （明度 ）也不一样：
+// HSB 中的 S 控制纯色中混入白色的量，值越大，白色越少，颜色越纯；
+// HSB 中的 B 控制纯色中混入黑色的量，值越大，黑色越少，明度越高；
+// HSL 中的 S 控制纯色中混入灰色的量，值越大，灰色越少，颜色越纯；
+// HSL 中的 L 控制纯色中的混入的黑白两种颜色，数值越小，色彩越暗，越接近于黑色；数值越大，色彩越亮，越接近于白色。
+// https://www.zhihu.com/question/22077462
+// https://zhuanlan.zhihu.com/p/67930839
 
 }

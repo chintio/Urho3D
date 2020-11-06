@@ -126,7 +126,7 @@ public:
     }
 
     /// Multiply a matrix.
-    Matrix2 operator *(const Matrix2& rhs) const
+    Matrix2 operator *(const Matrix2& rhs) const // 矩阵连乘
     {
         return Matrix2(
             m00_ * rhs.m00_ + m01_ * rhs.m10_,
@@ -137,21 +137,21 @@ public:
     }
 
     /// Set scaling elements.
-    void SetScale(const Vector2& scale)
+    void SetScale(const Vector2& scale) // 设置矩阵的缩放分量
     {
         m00_ = scale.x_;
         m11_ = scale.y_;
     }
 
     /// Set uniform scaling elements.
-    void SetScale(float scale)
+    void SetScale(float scale) // 设置矩阵的缩放分量
     {
         m00_ = scale;
         m11_ = scale;
     }
 
     /// Return the scaling part.
-    Vector2 Scale() const
+    Vector2 Scale() const // x轴上的缩放因子乘进了矩阵的第一列，y轴上的缩放因子乘进了矩阵的第二列，z轴上的缩放因子乘进了矩阵的第三列，所以缩放因子就是列向量的长度。https://blog.csdn.net/hunter_wwq/article/details/21473519
     {
         return Vector2(
             sqrtf(m00_ * m00_ + m10_ * m10_),
@@ -160,7 +160,7 @@ public:
     }
 
     /// Return transpose.
-    Matrix2 Transpose() const
+    Matrix2 Transpose() const // 返回转置矩阵
     {
         return Matrix2(
             m00_,
@@ -197,7 +197,7 @@ public:
     }
 
     /// Return inverse.
-    Matrix2 Inverse() const;
+    Matrix2 Inverse() const; // 返回逆矩阵
 
     /// Return float data.
     const float* Data() const { return &m00_; }
@@ -226,9 +226,9 @@ public:
     }
 
     /// Zero matrix.
-    static const Matrix2 ZERO;
+    static const Matrix2 ZERO; // 零矩阵
     /// Identity matrix.
-    static const Matrix2 IDENTITY;
+    static const Matrix2 IDENTITY; // 单位矩阵
 };
 
 /// Multiply a 2x2 matrix with a scalar.

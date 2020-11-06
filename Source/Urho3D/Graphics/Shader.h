@@ -114,7 +114,7 @@ private:
 //     float cNearClip:相机近裁剪距离
 //     float cFarClip:相机远裁剪距离
 //     float cDeltaTime:当前帧的时间步长（帧耗时）
-//     float4 cDepthMode:用于计算0-1之间的线性深度值的参数，以传递到插值器中的像素着色器。
+//     float4 cDepthMode:计算0-1之间的线性深度值，作为参数，传递到像素着色器。
 //     float cElapsedTime:场景的运行时间值。可用于实现材质动画
 //     float4x3 cModel:被渲染对象的世界变换矩阵
 //     float4x3 cView:相机的观察矩阵
@@ -174,5 +174,8 @@ private:
 // 着色器预处理（缓存）
 // 材质技术在不同的照明条件和渲染过程中可能使用的着色器变体会在材质加载时枚举，但由于其数量很大，在用于渲染之前，实际上不会从字节码编译或加载这些着色器变体。尤其是在OpenGL上，在渲染之前编译着色器可能会导致帧速率出现故障。为了避免这种情况，可以将使用过的着色器组合转储到XML文件中，然后进行预加载。请参见图形子系统中的BeginDumpShaders（）、EndDumpShaders（）和PrecacheShaders（）。命令行参数 - ds <file>可用于指示引擎在启动时开始自动转储着色器。
 // 请注意，使用的着色器变体将随图形设置而变化，例如 阴影 质量 采样/PCF/VSM或实例启用/禁用。
+
+// 逐顶点和逐像素光照：
+// https://www.cnblogs.com/zengqh/archive/2012/07/02/2573845.html
 
 }

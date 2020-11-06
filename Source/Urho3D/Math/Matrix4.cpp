@@ -62,6 +62,7 @@ Matrix4 Matrix4::operator *(const Matrix3x4& rhs) const
     );
 }
 
+// 返回矩阵的平移分量、旋转分量、缩放分量
 void Matrix4::Decompose(Vector3& translation, Quaternion& rotation, Vector3& scale) const
 {
     translation.x_ = m03_;
@@ -76,6 +77,8 @@ void Matrix4::Decompose(Vector3& translation, Quaternion& rotation, Vector3& sca
     rotation = Quaternion(ToMatrix3().Scaled(invScale));
 }
 
+// 求逆矩阵
+// 逆矩阵=标准伴随矩阵/矩阵行列式，M^(-1)=adjM/detM
 Matrix4 Matrix4::Inverse() const
 {
     float v0 = m20_ * m31_ - m21_ * m30_;
@@ -90,7 +93,7 @@ Matrix4 Matrix4::Inverse() const
     float i20 = (v4 * m10_ - v2 * m11_ + v0 * m13_);
     float i30 = -(v3 * m10_ - v1 * m11_ + v0 * m12_);
 
-    float invDet = 1.0f / (i00 * m00_ + i10 * m01_ + i20 * m02_ + i30 * m03_);
+    float invDet = 1.0f / (i00 * m00_ + i10 * m01_ + i20 * m02_ + i30 * m03_); // 矩阵行列式的倒数（1/|M|）
 
     i00 *= invDet;
     i10 *= invDet;
