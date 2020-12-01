@@ -30,6 +30,7 @@
 namespace Urho3D
 {
 
+// 用顶点序列vertices的包围球定义this
 void Sphere::Define(const Vector3* vertices, unsigned count)
 {
     if (!count)
@@ -39,6 +40,7 @@ void Sphere::Define(const Vector3* vertices, unsigned count)
     Merge(vertices, count);
 }
 
+// 用包围盒box的包围球定义this
 void Sphere::Define(const BoundingBox& box)
 {
     const Vector3& min = box.min_;
@@ -55,23 +57,27 @@ void Sphere::Define(const BoundingBox& box)
     Merge(max);
 }
 
+// 用截锥体frustum的包围球定义this
 void Sphere::Define(const Frustum& frustum)
 {
     Define(frustum.vertices_, NUM_FRUSTUM_VERTICES);
 }
 
+// 用多面体poly的包围球定义this
 void Sphere::Define(const Polyhedron& poly)
 {
     Clear();
     Merge(poly);
 }
 
+// 根据this、顶点序列vertices，创建包围球，作为新的this
 void Sphere::Merge(const Vector3* vertices, unsigned count)
 {
     while (count--)
         Merge(*vertices++);
 }
 
+// 根据this、box创建包围球，作为新的this
 void Sphere::Merge(const BoundingBox& box)
 {
     const Vector3& min = box.min_;
@@ -87,12 +93,14 @@ void Sphere::Merge(const BoundingBox& box)
     Merge(max);
 }
 
+// 根据this、frustum创建包围球，作为新的this
 void Sphere::Merge(const Frustum& frustum)
 {
     const Vector3* vertices = frustum.vertices_;
     Merge(vertices, NUM_FRUSTUM_VERTICES);
 }
 
+// 根据this、poly创建包围球，作为新的this
 void Sphere::Merge(const Polyhedron& poly)
 {
     for (unsigned i = 0; i < poly.faces_.Size(); ++i)
@@ -103,8 +111,10 @@ void Sphere::Merge(const Polyhedron& poly)
     }
 }
 
+// 根据this、sphere创建包围球，作为新的this
 void Sphere::Merge(const Sphere& sphere)
 {
+    // 使用sphere初始化this
     if (radius_ < 0.0f)
     {
         center_ = sphere.center_;
@@ -113,19 +123,19 @@ void Sphere::Merge(const Sphere& sphere)
     }
 
     Vector3 offset = sphere.center_ - center_;
-    float dist = offset.Length();
+    float dist = offset.Length(); // 球心距离
 
     // If sphere fits inside, do nothing
-    if (dist + sphere.radius_ < radius_)
+    if (dist + sphere.radius_ < radius_) // 如果sphere在this内部，什么也不做
         return;
 
     // If we fit inside the other sphere, become it
-    if (dist + radius_ < sphere.radius_)
+    if (dist + radius_ < sphere.radius_) // 如果this在sphere内部，则用sphere替换this
     {
         center_ = sphere.center_;
         radius_ = sphere.radius_;
     }
-    else
+    else // 否则，以两球体的包围球创建新的球体
     {
         Vector3 NormalizedOffset = offset / dist;
 
@@ -136,14 +146,16 @@ void Sphere::Merge(const Sphere& sphere)
     }
 }
 
+// 包围盒box和this的位置关系
 Intersection Sphere::IsInside(const BoundingBox& box) const
 {
-    float radiusSquared = radius_ * radius_;
-    float distSquared = 0;
+    float radiusSquared = radius_ * radius_; // 半径平方
+    float distSquared = 0; // 距离平方
     float temp;
     Vector3 min = box.min_;
     Vector3 max = box.max_;
 
+    // 如果球心在box外部，则计算球心到box包围盒的最近距离
     if (center_.x_ < min.x_)
     {
         temp = center_.x_ - min.x_;
@@ -175,7 +187,7 @@ Intersection Sphere::IsInside(const BoundingBox& box) const
         distSquared += temp * temp;
     }
 
-    if (distSquared >= radiusSquared)
+    if (distSquared >= radiusSquared) // 球在box外部（包含外切）
         return OUTSIDE;
 
     min -= center_;
@@ -209,6 +221,7 @@ Intersection Sphere::IsInside(const BoundingBox& box) const
     return INSIDE;
 }
 
+// 包围盒box和this的位置关系
 Intersection Sphere::IsInsideFast(const BoundingBox& box) const
 {
     float radiusSquared = radius_ * radius_;

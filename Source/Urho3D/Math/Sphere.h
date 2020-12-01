@@ -32,7 +32,7 @@ class Polyhedron;
 class Frustum;
 
 /// %Sphere in three-dimensional space.
-class URHO3D_API Sphere
+class URHO3D_API Sphere // 三维球体
 {
 public:
     /// Construct undefined.
@@ -108,9 +108,9 @@ public:
     void Define(const Polyhedron& poly);
 
     /// Merge a point.
-    void Merge(const Vector3& point)
+    void Merge(const Vector3& point) // 根据this、point创建包围球，作为新的this
     {
-        if (radius_ < 0.0f)
+        if (radius_ < 0.0f) // this未定义，则point为中心点，半径为0
         {
             center_ = point;
             radius_ = 0.0f;
@@ -118,13 +118,14 @@ public:
         }
 
         Vector3 offset = point - center_;
-        float dist = offset.Length();
+        float dist = offset.Length(); // 点（point）到球心的距离
 
+        // 创建新的包围球，包围this、point，作为新的this
         if (dist > radius_)
         {
-            float half = (dist - radius_) * 0.5f;
-            radius_ += half;
-            center_ += (half / dist) * offset;
+            float half = (dist - radius_) * 0.5f; // 点（point）到球面距离的一半
+            radius_ += half; // 半径扩大half
+            center_ += (half / dist) * offset; // 中心点向point靠近half
         }
     }
 
@@ -147,13 +148,13 @@ public:
     }
 
     /// Return true if this sphere is defined via a previous call to Define() or Merge().
-    bool Defined() const
+    bool Defined() const // radius_大于等于0，表示已经初始化
     {
         return radius_ >= 0.0f;
     }
 
     /// Test if a point is inside.
-    Intersection IsInside(const Vector3& point) const
+    Intersection IsInside(const Vector3& point) const // 点和this的位置关系：内部、外部（包含落在球面上）
     {
         float distSquared = (point - center_).LengthSquared();
         if (distSquared < radius_ * radius_)
@@ -163,7 +164,7 @@ public:
     }
 
     /// Test if another sphere is inside, outside or intersects.
-    Intersection IsInside(const Sphere& sphere) const
+    Intersection IsInside(const Sphere& sphere) const // 球和this的位置关系：外部（包含外切）、内部（不包含内切）、其他为相交
     {
         float dist = (sphere.center_ - center_).Length();
         if (dist >= sphere.radius_ + radius_)
@@ -175,10 +176,10 @@ public:
     }
 
     /// Test if another sphere is (partially) inside or outside.
-    Intersection IsInsideFast(const Sphere& sphere) const
+    Intersection IsInsideFast(const Sphere& sphere) const // 球和this的位置关系：外部（包含外切）、其他为内部
     {
-        float distSquared = (sphere.center_ - center_).LengthSquared();
-        float combined = sphere.radius_ + radius_;
+        float distSquared = (sphere.center_ - center_).LengthSquared(); // 两球心距离的平方
+        float combined = sphere.radius_ + radius_; // 两球的半径和
 
         if (distSquared >= combined * combined)
             return OUTSIDE;
@@ -192,7 +193,7 @@ public:
     Intersection IsInsideFast(const BoundingBox& box) const;
 
     /// Return distance of a point to the surface, or 0 if inside.
-    float Distance(const Vector3& point) const { return Max((point - center_).Length() - radius_, 0.0f); }
+    float Distance(const Vector3& point) const { return Max((point - center_).Length() - radius_, 0.0f); } // 返回点到球面的距离，如果在球内部则为0
     /// Return point on the sphere relative to sphere position.
     Vector3 GetLocalPoint(float theta, float phi) const;
     /// Return point on the sphere.

@@ -37,7 +37,7 @@ const Quaternion Quaternion::IDENTITY;
 void Quaternion::FromAngleAxis(float angle, const Vector3& axis)
 {
     Vector3 normAxis = axis.Normalized(); // 旋转轴标准化
-    angle *= M_DEGTORAD_2; // 角度转为弧度
+    angle *= M_DEGTORAD_2; // 角度转为弧度，theta/2弧度
     float sinAngle = sinf(angle);
     float cosAngle = cosf(angle);
 
@@ -104,7 +104,7 @@ void Quaternion::FromRotationTo(const Vector3& start, const Vector3& end)
     }
 }
 
-// 从正交轴构造四元数
+// 从正交轴构造四元数，正交基-》旋转矩阵-》四元数
 void Quaternion::FromAxes(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis)
 {
     Matrix3 matrix(
@@ -174,6 +174,8 @@ void Quaternion::FromRotationMatrix(const Matrix3& matrix)
     }
 }
 
+// 从观察方向（direction）和上向（up）定义四元数，成功返回真
+// direction、up确定正交基，通过FromAxes()构建四元数。
 bool Quaternion::FromLookRotation(const Vector3& direction, const Vector3& up)
 {
     Quaternion ret;
@@ -188,7 +190,7 @@ bool Quaternion::FromLookRotation(const Vector3& direction, const Vector3& up)
         Vector3 right = up.CrossProduct(forward);
         ret.FromAxes(right, up, forward);
     }
-    else
+    else // direction、up 平行
         ret.FromRotationTo(Vector3::FORWARD, forward);
 
     if (!ret.IsNaN())
@@ -200,6 +202,7 @@ bool Quaternion::FromLookRotation(const Vector3& direction, const Vector3& up)
         return false;
 }
 
+// 四元数转欧拉角
 Vector3 Quaternion::EulerAngles() const
 {
     // Derivation from http://www.geometrictools.com/Documentation/EulerAngles.pdf
@@ -247,18 +250,25 @@ float Quaternion::RollAngle() const
     return EulerAngles().z_;
 }
 
+// 返回标准旋转轴向量
 Urho3D::Vector3 Quaternion::Axis() const
 {
-    return Vector3(x_, y_, z_) / sqrt(1. - w_ * w_);
+    return Vector3(x_, y_, z_) / sqrt(1. - w_ * w_); // sqrt(1. - w_ * w_) = sin(theta/2)
 }
 
+// 返回旋转角（弧度）
 float Quaternion::Angle() const
 {
     return 2 * Acos(w_);
 }
 
+// 返回旋转矩阵
 Matrix3 Quaternion::RotationMatrix() const
 {
+    // 用矩阵和四元数分别表示绕单位向量n旋转theta，依此解出四元数(w,x,y,z)的矩阵表示：
+    // | 1-2y^2-2z^2 2xy+2wz         2xz-2wy     |
+    // | 2xy-2wz     1-2x^2-2z^2     2yz+2wx     |
+    // | 2xz+2wy     2yz-2wx         1-2x^2-2y^2 |
     return Matrix3(
         1.0f - 2.0f * y_ * y_ - 2.0f * z_ * z_,
         2.0f * x_ * y_ - 2.0f * w_ * z_,
@@ -272,6 +282,7 @@ Matrix3 Quaternion::RotationMatrix() const
     );
 }
 
+// 球面线性插值（spherical linear interpolation）
 Quaternion Quaternion::Slerp(const Quaternion& rhs, float t) const
 {
     // Use fast approximation for Emscripten builds
@@ -307,10 +318,10 @@ Quaternion Quaternion::Slerp(const Quaternion& rhs, float t) const
     return (*this * (a * sign) + rhs * b).Normalized();
 #else
     // Favor accuracy for native code builds
-    float cosAngle = DotProduct(rhs);
+    float cosAngle = DotProduct(rhs); // 计算this、rhs的夹角（向量点积=向量模积*cos(theta)）
     float sign = 1.0f;
     // Enable shortest path rotation
-    if (cosAngle < 0.0f)
+    if (cosAngle < 0.0f) // 如果点乘为负，则反转一个四元数以取得短的4D“弧”
     {
         cosAngle = -cosAngle;
         sign = -1.0f;
@@ -320,13 +331,13 @@ Quaternion Quaternion::Slerp(const Quaternion& rhs, float t) const
     float sinAngle = sinf(angle);
     float t1, t2;
 
-    if (sinAngle > 0.001f)
+    if (sinAngle > 0.001f) // 使用球面插值
     {
         float invSinAngle = 1.0f / sinAngle;
         t1 = sinf((1.0f - t) * angle) * invSinAngle;
         t2 = sinf(t * angle) * invSinAngle;
     }
-    else
+    else // 近似重合，使用线性插值
     {
         t1 = 1.0f - t;
         t2 = t;
@@ -336,6 +347,7 @@ Quaternion Quaternion::Slerp(const Quaternion& rhs, float t) const
 #endif
 }
 
+// 标准线性插值
 Quaternion Quaternion::Nlerp(const Quaternion& rhs, float t, bool shortestPath) const
 {
     Quaternion result;

@@ -28,7 +28,7 @@ namespace Urho3D
 {
 
 /// Two-dimensional bounding rectangle.
-class URHO3D_API Rect
+class URHO3D_API Rect // 矩形
 {
 public:
     /// Construct an undefined rect.
@@ -155,7 +155,7 @@ public:
     }
 
     /// Merge a point.
-    void Merge(const Vector2& point)
+    void Merge(const Vector2& point) // 用this和point的边界生成新矩形
     {
         if (point.x_ < min_.x_)
             min_.x_ = point.x_;
@@ -188,10 +188,10 @@ public:
     }
 
     /// Clip with another rect.
-    void Clip(const Rect& rect);
+    void Clip(const Rect& rect); // 相交区域的边界生成新矩形
 
     /// Return true if this rect is defined via a previous call to Define() or Merge().
-    bool Defined() const
+    bool Defined() const // 已经初始化
     {
         return min_.x_ != M_INFINITY;
     }
@@ -209,7 +209,7 @@ public:
     bool Equals(const Rect& rhs) const { return min_.Equals(rhs.min_) && max_.Equals(rhs.max_); }
 
     /// Test whether a point is inside.
-    Intersection IsInside(const Vector2& point) const
+    Intersection IsInside(const Vector2& point) const // 点在矩形外部还是内部（包括落在边界框上）
     {
         if (point.x_ < min_.x_ || point.y_ < min_.y_ || point.x_ > max_.x_ || point.y_ > max_.y_)
             return OUTSIDE;
@@ -218,7 +218,7 @@ public:
     }
 
     /// Test if another rect is inside, outside or intersects.
-    Intersection IsInside(const Rect& rect) const
+    Intersection IsInside(const Rect& rect) const // 外部、相交、内部
     {
         if (rect.max_.x_ < min_.x_ || rect.min_.x_ > max_.x_ || rect.max_.y_ < min_.y_ || rect.min_.y_ > max_.y_)
             return OUTSIDE;

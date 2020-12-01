@@ -259,7 +259,7 @@ public:
     }
 
     /// Multiply a Vector3.
-    Vector3 operator *(const Vector3& rhs) const
+    Vector3 operator *(const Vector3& rhs) const // 四元数旋转三维向量
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
@@ -282,6 +282,8 @@ public:
             _mm_cvtss_f32(_mm_shuffle_ps(s, s, _MM_SHUFFLE(1, 1, 1, 1))),
             _mm_cvtss_f32(_mm_movehl_ps(s, s)));
 #else
+        // nVidia SDK implementation
+        // Ogre引擎四元数与三维向量相乘算法推导：https://blog.csdn.net/outsp66336/article/details/7735930#
         Vector3 qVec(x_, y_, z_);
         Vector3 cross1(qVec.CrossProduct(rhs));
         Vector3 cross2(qVec.CrossProduct(cross1));
@@ -304,7 +306,7 @@ public:
     bool FromLookRotation(const Vector3& direction, const Vector3& up = Vector3::UP);
 
     /// Normalize to unit length.
-    void Normalize()
+    void Normalize() // 标准化
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
@@ -330,7 +332,7 @@ public:
     }
 
     /// Return normalized to unit length.
-    Quaternion Normalized() const
+    Quaternion Normalized() const // 返回标准化四元数
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
@@ -355,7 +357,7 @@ public:
     }
 
     /// Return inverse.
-    Quaternion Inverse() const
+    Quaternion Inverse() const // 返回逆四元数（共轭四元数/模）
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
@@ -413,7 +415,7 @@ public:
     bool IsNaN() const { return Urho3D::IsNaN(w_) || Urho3D::IsNaN(x_) || Urho3D::IsNaN(y_) || Urho3D::IsNaN(z_); }
 
     /// Return conjugate.
-    Quaternion Conjugate() const
+    Quaternion Conjugate() const // 返回共轭四元数（向量部分变负）
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
