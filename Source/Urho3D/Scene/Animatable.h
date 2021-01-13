@@ -60,7 +60,7 @@ private:
 };
 
 /// Base class for animatable object, an animatable object can be set animation on it's attributes, or can be set an object animation to it.
-class URHO3D_API Animatable : public Serializable
+class URHO3D_API Animatable : public Serializable // 属性动画的基类
 {
     URHO3D_OBJECT(Animatable, Serializable);
 
@@ -156,3 +156,6 @@ protected:
 };
 
 }
+
+// 属性动画
+// https://urho3d.github.io/documentation/1.7.1/_attribute_animation.html

@@ -212,10 +212,10 @@ bool Model::BeginLoad(Deserializer& source)
             float distance = source.ReadFloat();
             auto type = (PrimitiveType)source.ReadUInt();
 
-            unsigned vbRef = source.ReadUInt();
-            unsigned ibRef = source.ReadUInt();
-            unsigned indexStart = source.ReadUInt();
-            unsigned indexCount = source.ReadUInt();
+            unsigned vbRef = source.ReadUInt(); // 引用了第几个顶点数据块
+            unsigned ibRef = source.ReadUInt(); // 引用了第几个索引数据块
+            unsigned indexStart = source.ReadUInt(); // 索引数据的开始位置
+            unsigned indexCount = source.ReadUInt(); // 索引数据的个数
 
             if (vbRef >= vertexBuffers_.Size())
             {

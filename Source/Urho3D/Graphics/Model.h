@@ -90,18 +90,18 @@ struct IndexBufferDesc
 };
 
 /// Description of a geometry for asynchronous loading.
-struct GeometryDesc
+struct GeometryDesc // 异步加载的几何体描述
 {
     /// Primitive type.
-    PrimitiveType type_;
+    PrimitiveType type_; // 图元类型（PrimitiveType）
     /// Vertex buffer ref.
-    unsigned vbRef_;
+    unsigned vbRef_; // 引用第几块顶点数据
     /// Index buffer ref.
-    unsigned ibRef_;
+    unsigned ibRef_; // 引用第几块索引数据
     /// Index start.
-    unsigned indexStart_;
+    unsigned indexStart_; // 索引开始位置
     /// Index count.
-    unsigned indexCount_;
+    unsigned indexCount_; // 索引个数
 };
 
 /// 3D model resource.
@@ -207,9 +207,9 @@ private:
     /// Skeleton.
     Skeleton skeleton_; // 骨骼数据
     /// Vertex buffers.
-    Vector<SharedPtr<VertexBuffer> > vertexBuffers_;
+    Vector<SharedPtr<VertexBuffer> > vertexBuffers_; // 顶点数据，设备缓存，对应模型的每个部分
     /// Index buffers.
-    Vector<SharedPtr<IndexBuffer> > indexBuffers_;
+    Vector<SharedPtr<IndexBuffer> > indexBuffers_; // 顶点索引数据，设备缓存，对应模型的每个部分
     /// Geometries.
     Vector<Vector<SharedPtr<Geometry> > > geometries_; // 每个模型有多个部分（换装），每个部分有多个模型精度（LOD），每个LOD用几何体（Geometry）表示，geometries_.Size()表示模型有几部分，geometries_[].Size()表示该部分的Lod层级数
     /// Geometry bone mappings.
@@ -227,7 +227,7 @@ private:
     /// Index buffer data for asynchronous loading.
     Vector<IndexBufferDesc> loadIBData_; // 异步加载时的索引数据在BeginLoad中存放于此地，在EndLoad中转入indexBuffers_。
     /// Geometry definitions for asynchronous loading.
-    Vector<PODVector<GeometryDesc> > loadGeometries_; // 几何体（及其LOD几何体）的描述数据
+    Vector<PODVector<GeometryDesc> > loadGeometries_; // 几何体的描述数据（模型的各个部分，每部分的各个LOD）
 };
 
 }
