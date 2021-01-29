@@ -124,6 +124,7 @@ bool Model::BeginLoad(Deserializer& source)
             }
         }
 
+        // 确定顶点数据中，从哪个顶点开始，共有多少个顶点参与变形动画
         morphRangeStarts_[i] = source.ReadUInt();
         morphRangeCounts_[i] = source.ReadUInt();
 
@@ -252,6 +253,7 @@ bool Model::BeginLoad(Deserializer& source)
     }
 
     // Read morphs
+    // 读取顶点变形数据到morphs_，每个morphs_，其buffers_[i]的变形数据都将按权重被混合到vertexBuffers_[i]中
     unsigned numMorphs = source.ReadUInt();
     morphs_.Reserve(numMorphs);
     for (unsigned i = 0; i < numMorphs; ++i)

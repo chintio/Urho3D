@@ -47,20 +47,20 @@ struct VertexBufferMorph
     /// Morphed vertices data size as bytes.
     unsigned dataSize_;
     /// Morphed vertices. Stored packed as <index, data> pairs.
-    SharedArrayPtr<unsigned char> morphData_;
+    SharedArrayPtr<unsigned char> morphData_; // 要混合的顶点，格式为<index, data>，index指向Model.vertexBuffers_中的顶点元素索引（从0开始）
 };
 
 /// Definition of a model's vertex morph.
 struct ModelMorph
 {
     /// Morph name.
-    String name_;
+    String name_; // 变形动画的名称
     /// Morph name hash.
     StringHash nameHash_;
     /// Current morph weight.
-    float weight_;
+    float weight_; // 混合权重
     /// Morph data per vertex buffer.
-    HashMap<unsigned, VertexBufferMorph> buffers_;
+    HashMap<unsigned, VertexBufferMorph> buffers_; // 要混合的顶点信息，索引对应Model.vertexBuffers_索引
 };
 
 /// Description of vertex buffer data for asynchronous loading.
@@ -217,11 +217,11 @@ private:
     /// Geometry centers.
     PODVector<Vector3> geometryCenters_; // 几何体的中心点
     /// Vertex morphs.
-    Vector<ModelMorph> morphs_; // 顶点变形数据
+    Vector<ModelMorph> morphs_; // 顶点变形数据，每个morphs_，其buffers_[i]的变形数据都将按权重被混合到vertexBuffers_[i]中
     /// Vertex buffer morph range start.
-    PODVector<unsigned> morphRangeStarts_;
+    PODVector<unsigned> morphRangeStarts_; // vertexBuffers_中从哪个顶点开始变形
     /// Vertex buffer morph range vertex count.
-    PODVector<unsigned> morphRangeCounts_;
+    PODVector<unsigned> morphRangeCounts_; // vertexBuffers_中从morphRangeStarts_开始，有多少个顶点参与变形
     /// Vertex buffer data for asynchronous loading.
     Vector<VertexBufferDesc> loadVBData_; // 异步加载时的顶点数据在BeginLoad中存放于此地，在EndLoad中转入vertexBuffers_。
     /// Index buffer data for asynchronous loading.

@@ -146,6 +146,7 @@ protected:
 
 template <class T> T* Component::GetComponent() const { return static_cast<T*>(GetComponent(T::GetTypeStatic())); }
 
+// 将本组件所属的节点（Node）下的所有目标组件（class T），放入dest
 template <class T> void Component::GetComponents(PODVector<T*>& dest) const
 {
     GetComponents(reinterpret_cast<PODVector<Component*>&>(dest), T::GetTypeStatic());

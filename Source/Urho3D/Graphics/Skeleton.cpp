@@ -47,10 +47,11 @@ bool Skeleton::Load(Deserializer& source)
     unsigned bones = source.ReadUInt();
     bones_.Reserve(bones);
 
+    // 读取每根骨头的数据
     for (unsigned i = 0; i < bones; ++i)
     {
         Bone newBone;
-        newBone.name_ = source.ReadString();
+        newBone.name_ = source.ReadString(); // 骨头名称，该名称和动画轨迹的名称（AnimationTrack.name_）对应
         newBone.nameHash_ = newBone.name_;
         newBone.parentIndex_ = source.ReadUInt();
         newBone.initialPosition_ = source.ReadVector3();
@@ -100,6 +101,7 @@ bool Skeleton::Save(Serializer& dest) const
     return true;
 }
 
+// 从src复制骨骼数据（骨头数组bones_、根骨头索引）
 void Skeleton::Define(const Skeleton& src)
 {
     ClearBones();
@@ -120,6 +122,7 @@ void Skeleton::SetRootBoneIndex(unsigned index)
         URHO3D_LOGERROR("Root bone index out of bounds");
 }
 
+// 清除骨头数组bones_、清除根骨头索引
 void Skeleton::ClearBones()
 {
     bones_.Clear();

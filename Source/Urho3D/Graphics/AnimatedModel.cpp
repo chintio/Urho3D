@@ -351,6 +351,7 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
         SubscribeToEvent(model, E_RELOADFINISHED, URHO3D_HANDLER(AnimatedModel, HandleModelReloadFinished));
 
         // Copy the subgeometry & LOD level structure
+        // 将geometries_、geometryData_指向model的对应数据
         SetNumGeometries(model->GetNumGeometries());
         const Vector<Vector<SharedPtr<Geometry> > >& geometries = model->GetGeometries();
         const PODVector<Vector3>& geometryCenters = model->GetGeometryCenters();
@@ -361,6 +362,7 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
         }
 
         // Copy geometry bone mappings
+        // 将geometryBoneMappings_指向model的对应数据
         const Vector<PODVector<unsigned> >& geometryBoneMappings = model->GetGeometryBoneMappings();
         geometryBoneMappings_.Clear();
         geometryBoneMappings_.Reserve(geometryBoneMappings.Size());
@@ -368,6 +370,7 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
             geometryBoneMappings_.Push(geometryBoneMappings[i]);
 
         // Copy morphs. Note: morph vertex buffers will be created later on-demand
+        // 将morphs_、morphVertexBuffers_指向model的对应数据
         morphVertexBuffers_.Clear();
         morphs_.Clear();
         const Vector<ModelMorph>& morphs = model->GetMorphs();
@@ -387,6 +390,7 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
         }
 
         // Copy bounding box & skeleton
+        // 复制包围盒
         SetBoundingBox(model->GetBoundingBox());
         // Initial bone bounding box is just the one stored in the model
         boneBoundingBox_ = boundingBox_;
@@ -399,13 +403,14 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
         SetGeometryBoneMappings();
 
         // Enable skinning in batches
+        // 设置各批次的变换矩阵（蒙皮模型使用骨骼的变换矩阵，静态模型使用节点的变换矩阵）
         for (unsigned i = 0; i < batches_.Size(); ++i)
         {
-            if (skinMatrices_.Size())
+            if (skinMatrices_.Size()) // 有骨头数据
             {
                 batches_[i].geometryType_ = GEOM_SKINNED;
                 // Check if model has per-geometry bone mappings
-                if (geometrySkinMatrices_.Size() && geometrySkinMatrices_[i].Size())
+                if (geometrySkinMatrices_.Size() && geometrySkinMatrices_[i].Size()) // 骨头按子几何体划分
                 {
                     batches_[i].worldTransform_ = &geometrySkinMatrices_[i][0];
                     batches_[i].numWorldTransforms_ = geometrySkinMatrices_[i].Size();
@@ -518,6 +523,7 @@ void AnimatedModel::RemoveAnimationState(AnimationState* state)
     }
 }
 
+// 移除指定索引的动画
 void AnimatedModel::RemoveAnimationState(unsigned index)
 {
     if (index < animationStates_.Size())
@@ -527,6 +533,7 @@ void AnimatedModel::RemoveAnimationState(unsigned index)
     }
 }
 
+// 移除所有动画
 void AnimatedModel::RemoveAllAnimationStates()
 {
     if (animationStates_.Size())
@@ -549,6 +556,7 @@ void AnimatedModel::SetUpdateInvisible(bool enable)
 }
 
 
+// 设置变形权重，如果是是主动画模型，则递归设置辅动画模型的同名变形权重
 void AnimatedModel::SetMorphWeight(unsigned index, float weight)
 {
     if (index >= morphs_.Size())
@@ -691,6 +699,7 @@ AnimationState* AnimatedModel::GetAnimationState(unsigned index) const
     return index < animationStates_.Size() ? animationStates_[index].Get() : nullptr;
 }
 
+// 设置骨骼数据：复制骨头数据、确定骨头边界框、建立骨头节点的层次关系。
 void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
 {
     if (!node_ && createBones)
@@ -699,10 +708,11 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
         return;
     }
 
-    if (isMaster_)
+    if (isMaster_) // 主动画模型
     {
         // Check if bone structure has stayed compatible (reloading the model.) In that case retain the old bones and animations
-        if (skeleton_.GetNumBones() == skeleton.GetNumBones())
+        // 检查骨头结构是否保持兼容（重新加载模型）。在这种情况下，保留旧的骨头和动画
+        if (skeleton_.GetNumBones() == skeleton.GetNumBones()) // 骨头数相同
         {
             Vector<Bone>& destBones = skeleton_.GetModifiableBones();
             const Vector<Bone>& srcBones = skeleton.GetBones();
@@ -711,7 +721,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
             for (unsigned i = 0; i < destBones.Size(); ++i)
             {
                 if (destBones[i].node_ && destBones[i].name_ == srcBones[i].name_ && destBones[i].parentIndex_ ==
-                                                                                     srcBones[i].parentIndex_)
+                                                                                     srcBones[i].parentIndex_) // 骨头名称、父骨头，都相同，则使用新的骨头数据，保留旧的场景节点和动画
                 {
                     // If compatible, just copy the values and retain the old node and animated status
                     Node* boneNode = destBones[i].node_;
@@ -730,7 +740,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
                 return;
         }
 
-        RemoveAllAnimationStates();
+        RemoveAllAnimationStates(); // 移除所有动画
 
         // Detach the rootbone of the previous model if any
         if (createBones)
@@ -745,6 +755,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
         // Create scene nodes for the bones
         if (createBones)
         {
+            // 为每根骨头创建节点（Node）
             for (Vector<Bone>::Iterator i = bones.Begin(); i != bones.End(); ++i)
             {
                 // Create bones as local, as they are never to be directly synchronized over the network
@@ -756,6 +767,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
                 i->node_ = boneNode;
             }
 
+            // 根据骨头索引建立其对应节点的父子关系（层次关系）
             for (unsigned i = 0; i < bones.Size(); ++i)
             {
                 unsigned parentIndex = bones[i].parentIndex_;
@@ -770,7 +782,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
         eventData[P_NODE] = node_;
         node_->SendEvent(E_BONEHIERARCHYCREATED, eventData);
     }
-    else
+    else // 非主动画模型
     {
         // For non-master models: use the bone nodes of the master model
         skeleton_.Define(skeleton);
@@ -783,6 +795,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
         if (createBones)
         {
             Vector<Bone>& bones = skeleton_.GetModifiableBones();
+            // 为每根骨头创建节点（Node）
             for (Vector<Bone>::Iterator i = bones.Begin(); i != bones.End(); ++i)
             {
                 Node* boneNode = node_->GetChild(i->name_, true);
@@ -903,6 +916,7 @@ const PODVector<unsigned char>& AnimatedModel::GetMorphsAttr() const
     return attrBuffer_.GetBuffer();
 }
 
+// 更新骨头边界框
 void AnimatedModel::UpdateBoneBoundingBox()
 {
     if (skeleton_.GetNumBones())
@@ -1010,15 +1024,17 @@ void AnimatedModel::AssignBoneNodes()
     }
 }
 
+// 确定每个骨头的边界框
 void AnimatedModel::FinalizeBoneBoundingBoxes()
 {
     Vector<Bone>& bones = skeleton_.GetModifiableBones();
     PODVector<AnimatedModel*> models;
     GetComponents<AnimatedModel>(models);
 
-    if (models.Size() > 1)
+    if (models.Size() > 1) // 多于一个动画模型
     {
         // Reset first to the model resource's original bone bounding information if available (should be)
+        // 重置为模型资源的原始碰撞（骨骼边界）信息
         if (model_)
         {
             const Vector<Bone>& modelBones = model_->GetSkeleton().GetBones();
@@ -1032,6 +1048,7 @@ void AnimatedModel::FinalizeBoneBoundingBoxes()
 
         // Get matching bones from all non-master models and merge their bone bounding information
         // to prevent culling errors (master model may not have geometry in all bones, or the bounds are smaller)
+        // 从所有非主模型中获取匹配骨骼（相同名称）并合并其骨骼边界信息，防止剔除错误（主模型可能不是所有骨骼都有几何体，或者边界较小）
         for (PODVector<AnimatedModel*>::Iterator i = models.Begin(); i != models.End(); ++i)
         {
             if ((*i) == this)
@@ -1063,6 +1080,7 @@ void AnimatedModel::FinalizeBoneBoundingBoxes()
 
     // Remove collision information from dummy bones that do not affect skinning, to prevent them from being merged
     // to the bounding box and making it artificially large
+    // 从不影响蒙皮的虚拟骨骼（dummy bones，碰撞球半径或者碰撞盒长度为0）中移除碰撞信息，以防止它们被合并到边界框并使其人为变大
     for (Vector<Bone>::Iterator i = bones.Begin(); i != bones.End(); ++i)
     {
         if (i->collisionMask_ & BONECOLLISION_BOX && i->boundingBox_.Size().Length() < M_EPSILON)
@@ -1072,6 +1090,7 @@ void AnimatedModel::FinalizeBoneBoundingBoxes()
     }
 }
 
+// 移除根骨头的场景节点
 void AnimatedModel::RemoveRootBone()
 {
     Bone* rootBone = skeleton_.GetRootBone();
@@ -1102,12 +1121,14 @@ void AnimatedModel::MarkMorphsDirty()
     morphsDirty_ = true;
 }
 
+// 根据模型原始顶点数据产生变形顶点数据（morphVertexBuffers_），将变形顶点缓冲区加入geometries_的顶点缓冲区索引
 void AnimatedModel::CloneGeometries()
 {
     const Vector<SharedPtr<VertexBuffer> >& originalVertexBuffers = model_->GetVertexBuffers();
     HashMap<VertexBuffer*, SharedPtr<VertexBuffer> > clonedVertexBuffers;
     morphVertexBuffers_.Resize(originalVertexBuffers.Size());
 
+    // 根据原始模型的顶点数据生成对应的变形顶点数据到morphVertexBuffers_
     for (unsigned i = 0; i < originalVertexBuffers.Size(); ++i)
     {
         VertexBuffer* original = originalVertexBuffers[i];
@@ -1130,6 +1151,7 @@ void AnimatedModel::CloneGeometries()
     }
 
     // Geometries will always be cloned fully. They contain only references to buffer, so they are relatively light
+    // 创建新的geometries_数据，在各个顶点缓冲区索引后面插入变形顶点缓冲区索引，其他数据不变
     for (unsigned i = 0; i < geometries_.Size(); ++i)
     {
         for (unsigned j = 0; j < geometries_[i].Size(); ++j)
@@ -1273,6 +1295,7 @@ void AnimatedModel::UpdateAnimation(const FrameInfo& frame)
     ApplyAnimation();
 }
 
+// 根据动画，设置骨头节点的方位
 void AnimatedModel::ApplyAnimation()
 {
     // Make sure animations are in ascending priority order
@@ -1300,6 +1323,7 @@ void AnimatedModel::ApplyAnimation()
     animationDirty_ = false;
 }
 
+// 更新蒙皮数据
 void AnimatedModel::UpdateSkinning()
 {
     // Note: the model's world transform will be baked in the skin matrices
@@ -1339,6 +1363,7 @@ void AnimatedModel::UpdateSkinning()
     skinningDirty_ = false;
 }
 
+// 将变形数据morphs_按权重混合到顶点数据morphVertexBuffers_
 void AnimatedModel::UpdateMorphs()
 {
     auto* graphics = GetSubsystem<Graphics>();
@@ -1383,6 +1408,7 @@ void AnimatedModel::UpdateMorphs()
     morphsDirty_ = false;
 }
 
+// 将变形数据按权重混合到顶点数据中
 void AnimatedModel::ApplyMorph(VertexBuffer* buffer, void* destVertexData, unsigned morphRangeStart, const VertexBufferMorph& morph,
     float weight)
 {

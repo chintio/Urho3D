@@ -56,11 +56,11 @@ struct AnimationStateTrack
     ~AnimationStateTrack();
 
     /// Animation track.
-    const AnimationTrack* track_;
+    const AnimationTrack* track_; // 骨头对应的动画轨迹
     /// Bone pointer.
-    Bone* bone_;
+    Bone* bone_; // 骨头
     /// Scene node pointer.
-    WeakPtr<Node> node_;
+    WeakPtr<Node> node_; // 骨头对应的节点
     /// Blending weight.
     float weight_;
     /// Last key frame.
@@ -156,15 +156,15 @@ private:
     void ApplyTrack(AnimationStateTrack& stateTrack, float weight, bool silent);
 
     /// Animated model (model mode.)
-    WeakPtr<AnimatedModel> model_;
+    WeakPtr<AnimatedModel> model_; // 动画对应的模型
     /// Root scene node (node hierarchy mode.)
     WeakPtr<Node> node_;
     /// Animation.
-    SharedPtr<Animation> animation_;
+    SharedPtr<Animation> animation_; // 动画资源
     /// Start bone.
-    Bone* startBone_;
+    Bone* startBone_; // 起始骨头（通常为根骨头）
     /// Per-track data.
-    Vector<AnimationStateTrack> stateTracks_;
+    Vector<AnimationStateTrack> stateTracks_; // 各动画轨迹的数据（骨头、节点、动画轨迹）
     /// Looped flag.
     bool looped_;
     /// Blending weight.

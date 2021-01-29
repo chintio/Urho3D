@@ -57,7 +57,7 @@ struct Bone
     }
 
     /// Bone name.
-    String name_;
+    String name_; // 骨头名称，该名称和动画轨迹的名称（AnimationTrack.name_）对应
     /// Bone name hash.
     StringHash nameHash_;
     /// Parent bone index.
@@ -75,9 +75,9 @@ struct Bone
     /// Supported collision types.
     BoneCollisionShapeFlags collisionMask_ = BONECOLLISION_NONE;
     /// Radius.
-    float radius_;
+    float radius_; // 碰撞球半径，BONECOLLISION_SPHERE
     /// Local-space bounding box.
-    BoundingBox boundingBox_;
+    BoundingBox boundingBox_; // 碰撞盒，BONECOLLISION_BOX
     /// Scene node.
     WeakPtr<Node> node_;
 };

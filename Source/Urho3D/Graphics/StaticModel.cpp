@@ -364,6 +364,7 @@ void StaticModel::SetBoundingBox(const BoundingBox& box)
     OnMarkedDirty(node_);
 }
 
+// 重置相关数组大小为num
 void StaticModel::SetNumGeometries(unsigned num)
 {
     batches_.Resize(num);
@@ -404,6 +405,7 @@ void StaticModel::OnWorldBoundingBoxUpdate()
     worldBoundingBox_ = boundingBox_.Transformed(node_->GetWorldTransform());
 }
 
+// 重置LOD层级：将各批次的几何体置为第一层级的几何体
 void StaticModel::ResetLodLevels()
 {
     // Ensure that each subgeometry has at least one LOD level, and reset the current LOD level

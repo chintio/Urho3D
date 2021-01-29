@@ -140,6 +140,7 @@ bool Animation::BeginLoad(Deserializer& source)
     memoryUse += tracks * sizeof(AnimationTrack);
 
     // Read tracks
+    // 读取轨迹数据，每块骨头一个轨迹，每个轨迹的每帧有一份数据
     for (unsigned i = 0; i < tracks; ++i)
     {
         AnimationTrack* newTrack = CreateTrack(source.ReadString());
@@ -167,6 +168,7 @@ bool Animation::BeginLoad(Deserializer& source)
     auto* cache = GetSubsystem<ResourceCache>();
     String xmlName = ReplaceExtension(GetName(), ".xml");
 
+    // 读取同名触发器数据
     SharedPtr<XMLFile> file(cache->GetTempResource<XMLFile>(xmlName, false));
     if (file)
     {

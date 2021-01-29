@@ -219,13 +219,13 @@ private:
     /// Animation states.
     Vector<SharedPtr<AnimationState> > animationStates_;
     /// Skinning matrices.
-    PODVector<Matrix3x4> skinMatrices_;
+    PODVector<Matrix3x4> skinMatrices_; // 保存每根骨头的变换矩阵，索引顺序和skeleton_.bones_一致
     /// Mapping of subgeometry bone indices, used if more bones than skinning shader can manage.
-    Vector<PODVector<unsigned> > geometryBoneMappings_;
+    Vector<PODVector<unsigned> > geometryBoneMappings_; // 保存子几何体的每根骨头的骨头id
     /// Subgeometry skinning matrices, used if more bones than skinning shader can manage.
-    Vector<PODVector<Matrix3x4> > geometrySkinMatrices_;
+    Vector<PODVector<Matrix3x4> > geometrySkinMatrices_; // 保存子几何体的每根骨头的变换矩阵
     /// Subgeometry skinning matrix pointers, if more bones than skinning shader can manage.
-    Vector<PODVector<Matrix3x4*> > geometrySkinMatrixPtrs_;
+    Vector<PODVector<Matrix3x4*> > geometrySkinMatrixPtrs_; // 按骨头id索引对应的geometrySkinMatrices_
     /// Bounding box calculated from bones.
     BoundingBox boneBoundingBox_;
     /// Attribute buffer.

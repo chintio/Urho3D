@@ -102,6 +102,7 @@ AnimationState::AnimationState(Node* node, Animation* animation) :
 
 AnimationState::~AnimationState() = default;
 
+// 设置起始骨头，组织轨迹信息
 void AnimationState::SetStartBone(Bone* startBone)
 {
     if (!model_ || !animation_)
@@ -128,6 +129,7 @@ void AnimationState::SetStartBone(Bone* startBone)
     if (!startBone->node_)
         return;
 
+    // 组织各动画轨迹的数据（骨头、节点、动画轨迹），填入stateTracks_
     for (HashMap<StringHash, AnimationTrack>::ConstIterator i = tracks.Begin(); i != tracks.End(); ++i)
     {
         AnimationStateTrack stateTrack;
@@ -441,6 +443,7 @@ float AnimationState::GetLength() const
     return animation_ ? animation_->GetLength() : 0.0f;
 }
 
+// 根据轨迹数据，设置骨头节点的方位
 void AnimationState::Apply()
 {
     if (!animation_ || !IsEnabled())
@@ -474,6 +477,7 @@ void AnimationState::ApplyToNodes()
         ApplyTrack(*i, 1.0f, false);
 }
 
+// 应用动画轨迹，设置对应骨头节点的方位
 void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, bool silent)
 {
     const AnimationTrack* track = stateTrack.track_;
@@ -506,6 +510,7 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
     Quaternion newRotation;
     Vector3 newScale;
 
+    // 根据前后帧数据进行插值得到当前时刻的方位数据（位置、旋转、缩放）
     if (interpolate)
     {
         const AnimationKeyFrame* nextKeyFrame = &track->keyFrames_[nextFrame];
@@ -531,6 +536,7 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
             newScale = keyFrame->scale_;
     }
 
+    // 根据混合模式，计算世界空间的方位数据
     if (blendingMode_ == ABM_ADDITIVE) // not ABM_LERP
     {
         if (channelMask & CHANNEL_POSITION)
@@ -564,6 +570,7 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
         }
     }
 
+    // 设置骨头节点的方位
     if (silent)
     {
         if (channelMask & CHANNEL_POSITION)

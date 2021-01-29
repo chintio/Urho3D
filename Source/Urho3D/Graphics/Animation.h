@@ -89,13 +89,13 @@ struct URHO3D_API AnimationTrack
     void GetKeyFrameIndex(float time, unsigned& index) const;
 
     /// Bone or scene node name.
-    String name_;
+    String name_; // 轨迹名称，和骨头名称对应
     /// Name hash.
     StringHash nameHash_;
     /// Bitmask of included data (position, rotation, scale.)
-    AnimationChannelFlags channelMask_{};
+    AnimationChannelFlags channelMask_{}; // 通道掩码（通过位标识，指明动画轨迹是否包含位置、旋转、缩放数据）
     /// Keyframes.
-    Vector<AnimationKeyFrame> keyFrames_;
+    Vector<AnimationKeyFrame> keyFrames_; // 各个关键帧数据（时间、位置、旋转、缩放）
 };
 
 /// %Animation trigger point.
@@ -108,7 +108,7 @@ struct AnimationTriggerPoint
     }
 
     /// Trigger time.
-    float time_;
+    float time_; // 触发时间点
     /// Trigger data.
     Variant data_;
 };
@@ -190,15 +190,15 @@ public:
 
 private:
     /// Animation name.
-    String animationName_;
+    String animationName_; // 动画名称
     /// Animation name hash.
     StringHash animationNameHash_;
     /// Animation length.
-    float length_;
+    float length_; // 动画长度，秒
     /// Animation tracks.
-    HashMap<StringHash, AnimationTrack> tracks_;
+    HashMap<StringHash, AnimationTrack> tracks_; // 动画轨迹，每块骨头一个轨迹
     /// Animation trigger points.
-    Vector<AnimationTriggerPoint> triggers_;
+    Vector<AnimationTriggerPoint> triggers_; // 触发器数据
 };
 
 }
