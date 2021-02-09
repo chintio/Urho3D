@@ -757,6 +757,12 @@ const String& Scene::GetVarName(StringHash hash) const
     return i != varNames_.End() ? i->second_ : String::EMPTY;
 }
 
+// E_SCENEUPDATE：可变时间步长（timestep）场景更新。这是一个很好的地方来实现任何场景逻辑，无需在固定步骤发生的逻辑都可以放在这里。
+// E_SCENESUBSYSTEMUPDATE：更新场景范围的子系统。当前只有PhysicsWorld组件侦听此消息，这将使它逐步执行物理模拟，并为每个模拟步骤发送以下两个事件：
+//      E_PHYSICSPRESTEP：在模拟迭代之前调用。以固定速率发生（物理FPS）。如果需要固定的timestep逻辑更新，这是一个很好的事件。
+//      E_PHYSICSPOSTSTEP：在模拟迭代后调用。发生的频率和E_PHYSICSPRESTEP相同。
+// E_SMOOTHINGUPDATE：更新网络客户端场景中的SmoothedTransform组件。
+// E_SCENEPOSTUPDATE：可变时间步长场景更新后（post-update）。ParticleEmitter和AnimationController将更新自己作为对此事件的响应。
 void Scene::Update(float timeStep)
 {
     if (asyncLoading_)
@@ -1009,6 +1015,7 @@ void Scene::NodeRemoved(Node* node)
         NodeRemoved(*i);
 }
 
+// 根据组件ID类型加入replicatedComponents_或localComponents_
 void Scene::ComponentAdded(Component* component)
 {
     if (!component)
@@ -1046,7 +1053,7 @@ void Scene::ComponentAdded(Component* component)
         localComponents_[id] = component;
     }
 
-    component->OnSceneSet(this);
+    component->OnSceneSet(this); // 调用组件设置场景后的后续处理
 }
 
 void Scene::ComponentRemoved(Component* component)

@@ -92,6 +92,7 @@ namespace Urho3D
 
 extern const char* logLevelPrefixes[];
 
+// 注册需要的子系统和对象工厂
 Engine::Engine(Context* context) :
     Object(context),
     timeStep_(0.0f),
@@ -119,6 +120,7 @@ Engine::Engine(Context* context) :
     context_->RegisterSubsystem(this);
 
     // Create subsystems which do not depend on engine initialization or startup parameters
+    // 注册不依赖于引擎初始化或启动参数的子系统实例
     context_->RegisterSubsystem(new Time(context_));
     context_->RegisterSubsystem(new WorkQueue(context_));
 #ifdef URHO3D_PROFILING
@@ -141,6 +143,7 @@ Engine::Engine(Context* context) :
     context_->RegisterSubsystem(new UI(context_));
 
     // Register object factories for libraries which are not automatically registered along with subsystem creation
+    // 注册对象工厂，用于根据类名字符串创建对象实例
     RegisterSceneLibrary(context_);
 
 #ifdef URHO3D_IK
@@ -160,6 +163,7 @@ Engine::Engine(Context* context) :
 
 Engine::~Engine() = default;
 
+// 使用给定的参数初始化引擎并显示应用程序窗口。如果成功，则返回true。
 bool Engine::Initialize(const VariantMap& parameters)
 {
     if (initialized_)
@@ -171,6 +175,7 @@ bool Engine::Initialize(const VariantMap& parameters)
     headless_ = GetParameter(parameters, EP_HEADLESS, false).GetBool();
 
     // Register the rest of the subsystems
+    // 无界面模式，不需要使用GPU资源
     if (!headless_)
     {
         context_->RegisterSubsystem(new Graphics(context_));
@@ -193,12 +198,12 @@ bool Engine::Initialize(const VariantMap& parameters)
     {
         if (HasParameter(parameters, EP_LOG_LEVEL))
             log->SetLevel(GetParameter(parameters, EP_LOG_LEVEL).GetInt());
-        log->SetQuiet(GetParameter(parameters, EP_LOG_QUIET, false).GetBool());
-        log->Open(GetParameter(parameters, EP_LOG_NAME, "Urho3D.log").GetString());
+        log->SetQuiet(GetParameter(parameters, EP_LOG_QUIET, false).GetBool()); // 是否仅将错误条目打印到标准错误流（通常也会重定向到控制台）。
+        log->Open(GetParameter(parameters, EP_LOG_NAME, "Urho3D.log").GetString()); // 指定日志名称
     }
 
     // Set maximally accurate low res timer
-    GetSubsystem<Time>()->SetTimerPeriod(1);
+    GetSubsystem<Time>()->SetTimerPeriod(1); // 设置系统时钟中断的频率
 
     // Configure max FPS
     if (GetParameter(parameters, EP_FRAME_LIMITER, true) == false)
@@ -206,6 +211,7 @@ bool Engine::Initialize(const VariantMap& parameters)
 
     // Set amount of worker threads according to the available physical CPU cores. Using also hyperthreaded cores results in
     // unpredictable extra synchronization overhead. Also reserve one core for the main thread
+    // 根据可用的物理CPU内核设置工作线程的数量。使用超线程内核也会导致不可预知的额外同步开销。同时为主线程保留一个内核
 #ifdef URHO3D_THREADING
     unsigned numThreads = GetParameter(parameters, EP_WORKER_THREADS, true).GetBool() ? GetNumPhysicalCPUs() - 1 : 0;
     if (numThreads)
@@ -217,6 +223,7 @@ bool Engine::Initialize(const VariantMap& parameters)
 #endif
 
     // Add resource paths
+    // 使用给定的参数重新初始化资源缓存子系统
     if (!InitializeResourceCache(parameters, false))
         return false;
 
@@ -468,6 +475,18 @@ bool Engine::InitializeResourceCache(const VariantMap& parameters, bool removeOl
     return true;
 }
 
+// 运行一帧
+// https://urho3d.github.io/documentation/1.7.1/_main_loop.html
+// E_BEGINFRAME：表示新帧的开始。Input和Network对此作出反应，以检查操作系统窗口消息和到达的网络数据包。
+// E_UPDATE：应用程序范围的逻辑更新事件。默认情况下，每个启用更新的Scene都会对此作出反应并触发场景更新
+// E_POSTUPDATE：应用程序范围逻辑更新后事件。UI子系统在这里更新其逻辑。
+// E_RENDERUPDATE：Renderer在此处更新其视口（viewports）以准备渲染，UI生成渲染用户界面所需的渲染命令。
+// E_POSTRENDERUPDATE：默认情况下，没有任何东西与此挂钩。这可以用于实现要求渲染视图（rendering views）是最新（up-to-date）的逻辑，例如执行精确的光线投射。此时可能无法修改Scenes；尤其是场景对象可能无法删除或发生崩溃。
+// E_ENDFRAME：表示帧结束。在此之前，渲染帧并测量下一帧的时间步长将发生。
+
+// 可变时间步（timestep）逻辑更新优于固定时间步，因为它们每帧只执行一次。
+// 相反，如果渲染帧率较低，则会在每一帧上执行多个物理模拟步骤以保持时间的明显流逝，如果这也会导致对每个步骤执行大量逻辑代码，则如果CPU无法处理负载，则程序可能会进一步陷入停滞。
+// 请注意，引擎的最小FPS（默认情况下为10）为时间步长设置了一个硬上限，以防止螺旋式下降到完全停止；如果超过该上限，动画和物理将变慢。
 void Engine::RunFrame()
 {
     assert(initialized_);
@@ -497,7 +516,7 @@ void Engine::RunFrame()
     time->BeginFrame(timeStep_);
 
     // If pause when minimized -mode is in use, stop updates and audio as necessary
-    if (pauseMinimized_ && input->IsMinimized())
+    if (pauseMinimized_ && input->IsMinimized()) // 窗口最小化了，且需要暂停
     {
         if (audio->IsPlaying())
         {

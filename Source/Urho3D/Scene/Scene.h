@@ -335,7 +335,7 @@ private:
     /// Asynchronous loading flag.
     bool asyncLoading_;
     /// Threaded update flag.
-    bool threadedUpdate_;
+    bool threadedUpdate_; // 标志正在多线程更新中（用于八叉树的多线程更新）
 };
 
 /// Register Scene library objects.

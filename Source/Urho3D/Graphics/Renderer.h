@@ -480,11 +480,11 @@ private:
     /// Default zone.
     SharedPtr<Zone> defaultZone_;
     /// Directional light quad geometry.
-    SharedPtr<Geometry> dirLightGeometry_;
+    SharedPtr<Geometry> dirLightGeometry_; // 方向光几何体
     /// Spot light volume geometry.
-    SharedPtr<Geometry> spotLightGeometry_;
+    SharedPtr<Geometry> spotLightGeometry_; // 聚光灯几何体
     /// Point light volume geometry.
-    SharedPtr<Geometry> pointLightGeometry_;
+    SharedPtr<Geometry> pointLightGeometry_; // 点光源几何体
     /// Instance stream vertex buffer.
     SharedPtr<VertexBuffer> instancingBuffer_;
     /// Default material.
@@ -494,9 +494,9 @@ private:
     /// Default spotlight attenuation texture.
     SharedPtr<Texture2D> defaultLightSpot_;
     /// Face selection cube map for shadowed pointlights.
-    SharedPtr<TextureCube> faceSelectCubeMap_;
+    SharedPtr<TextureCube> faceSelectCubeMap_; // 阴影点光源的面选择立方体贴图
     /// Indirection cube map for shadowed pointlights.
-    SharedPtr<TextureCube> indirectionCubeMap_;
+    SharedPtr<TextureCube> indirectionCubeMap_; // 阴影点光源的间接立方体贴图
     /// Reusable scene nodes with shadow camera components.
     Vector<SharedPtr<Node> > shadowCameraNodes_;
     /// Reusable occlusion buffers.
@@ -526,7 +526,7 @@ private:
     /// Prepared views by culling camera.
     HashMap<Camera*, WeakPtr<View> > preparedViews_;
     /// Octrees that have been updated during the frame.
-    HashSet<Octree*> updatedOctrees_;
+    HashSet<Octree*> updatedOctrees_; // 保存本帧已经更新过的八叉树
     /// Techniques for which missing shader error has been displayed.
     HashSet<Technique*> shaderErrorDisplayed_;
     /// Mutex for shadow camera allocation.
@@ -604,5 +604,21 @@ private:
     /// Flag for views needing reset.
     bool resetViews_{};
 };
+
+// 每帧渲染每个视口的步骤大致如下：
+// 1，在八叉树中查询摄影机视锥中的可见对象和灯光。
+// 2，检查每个可见光对物体的影响。如果灯光投射阴影，则为阴影投射器对象查询八叉树。
+// 3，根据“渲染路径”（render path）命令序列中的场景过程（scene passes），为可见对象构造渲染操作（batches）。
+// 4，在帧末尾的渲染步骤中执行“渲染路径”命令序列（render path command sequence）。
+// 5，如果场景具有DebugRenderer组件并且视口启用了调试渲染，则最后渲染调试几何体。可以使用SetDrawDebug（）进行控制，默认设置为启用。
+
+// 在默认渲染路径中（前向渲染），渲染操作按以下顺序进行：
+// 1，不透明几何体环境光过程（pass），或延迟渲染（deferred rendering）模式下的G-buffer过程。
+// 2，不透明几何体每像素光照过程（passes）。对于阴影投射灯光，首先渲染阴影贴图（shadow map）。
+// 3，（Light pre-pass only）不透明几何体材质过程，它使用累积的每像素照明（per-pixel lighting）渲染对象。
+// 4，后不透明过程（Post-opaque pass），用于自定义渲染顺序（如skybox）。
+// 5，折射几何体过程（Refractive geometry pass）。
+// 6，透明几何体过程。透明的alpha混合对象根据距离排序，并从后向前渲染，以确保正确的混合。
+// 7，后阿尔法过程（Post-alpha pass），可用于三维叠加（应出现在最顶层）。
 
 }

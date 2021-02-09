@@ -84,13 +84,13 @@ struct ScenePassInfo
     /// Pass index.
     unsigned passIndex_;
     /// Allow instancing flag.
-    bool allowInstancing_;
+    bool allowInstancing_; // 允许实例渲染，根据RenderPath中的sort="fronttoback"判断
     /// Mark to stencil flag.
-    bool markToStencil_;
+    bool markToStencil_; // 标志到模板，根据RenderPath中的marktostencil="true"判断
     /// Vertex light flag.
-    bool vertexLights_;
+    bool vertexLights_; // 顶点光，根据RenderPath中的vertexlights="true"判断
     /// Batch queue.
-    BatchQueue* batchQueue_;
+    BatchQueue* batchQueue_; // 批次队列，和View::batchQueues_依此对应
 };
 
 /// Per-thread geometry, light and scene range collection structure.
@@ -375,9 +375,9 @@ private:
     /// Deferred flag. Inferred from the existence of a light volume command in the renderpath.
     bool deferred_{};
     /// Deferred ambient pass flag. This means that the destination rendertarget is being written to at the same time as albedo/normal/depth buffers, and needs to be RGBA on OpenGL.
-    bool deferredAmbient_{};
+    bool deferredAmbient_{}; // 延迟环境光pass标志。这意味着目标rendertarget与albedo/normal/depth缓冲区同时被写入，并且需要是OpenGL上的RGBA。
     /// Forward light base pass optimization flag. If in use, combine the base pass and first light for all opaque objects.
-    bool useLitBase_{};
+    bool useLitBase_{}; // Forward light base pass优化标志。如果使用，请为所有不透明对象合并base pass和第一个灯光。
     /// Has scene passes flag. If no scene passes, view can be defined without a valid scene or camera to only perform quad rendering.
     bool hasScenePasses_{};
     /// Whether is using a custom readable depth texture without a stencil channel.
@@ -412,25 +412,25 @@ private:
     /// Intermediate light processing results.
     Vector<LightQueryResult> lightQueryResults_; // 与各光源关联的几何体及阴影信息（lights_中每个光源及其影响的几何体为一组）
     /// Info for scene render passes defined by the renderpath.
-    PODVector<ScenePassInfo> scenePasses_; // 保存renderpath中command type="scenepass"的各个pass信息
+    PODVector<ScenePassInfo> scenePasses_; // 根据RenderPath中的scenepass创建的各个pass信息
     /// Per-pixel light queues.
     Vector<LightBatchQueue> lightQueues_; // 逐像素光源的批次队列（受lightQueues_[x].light_影响的Drawable，生成Batch，放入lightQueues_[x]）
     /// Per-vertex light queues.
     HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 逐顶点光源的批次队列（只受顶点）
     /// Batch queues by pass index.
-    HashMap<unsigned, BatchQueue> batchQueues_; // command type="scenepass" 的各个pass的批次（不受光照影响）
+    HashMap<unsigned, BatchQueue> batchQueues_; // 根据RenderPath中的scenepass创建
     /// Index of the GBuffer pass.
     unsigned gBufferPassIndex_{};
     /// Index of the opaque forward base pass.
-    unsigned basePassIndex_{}; // pass name="base"
+    unsigned basePassIndex_{}; // pass="base"，或者metadata="base"
     /// Index of the alpha pass.
-    unsigned alphaPassIndex_{};
+    unsigned alphaPassIndex_{}; // pass="alpha"，或者metadata="alpha"
     /// Index of the forward light pass.
-    unsigned lightPassIndex_{}; // pass name="light"
+    unsigned lightPassIndex_{}; // pass="light"，或者type="forwardlights"
     /// Index of the litbase pass.
-    unsigned litBasePassIndex_{}; // pass name="litbase"
+    unsigned litBasePassIndex_{}; // pass="litbase"，或者metadata="base"
     /// Index of the litalpha pass.
-    unsigned litAlphaPassIndex_{};
+    unsigned litAlphaPassIndex_{}; // pass="litalpha"，或者metadata="alpha"
     /// Pointer to the light volume command if any.
     const RenderPathCommand* lightVolumeCommand_{};
     /// Pointer to the forwardlights command if any.

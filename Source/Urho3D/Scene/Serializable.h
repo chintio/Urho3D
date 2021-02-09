@@ -239,7 +239,8 @@ namespace AttributeMetadata
 /// Remove attribute by name.
 #define URHO3D_REMOVE_ATTRIBUTE(name) context->RemoveAttribute<ClassName>(name)
 
-// 属性注册相关的帮助宏
+// 属性注册相关的帮助宏，通过URHO3D_ATTRIBUTE类的宏将属性注册到上下文（Context::RegisterAttribute），通过Context::GetAttribute().accessor_->Get、Set操作属性值（见Serializable::Load、Save）
+
 // 对象成员变量注册为属性
 /// Define an object member attribute.
 #define URHO3D_ATTRIBUTE(name, typeName, variable, defaultValue, mode) context->RegisterAttribute<ClassName>(Urho3D::AttributeInfo( \

@@ -369,6 +369,7 @@ void Octree::SetSize(const BoundingBox& box, unsigned numLevels)
     numLevels_ = Max(numLevels, 1U);
 }
 
+// 更新队列中的drawables、发送更新完成事件、drawables重新定位八叉树节点（从旧节点移除，插入新节点）
 void Octree::Update(const FrameInfo& frame)
 {
     if (!Thread::IsMainThread())
@@ -378,6 +379,7 @@ void Octree::Update(const FrameInfo& frame)
     }
 
     // Let drawables update themselves before reinsertion. This can be used for animation
+    // 对drawableUpdates_中的对象执行Update（多线程）
     if (!drawableUpdates_.Empty())
     {
         URHO3D_PROFILE(UpdateDrawables);
@@ -416,6 +418,7 @@ void Octree::Update(const FrameInfo& frame)
     }
 
     // If any drawables were inserted during threaded update, update them now from the main thread
+    // 对于多线程更新过程中插入的drawables，在这里执行
     if (!threadedDrawableUpdates_.Empty())
     {
         URHO3D_PROFILE(UpdateDrawablesQueuedDuringUpdate);
@@ -434,6 +437,7 @@ void Octree::Update(const FrameInfo& frame)
     }
 
     // Notify drawable update being finished. Custom animation (eg. IK) can be done at this point
+    // 发送drawables已经更新完成的事件，自定义动画（如IK）可以在这一点上完成
     Scene* scene = GetScene();
     if (scene)
     {
@@ -447,7 +451,7 @@ void Octree::Update(const FrameInfo& frame)
 
     // Reinsert drawables that have been moved or resized, or that have been newly added to the octree and do not sit inside
     // the proper octant yet
-    if (!drawableUpdates_.Empty())
+    if (!drawableUpdates_.Empty()) // 已经更新过的drawables
     {
         URHO3D_PROFILE(ReinsertToOctree);
 
@@ -459,18 +463,18 @@ void Octree::Update(const FrameInfo& frame)
             const BoundingBox& box = drawable->GetWorldBoundingBox();
 
             // Skip if no octant or does not belong to this octree anymore
-            if (!octant || octant->GetRoot() != this)
+            if (!octant || octant->GetRoot() != this) // 跳过不属于本八叉树的drawables
                 continue;
             // Skip if still fits the current octant
-            if (drawable->IsOccludee() && octant->GetCullingBox().IsInside(box) == INSIDE && octant->CheckDrawableFit(box))
+            if (drawable->IsOccludee() && octant->GetCullingBox().IsInside(box) == INSIDE && octant->CheckDrawableFit(box)) // 如果可被遮挡，并且继续匹配原八叉树节点，则跳过
                 continue;
 
-            InsertDrawable(drawable);
+            InsertDrawable(drawable); // 更新所在八叉树节点
 
 #ifdef _DEBUG
             // Verify that the drawable will be culled correctly
             octant = drawable->GetOctant();
-            if (octant != this && octant->GetCullingBox().IsInside(box) != INSIDE)
+            if (octant != this && octant->GetCullingBox().IsInside(box) != INSIDE) // 没有找到合适的八叉树节点，则报错
             {
                 URHO3D_LOGERROR("Drawable is not fully inside its octant's culling bounds: drawable box " + box.ToString() +
                          " octant box " + octant->GetCullingBox().ToString());
@@ -556,10 +560,11 @@ void Octree::RaycastSingle(RayOctreeQuery& query) const
     }
 }
 
+// 将可绘制对象标记为需要更新和重新插入
 void Octree::QueueUpdate(Drawable* drawable)
 {
     Scene* scene = GetScene();
-    if (scene && scene->IsThreadedUpdate())
+    if (scene && scene->IsThreadedUpdate()) // 如果正在进行多线程更新，则加锁存入队列，后续将在主线程中处理
     {
         MutexLock lock(octreeMutex_);
         threadedDrawableUpdates_.Push(drawable);

@@ -251,6 +251,7 @@ void Drawable::MarkForUpdate()
         octant_->GetRoot()->QueueUpdate(this);
 }
 
+// 取包围盒，如果脏了，就先更新
 const BoundingBox& Drawable::GetWorldBoundingBox()
 {
     if (worldBoundingBoxDirty_)
@@ -375,6 +376,7 @@ void Drawable::OnSceneSet(Scene* scene)
         RemoveFromOctree();
 }
 
+// 包围盒标志为脏、置入八叉树的更新队列、区域标志为脏
 void Drawable::OnMarkedDirty(Node* node)
 {
     worldBoundingBoxDirty_ = true;

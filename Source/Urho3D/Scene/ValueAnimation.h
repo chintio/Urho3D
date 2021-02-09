@@ -64,6 +64,9 @@ struct VAnimEventFrame
     VariantMap eventData_;
 };
 
+// 单个属性（值）动画类
+// 比如设置颜色动画（{ValueAnimation::SetKeyFrame(0.0f, Color::WHITE);ValueAnimation::SetKeyFrame(2.0f, Color::YELLOW);ValueAnimation::SetKeyFrame(4.0f, Color::WHITE);}）
+// 、位置动画（{SetKeyFrame(0.0f, Vector3(-30.0f, 5.0f, -30.0f));SetKeyFrame(1.0f, Vector3( 30.0f, 5.0f, -30.0f));SetKeyFrame(2.0f, Vector3( 30.0f, 5.0f,  30.0f));SetKeyFrame(3.0f, Vector3(-30.0f, 5.0f,  30.0f));SetKeyFrame(4.0f, Vector3(-30.0f, 5.0f, -30.0f));}）
 /// Value animation class.
 class URHO3D_API ValueAnimation : public Resource
 {
@@ -162,7 +165,7 @@ protected:
     /// End time.
     float endTime_;
     /// Key frames.
-    Vector<VAnimKeyFrame> keyFrames_;
+    Vector<VAnimKeyFrame> keyFrames_; // 包含各关键帧的值
     /// Spline tangents.
     mutable VariantVector splineTangents_;
     /// Spline tangents dirty.

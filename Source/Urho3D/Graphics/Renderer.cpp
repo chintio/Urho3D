@@ -1776,6 +1776,7 @@ void Renderer::ReloadTextures()
         cache->ReloadResource(textures[i]);
 }
 
+// 创建各类光源几何体及用于点光源阴影的立方体贴图
 void Renderer::CreateGeometries()
 {
     SharedPtr<VertexBuffer> dlvb(new VertexBuffer(context_));
@@ -1889,6 +1890,7 @@ void Renderer::SetIndirectionTextureData()
     indirectionCubeMap_->ClearDataLost();
 }
 
+// 创建实例缓冲区
 void Renderer::CreateInstancingBuffer()
 {
     // Do not create buffer if instancing not supported

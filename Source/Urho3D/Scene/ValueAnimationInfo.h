@@ -35,6 +35,7 @@ class ValueAnimation;
 class Variant;
 struct VAnimEventFrame;
 
+// 属性（值）动画的运行时实例的基类，其中包括引用的动画、循环模式、速度和时间位置。
 /// Base class for a value animation instance, which includes animation runtime information and updates the target object's value automatically.
 class URHO3D_API ValueAnimationInfo : public RefCounted
 {

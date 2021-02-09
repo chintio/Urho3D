@@ -363,6 +363,7 @@ private:
 URHO3D_API StringHashRegister& GetEventNameRegister();
 
 // 事件相关的宏：URHO3D_EVENT、URHO3D_PARAM定义事件ID及其需要的参数ID（事件生产SendEvent、消费SubscribeToEvent时，需要使用这两个ID），Object在订阅事件时（SubscribeToEvent）使用URHO3D_HANDLER、URHO3D_HANDLER_USERDATA指定事件回调函数
+
 // 定义事件ID，用于SendEvent、SubscribeToEvent时标识事件
 /// Describe an event's hash ID and begin a namespace in which to define its parameters.
 #define URHO3D_EVENT(eventID, eventName) static const Urho3D::StringHash eventID(Urho3D::GetEventNameRegister().RegisterString(#eventName)); namespace eventName

@@ -175,18 +175,18 @@ void CheckVisibilityWork(const WorkItem* item, unsigned threadIndex)
     {
         Drawable* drawable = *start++;
 
-        if (!buffer || !drawable->IsOccludee() || buffer->IsVisible(drawable->GetWorldBoundingBox())) // 不会被buffer遮挡
+        if (!buffer || !drawable->IsOccludee() || buffer->IsVisible(drawable->GetWorldBoundingBox())) // 不会被buffer遮挡（可见几何体）
         {
             drawable->UpdateBatches(view->frame_);
             // If draw distance non-zero, update and check it
             float maxDistance = drawable->GetDrawDistance();
             if (maxDistance > 0.0f) // 检测可绘制距离
             {
-                if (drawable->GetDistance() > maxDistance)
+                if (drawable->GetDistance() > maxDistance) // 超过绘制距离
                     continue;
             }
 
-            drawable->MarkInView(view->frame_);
+            drawable->MarkInView(view->frame_); // 加入可见到drawable的相机列表
 
             // For geometries, find zone, clear lights and calculate view space Z range
             if (drawable->GetDrawableFlags() & DRAWABLE_GEOMETRY)
@@ -401,6 +401,7 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
 #endif
 
     // Make sure that all necessary batch queues exist
+    // 创建场景过程的批次信息（scenePasses_、batchQueues_）
     for (unsigned i = 0; i < renderPath_->commands_.Size(); ++i)
     {
         RenderPathCommand& command = renderPath_->commands_[i];
@@ -418,6 +419,8 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
             info.vertexLights_ = command.vertexLights_;
 
             // Check scenepass metadata for defining custom passes which interact with lighting
+            // 检查scenepass metadata，以定义与光照交互的自定义过程
+            // // command.metadata_有3个可能值："base|alpha|gbuffer"，用于指明实际表示的pass，因为pass name是可以自定义的（此时的lit过程名为"lit" + command.pass_）
             if (!command.metadata_.Empty())
             {
                 if (command.metadata_ == "gbuffer")
@@ -457,6 +460,7 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
             return false;
 
         // If scene is loading scene content asynchronously, it is incomplete and should not be rendered
+        // 若异步加载的场景内容没完成，不应渲染
         if (scene_->IsAsyncLoading() && scene_->GetAsyncLoadMode() > LOAD_RESOURCES_ONLY)
             return false;
 
@@ -466,6 +470,7 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
 
         // Do not accept view if camera projection is illegal
         // (there is a possibility of crash if occlusion is used and it can not clip properly)
+        // 如果相机投影不合法，不应渲染
         if (!cullCamera_->IsProjectionValid())
             return false;
     }
@@ -503,6 +508,7 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
     // Set possible quality overrides from the camera
     // Note that the culling camera is used here (its settings are authoritative) while the render camera
     // will be just used for the final view & projection matrices
+    // 使用裁剪相机的设置覆盖
     unsigned viewOverrideFlags = cullCamera_ ? cullCamera_->GetViewOverrideFlags() : VO_NONE;
     if (viewOverrideFlags & VO_LOW_MATERIAL_QUALITY)
         materialQuality_ = QUALITY_LOW;
@@ -512,12 +518,14 @@ bool View::Define(RenderSurface* renderTarget, Viewport* viewport)
         maxOccluderTriangles_ = 0;
 
     // Occlusion buffer has constant width. If resulting height would be too large due to aspect ratio, disable occlusion
+    // 遮挡缓冲区具有恒定的宽度。如果由于纵横比导致生成的高度过大，请禁用遮挡
     if (viewSize_.y_ > viewSize_.x_ * 4)
         maxOccluderTriangles_ = 0;
 
     return true;
 }
 
+// 更新和剔除对象并构造渲染批次。
 void View::Update(const FrameInfo& frame)
 {
     // No need to update if using another prepared view
@@ -1945,7 +1953,7 @@ bool View::CheckViewportRead(const RenderPathCommand& command)
     return false;
 }
 
-// 检测命令是否写入viewport
+// 检测RenderPath命令是否写入viewport
 bool View::CheckViewportWrite(const RenderPathCommand& command)
 {
     for (unsigned i = 0; i < command.outputs_.Size(); ++i)

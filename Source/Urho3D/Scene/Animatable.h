@@ -59,8 +59,9 @@ private:
     const AttributeInfo& attributeInfo_;
 };
 
+// 可设置动画的对象的基类，可以为其指定单属性动画（ValueAnimation）或多属性动画（ObjectAnimation）。
 /// Base class for animatable object, an animatable object can be set animation on it's attributes, or can be set an object animation to it.
-class URHO3D_API Animatable : public Serializable // 属性动画的基类
+class URHO3D_API Animatable : public Serializable
 {
     URHO3D_OBJECT(Animatable, Serializable);
 

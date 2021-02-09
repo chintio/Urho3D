@@ -153,7 +153,7 @@ private:
     /// Exiting flag.
     bool exiting_;
     /// Headless mode flag.
-    bool headless_;
+    bool headless_; // 无界面模式，不会创建渲染（Renderer）相关模块，用于服务器端运行
     /// Audio paused flag.
     bool audioPaused_;
 };

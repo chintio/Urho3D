@@ -261,6 +261,7 @@ public:
     PODVector<BatchGroup*> sortedBatchGroups_;
     /// Maximum sorted instances.
     unsigned maxSortedInstances_;
+    // 以下五项从RenderPath中产生（vsdefines=、psdefines=）
     /// Whether the pass command contains extra shader defines.
     bool hasExtraDefines_;
     /// Vertex shader extra defines.

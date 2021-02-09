@@ -909,6 +909,7 @@ void Node::RemoveChildren(bool removeReplicated, bool removeLocal, bool recursiv
         MarkReplicationDirty();
 }
 
+// 创建组件（根据组件类型，通过工厂类创建）实例，添加组件
 Component* Node::CreateComponent(StringHash type, CreateMode mode, unsigned id)
 {
     // Do not attempt to create replicated components to local nodes, as that may lead to component ID overwrite
@@ -924,7 +925,7 @@ Component* Node::CreateComponent(StringHash type, CreateMode mode, unsigned id)
         return nullptr;
     }
 
-    AddComponent(newComponent, id, mode);
+    AddComponent(newComponent, id, mode); // 添加组件到本节点和场景
     return newComponent;
 }
 
@@ -1819,6 +1820,7 @@ Node* Node::CreateChild(unsigned id, CreateMode mode, bool temporary)
     return newNode;
 }
 
+// 添加组件到本节点、设置组件的节点成员、向场景（如果有）添加该组件，设置相关脏标志，发送添加组件的事件
 void Node::AddComponent(Component* component, unsigned id, CreateMode mode)
 {
     if (!component)
@@ -1842,14 +1844,16 @@ void Node::AddComponent(Component* component, unsigned id, CreateMode mode)
     else
         component->SetID(id);
 
-    component->OnMarkedDirty(this);
+    component->OnMarkedDirty(this); // 将组件标志为脏的
 
     // Check attributes of the new component on next network update, and mark node dirty in all replication states
+    // 将涉及到网络复制的内容设置为脏
     component->MarkNetworkUpdate();
     MarkNetworkUpdate();
     MarkReplicationDirty();
 
     // Send change event
+    // 发送添加组件的事件
     if (scene_)
     {
         using namespace ComponentAdded;

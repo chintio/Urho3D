@@ -66,7 +66,7 @@ int Application::Run()
     try
     {
 #endif
-        Setup();
+        Setup(); // 引擎初始化（Engine::Initialize(const VariantMap& parameters)）前的设置（修改引擎参数（engineParameters_）等）。调用ErrorExit()终止而不初始化引擎。由Application调用。
         if (exitCode_)
             return exitCode_;
 
@@ -76,7 +76,7 @@ int Application::Run()
             return exitCode_;
         }
 
-        Start();
+        Start(); // 在引擎初始化（Engine::Initialize(const VariantMap& parameters)）之后和运行主循环之前的设置（创建场景等）。调用ErrorExit（）终止而不运行主循环。由Application调用。
         if (exitCode_)
             return exitCode_;
 
@@ -85,7 +85,7 @@ int Application::Run()
         while (!engine_->IsExiting())
             engine_->RunFrame();
 
-        Stop();
+        Stop(); // 主循环后的清理（将所有资源的信息转储到日志中（Engine::DumpResources）等）。由Application调用。
         // iOS/tvOS will setup a timer for running animation frames so eg. Game Center can run. In this case we do not
         // support calling the Stop() function, as the application will never stop manually
 #else
@@ -107,6 +107,7 @@ int Application::Run()
 #endif
 }
 
+// 关闭渲染窗口，设置退出码，显示错误消息框
 void Application::ErrorExit(const String& message)
 {
     engine_->Exit(); // Close the rendering window
@@ -121,6 +122,7 @@ void Application::ErrorExit(const String& message)
         ErrorDialog(GetTypeName(), message);
 }
 
+// 将错误消息放入startupErrors_
 void Application::HandleLogMessage(StringHash eventType, VariantMap& eventData)
 {
     using namespace LogMessage;

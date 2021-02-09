@@ -145,7 +145,7 @@ struct URHO3D_API RenderPathCommand
     /// Scene pass index. Filled by View.
     unsigned passIndex_{};
     /// Command/pass metadata.
-    String metadata_;
+    String metadata_; // 有3个可能值："base|alpha|gbuffer"，用于指明实际表示的pass，因为pass name是可以自定义的
     /// Vertex shader name.
     String vertexShaderName_;
     /// Pixel shader name.

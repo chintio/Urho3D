@@ -343,7 +343,7 @@ protected:
     /// Occludee flag.
     bool occludee_; // 被遮挡物
     /// Octree update queued flag.
-    bool updateQueued_;
+    bool updateQueued_; // 是否置于八叉树的更新队列
     /// Zone inconclusive or dirtied flag.
     bool zoneDirty_;
     /// Octree octant.

@@ -62,6 +62,7 @@ private:
     bool dirty_;
 };
 
+// 执行上下文。提供对子系统、对象工厂和属性以及事件接收器的访问。
 /// Urho3D execution context. Provides access to subsystems, object factories and attributes, and event receivers.
 class URHO3D_API Context : public RefCounted
 {

@@ -256,10 +256,11 @@ void Component::SetID(unsigned id)
     id_ = id;
 }
 
+// 设置组件的场景节点
 void Component::SetNode(Node* node)
 {
     node_ = node;
-    OnNodeSet(node_);
+    OnNodeSet(node_); // 子类处理后续事宜（比如设置为节点的监听器，节点将自身变动通知到监听者）
 }
 
 Component* Component::GetComponent(StringHash type) const

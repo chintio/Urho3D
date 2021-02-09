@@ -547,7 +547,7 @@ void Light::OnWorldBoundingBoxUpdate()
     {
     case LIGHT_DIRECTIONAL:
         // Directional light always sets humongous bounding box not affected by transform
-        worldBoundingBox_.Define(-M_LARGE_VALUE, M_LARGE_VALUE);
+        worldBoundingBox_.Define(-M_LARGE_VALUE, M_LARGE_VALUE); // 平行光设置最大边界框
         break;
 
     case LIGHT_SPOT:

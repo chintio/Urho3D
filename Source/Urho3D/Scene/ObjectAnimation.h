@@ -33,6 +33,7 @@ class ValueAnimationInfo;
 class XMLElement;
 class JSONValue;
 
+// 一个或多个属性（值）动画类
 /// Object animation class, an object animation include one or more attribute animations and theirs wrap mode and speed for an Animatable object.
 class URHO3D_API ObjectAnimation : public Resource
 {
