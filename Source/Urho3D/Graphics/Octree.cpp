@@ -102,24 +102,26 @@ Octant* Octant::GetOrCreateChild(unsigned index)
     if (children_[index])
         return children_[index];
 
+    // 确定子节点的包围盒
     Vector3 newMin = worldBoundingBox_.min_;
     Vector3 newMax = worldBoundingBox_.max_;
     Vector3 oldCenter = worldBoundingBox_.Center();
 
-    if (index & 1u)
+    if (index & 1u) // 子节点中心点在本中心点右方（x轴正方向）
         newMin.x_ = oldCenter.x_;
     else
         newMax.x_ = oldCenter.x_;
 
-    if (index & 2u)
+    if (index & 2u) // 子节点中心点在本中心点上方（y轴正方向）
         newMin.y_ = oldCenter.y_;
     else
         newMax.y_ = oldCenter.y_;
 
-    if (index & 4u)
+    if (index & 4u) // 子节点中心点在本中心点前方（z轴正方向）
         newMin.z_ = oldCenter.z_;
     else
         newMax.z_ = oldCenter.z_;
+    //
 
     children_[index] = new Octant(BoundingBox(newMin, newMax), level_ + 1, this, root_, index);
     return children_[index];
@@ -133,6 +135,8 @@ void Octant::DeleteChild(unsigned index)
 }
 
 // 通过递归检查合适的节点，插入可绘制对象。
+// 1，不可遮挡物、不在根剔除盒之内（INSIDE）的物体，将直接放入根节点
+// 2，Drawable包围盒完全在某个子节点cullingBox_内部，且Drawable包围盒任一维度尺寸小于子节点包围盒（worldBoundingBox_）尺寸，则加入该子节点，否则加入本节点
 void Octant::InsertDrawable(Drawable* drawable)
 {
     const BoundingBox& box = drawable->GetWorldBoundingBox();
@@ -141,7 +145,7 @@ void Octant::InsertDrawable(Drawable* drawable)
     // Also if drawable is outside the root octant bounds, insert to root
     // 插入所有不能被遮挡的物体，这样节点遮挡就不会隐藏可绘制的物体。
     bool insertHere;
-    if (this == root_) // 不可遮挡物、不在剔除盒之内的物体都插入根节点
+    if (this == root_) // 不可遮挡物、不在根剔除盒之内的物体都插入根节点
         insertHere = !drawable->IsOccludee() || cullingBox_.IsInside(box) != INSIDE || CheckDrawableFit(box);
     else
         insertHere = CheckDrawableFit(box);
@@ -159,7 +163,7 @@ void Octant::InsertDrawable(Drawable* drawable)
     }
     else
     {
-        //根据中心点确定节点索引
+        //根据中心点确定节点索引（立方体靠近观察者的一面，从左下开始逆时针顺序，节点编号依次为0、1、3、2，远离观测者的一面对应节点编号为4、5、7、6）
         Vector3 boxCenter = box.Center();
         unsigned x = boxCenter.x_ < center_.x_ ? 0 : 1;
         unsigned y = boxCenter.y_ < center_.y_ ? 0 : 2;
@@ -170,17 +174,18 @@ void Octant::InsertDrawable(Drawable* drawable)
 }
 
 // 检测BoundingBox是否可以放在该节点，需要符合下列三个条件之一：
-// 1，节点已是最深层级；2，大于等于子节点worldBoundingBox_的Size；3，达到或超出子节点cullingBox_的最大范围
+// 1，节点已是最大层级；2，大于等于子节点worldBoundingBox_的Size；3，达到或超出子节点cullingBox_的范围
+// 即：如果box完全在某个子节点cullingBox_内部，且box尺寸小于worldBoundingBox_尺寸，则属于该子节点，否则属于本节点
 bool Octant::CheckDrawableFit(const BoundingBox& box) const
 {
     Vector3 boxSize = box.Size();
 
     // If max split level, size always OK, otherwise check that box is at least half size of octant
     if (level_ >= root_->GetNumLevels() || boxSize.x_ >= halfSize_.x_ || boxSize.y_ >= halfSize_.y_ ||
-        boxSize.z_ >= halfSize_.z_) // 层级已经达到最大，或者大于等于子节点worldBoundingBox_的Size
+        boxSize.z_ >= halfSize_.z_) // 本节点层级已经达到最大，或者给定包围盒尺寸大于等于子节点worldBoundingBox_的Size
         return true;
     // Also check if the box can not fit a child octant's culling box, in that case size OK (must insert here)
-    else // 达到或超出子节点cullingBox_的最大范围
+    else // 达到或超出所有子节点cullingBox_合集的范围
     {
         if (box.min_.x_ <= worldBoundingBox_.min_.x_ - 0.5f * halfSize_.x_ ||
             box.max_.x_ >= worldBoundingBox_.max_.x_ + 0.5f * halfSize_.x_ ||
@@ -237,10 +242,10 @@ void Octant::GetDrawablesInternal(OctreeQuery& query, bool inside) const
 {
     if (this != root_)
     {
-        Intersection res = query.TestOctant(cullingBox_, inside);
+        Intersection res = query.TestOctant(cullingBox_, inside); // 测试树节点的剔除盒和OctreeQuery对象的关系，如果节点剔除盒在外部，就无需测试该节点中的元素和子节点了
         if (res == INSIDE) // 该节点在OctreeQuery对象内部
             inside = true;
-        else if (res == OUTSIDE) // 该节点在OctreeQuery对象外部，则排除该节点及其子树，直接返回
+        else if (res == OUTSIDE) // 该节点的剔除盒在OctreeQuery对象外部，则排除该节点及其子树，直接返回
         {
             // Fully outside, so cull this octant, its children & drawables
             return;

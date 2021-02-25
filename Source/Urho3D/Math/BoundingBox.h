@@ -287,7 +287,7 @@ public:
     }
 
     /// Test if another bounding box is inside, outside or intersects.
-    Intersection IsInside(const BoundingBox& box) const
+    Intersection IsInside(const BoundingBox& box) const // 判断和box的位置关系
     {
         if (box.max_.x_ < min_.x_ || box.min_.x_ > max_.x_ || box.max_.y_ < min_.y_ || box.min_.y_ > max_.y_ ||
             box.max_.z_ < min_.z_ || box.min_.z_ > max_.z_) // 完全在外部（box的任何部分都在this的外面）

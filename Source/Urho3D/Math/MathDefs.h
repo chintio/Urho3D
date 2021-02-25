@@ -61,9 +61,9 @@ static const float M_RADTODEG = 1.0f / M_DEGTORAD;
 /// Intersection test result.
 enum Intersection
 {
-    OUTSIDE,
-    INTERSECTS,
-    INSIDE
+    OUTSIDE, // 外部
+    INTERSECTS, // 相交（且不重合）
+    INSIDE // 内部（或重合）
 };
 
 /// Check whether two floating point values are equal within accuracy.

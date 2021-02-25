@@ -552,14 +552,14 @@ void Light::OnWorldBoundingBoxUpdate()
 
     case LIGHT_SPOT:
         // Frustum is already transformed into world space
-        worldBoundingBox_.Define(GetFrustum());
+        worldBoundingBox_.Define(GetFrustum()); // 聚光灯以截锥体为边界框（截锥体的外切长方体）
         break;
 
     case LIGHT_POINT:
         {
             const Vector3& center = node_->GetWorldPosition();
             Vector3 edge(range_, range_, range_);
-            worldBoundingBox_.Define(center - edge, center + edge);
+            worldBoundingBox_.Define(center - edge, center + edge); // 点光源以外切盒为边界框
         }
         break;
     }

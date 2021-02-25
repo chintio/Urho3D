@@ -133,9 +133,9 @@ protected:
     }
 
     /// World bounding box.
-    BoundingBox worldBoundingBox_; // 八叉树节点的包围盒
+    BoundingBox worldBoundingBox_; // 八叉树节点的包围盒，用于确定节点基础范围
     /// Bounding box used for drawable object fitting.
-    BoundingBox cullingBox_; // 剔除盒，worldBoundingBox_ * 2，也是节点的逻辑检测包围盒
+    BoundingBox cullingBox_; // 剔除盒（尺寸是包围盒（worldBoundingBox_）的两倍），用于和本节点的碰撞检测（Drawable的包围盒会跨越所属节点worldBoundingBox_，但不会跨越节点cullingBox_（根节点除外）），在Octant::Initialize定义
     /// Drawable objects.
     PODVector<Drawable*> drawables_; // 该节点包含的可见物（cullingBox_范围内）
     /// Child octants.
@@ -214,7 +214,7 @@ private:
     /// Ray query temporary list of drawables.
     mutable PODVector<Drawable*> rayQueryDrawables_;
     /// Subdivision level.
-    unsigned numLevels_;
+    unsigned numLevels_; // DEFAULT_OCTREE_LEVELS
 };
 
 }
