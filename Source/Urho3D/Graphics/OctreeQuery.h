@@ -59,7 +59,7 @@ public:
     /// Intersection test for an octant.
     virtual Intersection TestOctant(const BoundingBox& box, bool inside) = 0; // 测试参数box和OctreeQuery对象的位置关系， inside指定参数box是否在OctreeQuery对象的内部
     /// Intersection test for drawables.
-    virtual void TestDrawables(Drawable** start, Drawable** end, bool inside) = 0; // 如果几何体包围盒在OctreeQuery对象的内部，则将该几何体放入result_
+    virtual void TestDrawables(Drawable** start, Drawable** end, bool inside) = 0; // inside表示几何体所在的八叉树节点是否在OctreeQuery对象内部（如果是则将该几何体直接放入result_，否则表示相交（如果在外部则不会进入该函数）则需判断几何体和OctreeQuery对象的位置关系）
 
     /// Result vector reference.
     PODVector<Drawable*>& result_;

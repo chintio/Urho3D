@@ -123,7 +123,7 @@ void SkeletalAnimation::CreateScene()
     light->SetShadowCascade(CascadeParameters(10.0f, 50.0f, 200.0f, 0.0f, 0.8f));
 
     // Create animated models
-    const unsigned NUM_MODELS = 30;
+    const unsigned NUM_MODELS = 1;// 30;
     const float MODEL_MOVE_SPEED = 2.0f;
     const float MODEL_ROTATE_SPEED = 100.0f;
     const BoundingBox bounds(Vector3(-20.0f, 0.0f, -20.0f), Vector3(20.0f, 0.0f, 20.0f));
@@ -131,18 +131,22 @@ void SkeletalAnimation::CreateScene()
     for (unsigned i = 0; i < NUM_MODELS; ++i)
     {
         Node* modelNode = scene_->CreateChild("Jill");
+        modelNode->SetScale(Vector3(0.02f, 0.02f, 0.02f));
         modelNode->SetPosition(Vector3(Random(40.0f) - 20.0f, 0.0f, Random(40.0f) - 20.0f));
         modelNode->SetRotation(Quaternion(0.0f, Random(360.0f), 0.0f));
 
         auto* modelObject = modelNode->CreateComponent<AnimatedModel>();
-        modelObject->SetModel(cache->GetResource<Model>("Models/Kachujin/Kachujin.mdl"));
-        modelObject->SetMaterial(cache->GetResource<Material>("Models/Kachujin/Materials/Kachujin.xml"));
+        //modelObject->SetModel(cache->GetResource<Model>("Models/Kachujin/Kachujin.mdl"));
+        //modelObject->SetMaterial(cache->GetResource<Material>("Models/Kachujin/Materials/Kachujin.xml"));
+        modelObject->SetModel(cache->GetResource<Model>("Models/Paladin/Paladin.mdl"));
+        modelObject->SetMaterial(cache->GetResource<Material>("Models/Paladin/Materials/Paladin.xml"));
         modelObject->SetCastShadows(true);
 
         // Create an AnimationState for a walk animation. Its time position will need to be manually updated to advance the
         // animation, The alternative would be to use an AnimationController component which updates the animation automatically,
         // but we need to update the model's position manually in any case
-        auto* walkAnimation = cache->GetResource<Animation>("Models/Kachujin/Kachujin_Walk.ani");
+        //auto* walkAnimation = cache->GetResource<Animation>("Models/Kachujin/Kachujin_Walk.ani");
+        auto* walkAnimation = cache->GetResource<Animation>("Models/Paladin/Paladin_Walk.ani");
 
         AnimationState* state = modelObject->AddAnimationState(walkAnimation);
         // The state would fail to create (return null) if the animation was not found

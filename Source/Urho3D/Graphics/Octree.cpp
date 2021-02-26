@@ -242,7 +242,7 @@ void Octant::GetDrawablesInternal(OctreeQuery& query, bool inside) const
 {
     if (this != root_)
     {
-        Intersection res = query.TestOctant(cullingBox_, inside); // 测试树节点的剔除盒和OctreeQuery对象的关系，如果节点剔除盒在外部，就无需测试该节点中的元素和子节点了
+        Intersection res = query.TestOctant(cullingBox_, inside); // 测试树节点的剔除盒和OctreeQuery对象的关系，用于做八叉树节点的整体剔除，如果节点剔除盒在外部，就无需测试该节点中的元素和子节点了
         if (res == INSIDE) // 该节点在OctreeQuery对象内部
             inside = true;
         else if (res == OUTSIDE) // 该节点的剔除盒在OctreeQuery对象外部，则排除该节点及其子树，直接返回
