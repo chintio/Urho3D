@@ -50,6 +50,7 @@ template <class T> void InsertionSort(RandomAccessIterator<T> begin, RandomAcces
 }
 
 /// Perform insertion sort on an array using a compare function.
+// 冒泡排序：从第二个元素开始遍历，每个元数都与前面的所有元数比较，移动到合适的位置。
 template <class T, class U> void InsertionSort(RandomAccessIterator<T> begin, RandomAccessIterator<T> end, U compare)
 {
     for (RandomAccessIterator<T> i = begin + 1; i < end; ++i)
@@ -97,15 +98,16 @@ template <class T> void InitialQuickSort(RandomAccessIterator<T> begin, RandomAc
 }
 
 /// Perform quick sort initial pass on an array using a compare function. Does not sort fully.
+// 二分排序（元素个数小于QUICKSORT_THRESHOLD时使用）：选个中值，将数组分两段，比中值小的交换到一边，大的交换到另一边，然后再对两段迭代。
 template <class T, class U> void InitialQuickSort(RandomAccessIterator<T> begin, RandomAccessIterator<T> end, U compare)
 {
     while (end - begin > QUICKSORT_THRESHOLD)
     {
         // Choose the pivot by median
-        RandomAccessIterator<T> pivot = begin + ((end - begin) / 2);
-        if (compare(*begin, *pivot) && compare(*(end - 1), *begin))
+        RandomAccessIterator<T> pivot = begin + ((end - begin) / 2); // 设为数组中间位置元素
+        if (compare(*begin, *pivot) && compare(*(end - 1), *begin)) // 设为数组开始位置元素
             pivot = begin;
-        else if (compare(*(end - 1), *pivot) && compare(*begin, *(end - 1)))
+        else if (compare(*(end - 1), *pivot) && compare(*begin, *(end - 1))) // 设为数组末尾位置元素
             pivot = end - 1;
 
         // Partition and sort recursively
@@ -134,12 +136,15 @@ template <class T> void Sort(RandomAccessIterator<T> begin, RandomAccessIterator
     InsertionSort(begin, end);
 }
 
-// compare(lhs, rhs)，如果返回值为true，则lhs在左侧（Left Hand Side），rhs在右侧（Right Hand Side）；如果返回值为false，则相反
+// compare(lhs, rhs)，如果返回值为true，则lhs（Left Hand Side）放在rhs（Right Hand Side）的左侧；如果返回值为false，则相反
 /// Sort in ascending order using quicksort for initial passes, then an insertion sort to finalize, using a compare function.
+// 使用冒泡法排序（元数个数小于QUICKSORT_THRESHOLD时，先进行二分法排序）
 template <class T, class U> void Sort(RandomAccessIterator<T> begin, RandomAccessIterator<T> end, U compare)
 {
     InitialQuickSort(begin, end, compare);
     InsertionSort(begin, end, compare);
 }
+
+// https://blog.csdn.net/weixin_39540045/article/details/80499817
 
 }

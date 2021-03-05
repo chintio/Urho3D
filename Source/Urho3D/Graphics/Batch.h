@@ -97,7 +97,7 @@ struct Batch
     /// Zone.
     Zone* zone_{};
     /// Light properties.
-    LightBatchQueue* lightQueue_{};
+    LightBatchQueue* lightQueue_{}; // 批次所在的光源信息
     /// Material pass.
     Pass* pass_{};
     /// Vertex shader.
@@ -291,7 +291,7 @@ struct ShadowBatchQueue
 };
 
 /// Queue for light related draw calls.
-struct LightBatchQueue
+struct LightBatchQueue // 对于逐像素光源，保存几何体的光照批次（litBaseBatches_、litBatches_）、阴影批次（shadowSplits_）、光源本体批次（volumeBatches_）；对于RenderPath的scenepass，只保存顶点光列表，其他成员为空
 {
     /// Per-pixel light.
     Light* light_; // 像素光
@@ -304,11 +304,11 @@ struct LightBatchQueue
     /// Lit geometry draw calls, non-base (additive)
     BatchQueue litBatches_; // 像素光的附加批次，如果light_是几何体的后续像素光源（不是第一个），则批次就放到这里
     /// Shadow map split queues.
-    Vector<ShadowBatchQueue> shadowSplits_; // 各阴影层级的几何体（可投射阴影）批次（用于产生阴影深度图）
+    Vector<ShadowBatchQueue> shadowSplits_; // 各投影相机（阴影层级）的几何体（可投射阴影）批次（用于产生阴影深度图）
     /// Per-vertex lights.
-    PODVector<Light*> vertexLights_; // 顶点光列表
+    PODVector<Light*> vertexLights_; // 顶点光列表，此时light_为空
     /// Light volume draw calls.
-    PODVector<Batch> volumeBatches_; // 如果是延迟渲染路径，则通过该变量进入批次（volumeBatches_[].lightQueue_）
+    PODVector<Batch> volumeBatches_; // 如果是延迟渲染，则保存本光源的几何体批次数据（则通过该变量进入批次（volumeBatches_[].lightQueue_））
 };
 
 }

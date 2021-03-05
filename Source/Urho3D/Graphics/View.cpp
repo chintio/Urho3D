@@ -973,6 +973,7 @@ void View::GetDrawables()
         light->SetLightQueue(nullptr);
     }
 
+    // 对光源（lights_）排序
     Sort(lights_.Begin(), lights_.End(), CompareLights);
 }
 
@@ -1017,7 +1018,7 @@ void View::ProcessLights()
 }
 
 // 将lightQueryResults_中的按类型处理
-// 对于逐像素光，保存批次信息到lightQueues_：（1）将其影响到的能产生阴影的几何体，按阴影层级保存批次（pass name="shadow"）到lightQueues_[].shadowSplits_[].shadowBatches_；（2）将受光几何体交由GetLitBatches处理；（3）如果是延迟渲染模式，则将光源几何体信息保存到lightQueues_[].volumeBatches_
+// 对于逐像素光，保存批次信息到lightQueues_：（1）将其影响到的能产生阴影的几何体，按各投影相机保存批次（pass name="shadow"）到lightQueues_[].shadowSplits_[].shadowBatches_；（2）将受光几何体交由GetLitBatches处理；（3）如果是延迟渲染模式，则将光源几何体信息保存到lightQueues_[].volumeBatches_
 // 对于逐顶点光，将光源保存到Drawable::vertexLights_
 void View::GetLightBatches()
 {
@@ -1030,7 +1031,7 @@ void View::GetLightBatches()
         // Preallocate light queues: per-pixel lights which have lit geometries
         unsigned numLightQueues = 0;
         unsigned usedLightQueues = 0;
-        // 统计像素光源的个数
+        // 统计有效像素光源的个数
         for (Vector<LightQueryResult>::ConstIterator i = lightQueryResults_.Begin(); i != lightQueryResults_.End(); ++i) // 统计逐像素光源的个数（lightQueryResults_根据lights_数目分配）
         {
             if (!i->light_->GetPerVertex() && i->litGeometries_.Size()) // 像素光源，且存在被其照亮的几何体
@@ -1104,7 +1105,7 @@ void View::GetLightBatches()
                     FinalizeShadowCamera(shadowCamera, light, shadowQueue.shadowViewport_, query.shadowCasterBox_[j]);
 
                     // Loop through shadow casters
-                    // 遍历能投射阴影的几何体，将批次添加到shadowQueue.shadowBatches_
+                    // 遍历本投影相机中能投射阴影的几何体，将批次添加到shadowQueue.shadowBatches_
                     for (PODVector<Drawable*>::ConstIterator k = query.shadowCasters_.Begin() + query.shadowCasterBegin_[j];
                          k < query.shadowCasters_.Begin() + query.shadowCasterEnd_[j]; ++k)
                     {
@@ -1161,7 +1162,7 @@ void View::GetLightBatches()
 
                 // In deferred modes, store the light volume batch now. Since light mask 8 lowest bits are output to the stencil,
                 // lights that have all zeroes in the low 8 bits can be skipped; they would not affect geometry anyway
-                if (deferred_ && (light->GetLightMask() & 0xffu) != 0) // 延迟渲染时，保存光源几何体及批次信息到lightQueues_[].volumeBatches_
+                if (deferred_ && (light->GetLightMask() & 0xffu) != 0) // 延迟渲染时，保存光源几何体的批次信息到lightQueues_[].volumeBatches_
                 {
                     Batch volumeBatch;
                     volumeBatch.geometry_ = renderer_->GetLightGeometry(light);
@@ -1215,7 +1216,7 @@ void View::GetLightBatches()
     }
 }
 
-// 遍历geometries_，将不属于LightBatchQueue::litBaseBatches_（litbase pass）的各批次加入到scenePasses_[].batchQueue_
+// 遍历geometries_，构造RenderPath中各个scenepass对应的批次，放入batchQueues_，对于base批次，如果已经存在于lightQueues_，则此处不再创建
 void View::GetBaseBatches()
 {
     URHO3D_PROFILE(GetBaseBatches);
@@ -1250,10 +1251,10 @@ void View::GetBaseBatches()
             {
                 ScenePassInfo& info = scenePasses_[k];
                 // Skip forward base pass if the corresponding litbase pass already exists
-                if (info.passIndex_ == basePassIndex_ && j < 32 && drawable->HasBasePass(j)) //如果相应的litbase过程已存在，则跳过前向基本过程
+                if (info.passIndex_ == basePassIndex_ && j < 32 && drawable->HasBasePass(j)) // 该几何体已经加入像素光litbase批次（lightQueues_[].litBaseBatches_），无需进行场景的base批次
                     continue;
 
-                Pass* pass = tech->GetSupportedPass(info.passIndex_);
+                Pass* pass = tech->GetSupportedPass(info.passIndex_); // 材质技术（Technique）中不存在该过程（Pass）
                 if (!pass)
                     continue;
 
@@ -1405,6 +1406,7 @@ void View::UpdateGeometries()
     geometriesUpdated_ = true;
 }
 
+// 构造像素光受光体批次
 // 如果光源是几何体的第一个像素光，加入lightQueue.litBaseBatches_（pass name="litbase"）；后续的像素光，加入lightQueue.litBatches_（pass name="light"）；否则尝试加入批次到alphaQueue（pass name="litalpha"）
 void View::GetLitBatches(Drawable* drawable, LightBatchQueue& lightQueue, BatchQueue* alphaQueue)
 {
@@ -2340,13 +2342,14 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         isShadowed = false;
 #endif
     // Get lit geometries. They must match the light mask and be inside the main camera frustum to be considered
+    // 获取受光几何体（放入lightQueryResults_[].litGeometries_）。它们必须与光源的掩码匹配，并位于主摄像机截锥体内
     PODVector<Drawable*>& tempDrawables = tempDrawables_[threadIndex];
     query.litGeometries_.Clear();
 
-    // 受光几何体压入query.litGeometries
+    // 可见的受光几何体（被光源照亮，且相机可见）压入query.litGeometries
     switch (type)
     {
-    case LIGHT_DIRECTIONAL: // 平行光照亮一切
+    case LIGHT_DIRECTIONAL: // 平行光：选取相机截锥体内的几何体
         for (unsigned i = 0; i < geometries_.Size(); ++i)
         {
             if (GetLightMask(geometries_[i]) & lightMask)
@@ -2354,11 +2357,11 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         }
         break;
 
-    case LIGHT_SPOT: // 聚光灯照亮截锥体内的一切
+    case LIGHT_SPOT: // 聚光灯：选取聚光灯截锥体内的且在相机截锥体内的几何体
         {
             FrustumOctreeQuery octreeQuery(tempDrawables, light->GetFrustum(), DRAWABLE_GEOMETRY,
                 cullCamera_->GetViewMask());
-            octree_->GetDrawables(octreeQuery);
+            octree_->GetDrawables(octreeQuery); // 查询聚光灯截锥体内的几何体
             for (unsigned i = 0; i < tempDrawables.Size(); ++i)
             {
                 if (tempDrawables[i]->IsInView(frame_) && (GetLightMask(tempDrawables[i]) & lightMask))
@@ -2367,7 +2370,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         }
         break;
 
-    case LIGHT_POINT: // 聚光灯照亮圆内的一切
+    case LIGHT_POINT: // 点光源：选取点光源圆形范围内的且在相机截锥体内的几何体
         {
             SphereOctreeQuery octreeQuery(tempDrawables, Sphere(light->GetNode()->GetWorldPosition(), light->GetRange()),
                 DRAWABLE_GEOMETRY, cullCamera_->GetViewMask());
@@ -2407,12 +2410,14 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         // For directional light check that the split is inside the visible scene: if not, can skip the split
         if (type == LIGHT_DIRECTIONAL)
         {
+            // 投影区域不再场景相机可观察范围内
             if (minZ_ > query.shadowFarSplits_[i])
                 continue;
             if (maxZ_ < query.shadowNearSplits_[i])
                 continue;
 
             // Reuse lit geometry query for all except directional lights
+            // 对于平行光，查询投影相机内的几何体（有些几何体不在场景相机范围内，但其影子可以被场景相机可见，所以依然要选取进行后续处理）
             ShadowCasterOctreeQuery query(tempDrawables, shadowCameraFrustum, DRAWABLE_GEOMETRY, cullCamera_->GetViewMask());
             octree_->GetDrawables(query);
         }
@@ -2427,6 +2432,7 @@ void View::ProcessLight(LightQueryResult& query, unsigned threadIndex)
         query.numSplits_ = 0;
 }
 
+// 对于各投影相机（query.shadowCameras_[splitIndex]），将可以投射阴影的Drawable压入query.shadowCasters_。
 void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawable*>& drawables, unsigned splitIndex)
 {
     Light* light = query.light_;
@@ -2443,6 +2449,7 @@ void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawabl
     // Transform scene frustum into shadow camera's view space for shadow caster visibility check. For point & spot lights,
     // we can use the whole scene frustum. For directional lights, use the intersection of the scene frustum and the split
     // frustum, so that shadow casters do not get rendered into unnecessary splits
+    // 将场景视锥转化为投影相机的视图空间，以进行阴影投射器可见性检查。
     Frustum lightViewFrustum;
     if (type != LIGHT_DIRECTIONAL)
         lightViewFrustum = cullCamera_->GetSplitFrustum(minZ_, maxZ_).Transformed(lightView);
@@ -2453,6 +2460,7 @@ void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawabl
     BoundingBox lightViewFrustumBox(lightViewFrustum);
 
     // Check for degenerate split frustum: in that case there is no need to get shadow casters
+    // 如果换到投影空间的场景相机截锥体已经退化，则没有必要得到阴影投射器
     if (lightViewFrustum.vertices_[0] == lightViewFrustum.vertices_[4])
         return;
 
@@ -2464,12 +2472,13 @@ void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawabl
         Drawable* drawable = *i;
         // In case this is a point or spot light query result reused for optimization, we may have non-shadowcasters included.
         // Check for that first
-        if (!drawable->GetCastShadows())
+        if (!drawable->GetCastShadows()) // 投射阴影的标志为关闭状态
             continue;
         // Check shadow mask
-        if (!(GetShadowMask(drawable) & lightMask))
+        if (!(GetShadowMask(drawable) & lightMask)) // 投影掩码不匹配，不能投影
             continue;
         // For point light, check that this drawable is inside the split shadow camera frustum
+        // 对于点光源，drawables包括球内的几何体，要根据本投影相机（6个中的一个）进一步筛选
         if (type == LIGHT_POINT && shadowCameraFrustum.IsInsideFast(drawable->GetWorldBoundingBox()) == OUTSIDE)
             continue;
 
@@ -2482,10 +2491,11 @@ void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawabl
         float drawDistance = drawable->GetDrawDistance();
         if (drawDistance > 0.0f && (maxShadowDistance <= 0.0f || drawDistance < maxShadowDistance))
             maxShadowDistance = drawDistance;
-        if (maxShadowDistance > 0.0f && drawable->GetDistance() > maxShadowDistance)
+        if (maxShadowDistance > 0.0f && drawable->GetDistance() > maxShadowDistance) // 超过绘制距离，则不会绘制物体，更不会绘制其影子了
             continue;
 
         // Project shadow caster bounding box to light view space for visibility check
+        // 将阴影投射器边界框变换到投影相机空间以进行可见性检查
         lightViewBox = drawable->GetWorldBoundingBox().Transformed(lightView);
 
         if (IsShadowCasterVisible(drawable, lightViewBox, shadowCamera, lightView, lightViewFrustum, lightViewFrustumBox))
@@ -2506,16 +2516,16 @@ void View::ProcessShadowCasters(LightQueryResult& query, const PODVector<Drawabl
 bool View::IsShadowCasterVisible(Drawable* drawable, BoundingBox lightViewBox, Camera* shadowCamera, const Matrix3x4& lightView,
     const Frustum& lightViewFrustum, const BoundingBox& lightViewFrustumBox)
 {
-    if (shadowCamera->IsOrthographic())
+    if (shadowCamera->IsOrthographic()) // 如果投影相机是正交矩阵（平行光）
     {
         // Extrude the light space bounding box up to the far edge of the frustum's light space bounding box
         lightViewBox.max_.z_ = Max(lightViewBox.max_.z_, lightViewFrustumBox.max_.z_);
         return lightViewFrustum.IsInsideFast(lightViewBox) != OUTSIDE;
     }
-    else
+    else // 点光源或聚光灯的投影相机
     {
         // If light is not directional, can do a simple check: if object is visible, its shadow is too
-        if (drawable->IsInView(frame_))
+        if (drawable->IsInView(frame_)) // 物体可见即可
             return true;
 
         // For perspective lights, extrusion direction depends on the position of the shadow caster
@@ -2569,7 +2579,7 @@ IntRect View::GetShadowMapViewport(Light* light, int splitIndex, Texture2D* shad
     return {};
 }
 
-// 创建阴影相机（1，平行光，根据阴影层级参数创建对应相机数；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
+// 创建阴影相机（1，平行光，根据阴影层级参数（CascadeParameters）创建对应相机数；2，聚光灯创建1个相机；3，点光源6个面各创建1个）
 void View::SetupShadowCameras(LightQueryResult& query)
 {
     Light* light = query.light_;

@@ -566,7 +566,7 @@ void Light::OnWorldBoundingBoxUpdate()
 }
 
 // 根据强度和视距设置排序值。
-// 平行负光源-非平行负光源-平行正光源-非平行正光源
+// sortValue_: 平行负光源<非平行负光源<平行正光源<非平行正光源；相同条件光源，越近相机值越小，颜色越强值越小
 void Light::SetIntensitySortValue(float distance)
 {
     // When sorting lights globally, give priority to directional lights so that they will be combined into the ambient pass
@@ -588,6 +588,7 @@ void Light::SetIntensitySortValue(float distance)
     }
 }
 
+// 基于边界框上的整体强度设置排序值。
 void Light::SetIntensitySortValue(const BoundingBox& box)
 {
     // When sorting lights for object's maximum light cap, give priority based on attenuation and intensity

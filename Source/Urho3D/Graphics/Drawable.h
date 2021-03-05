@@ -290,12 +290,12 @@ public:
     /// Add a per-pixel light affecting the object this frame.
     void AddLight(Light* light)
     {
-        if (!firstLight_)
+        if (!firstLight_) // 记录第一个像素光
             firstLight_ = light;
 
         // Need to store into the light list only if the per-pixel lights are being limited
         // Otherwise recording the first light is enough
-        if (maxLights_)
+        if (maxLights_) // 如果限制最大像素光源个数，则记录，用于后续将多余的像素光转为顶点光
             lights_.Push(light);
     }
 
@@ -379,15 +379,15 @@ protected:
     /// Base pass flags, bit per batch.
     unsigned basePassFlags_;
     /// Maximum per-pixel lights.
-    unsigned maxLights_;
+    unsigned maxLights_; // 影响本对象的像素光源个数
     /// List of cameras from which is seen on the current frame.
     PODVector<Camera*> viewCameras_; // 当前帧可以看到this的相机列表
     /// First per-pixel light added this frame.
-    Light* firstLight_;
+    Light* firstLight_; // 第一个像素光源
     /// Per-pixel lights affecting this drawable.
-    PODVector<Light*> lights_; // 在像素光个数有限制时（maxLights_ > 0）记录相关的像素光（maxLights_ = 0则不记录），用于后续将多余的像素光转为顶点光（LimitLights()）
+    PODVector<Light*> lights_; // 在像素光个数有限制时（maxLights_ > 0）记录相关的像素光（maxLights_ = 0则不记录），用于后续将多余的像素光转为顶点光（LimitLights()），最终只保留影响最大的maxLights_个光源
     /// Per-vertex lights affecting this drawable.
-    PODVector<Light*> vertexLights_; // 相关的顶点光
+    PODVector<Light*> vertexLights_; // 影响本对象的顶点光源列表
 };
 
 inline bool CompareDrawables(Drawable* lhs, Drawable* rhs)

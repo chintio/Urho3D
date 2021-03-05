@@ -57,11 +57,11 @@ struct LightQueryResult
     /// Light.
     Light* light_;
     /// Lit geometries.
-    PODVector<Drawable*> litGeometries_; // 被本light_照亮的几何体（观察矩阵内）
+    PODVector<Drawable*> litGeometries_; // 被本light_照亮的几何体（且在场景相机截锥体内）
     /// Shadow casters.
-    PODVector<Drawable*> shadowCasters_; // 影子投射器（能产生阴影的几何体）
+    PODVector<Drawable*> shadowCasters_; // 影子投射器（能投射阴影的几何体），即在投影相机（灯光相机）截锥体内的能产生影子的几何体
     /// Shadow cameras.
-    Camera* shadowCameras_[MAX_LIGHT_SPLITS]; // 每个LOD的阴影相机，用于对该区域产生阴影贴图（深度图）
+    Camera* shadowCameras_[MAX_LIGHT_SPLITS]; // 投影相机（平行光，根据阴影层级参数（CascadeParameters）创建对应相机数；聚光灯创建1个；点光源6个面各创建1个），用于对该区域产生阴影贴图（深度图）
     /// Shadow caster start indices.
     unsigned shadowCasterBegin_[MAX_LIGHT_SPLITS]; // 每个LOD区域中投射阴影的几何体的开始id（对应shadowCasters_的索引）
     /// Shadow caster end indices.
@@ -90,7 +90,7 @@ struct ScenePassInfo
     /// Vertex light flag.
     bool vertexLights_; // 顶点光，根据RenderPath中的vertexlights="true"判断
     /// Batch queue.
-    BatchQueue* batchQueue_; // 批次队列，和View::batchQueues_依此对应
+    BatchQueue* batchQueue_; // 批次队列，引用自View::batchQueues_
 };
 
 /// Per-thread geometry, light and scene range collection structure.
@@ -290,7 +290,7 @@ private:
     }
 
     /// Return the drawable's light mask, considering also its zone.
-    unsigned GetLightMask(Drawable* drawable)
+    unsigned GetLightMask(Drawable* drawable) // 返回可见物的光照掩码（结合可见物所在区域的光照掩码）
     {
         return drawable->GetLightMask() & GetZone(drawable)->GetLightMask();
     }
@@ -373,7 +373,7 @@ private:
     /// Draw shadows flag.
     bool drawShadows_{};
     /// Deferred flag. Inferred from the existence of a light volume command in the renderpath.
-    bool deferred_{};
+    bool deferred_{}; //延迟标志。根据renderpath中的“command type="lightvolumes"”命令推断。
     /// Deferred ambient pass flag. This means that the destination rendertarget is being written to at the same time as albedo/normal/depth buffers, and needs to be RGBA on OpenGL.
     bool deferredAmbient_{}; // 延迟环境光pass标志。这意味着目标rendertarget与albedo/normal/depth缓冲区同时被写入，并且需要是OpenGL上的RGBA。
     /// Forward light base pass optimization flag. If in use, combine the base pass and first light for all opaque objects.
@@ -416,9 +416,9 @@ private:
     /// Per-pixel light queues.
     Vector<LightBatchQueue> lightQueues_; // 逐像素光源的批次队列（受lightQueues_[x].light_影响的Drawable，生成Batch，放入lightQueues_[x]）
     /// Per-vertex light queues.
-    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 逐顶点光源的批次队列（只受顶点）
+    HashMap<unsigned long long, LightBatchQueue> vertexLightQueues_; // 保存对各可见几何体（场景相机）产生影响的顶点光列表（LightBatchQueue.vertexLights_）
     /// Batch queues by pass index.
-    HashMap<unsigned, BatchQueue> batchQueues_; // 根据RenderPath中的scenepass创建
+    HashMap<unsigned, BatchQueue> batchQueues_; // RenderPath中各个scenepass对应的批次，对于"base"，如果已经在lightQueues_中创建对应批次，则不会在这里重复创建
     /// Index of the GBuffer pass.
     unsigned gBufferPassIndex_{};
     /// Index of the opaque forward base pass.

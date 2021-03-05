@@ -334,7 +334,7 @@ void Drawable::LimitLights()
     for (unsigned i = 0; i < lights_.Size(); ++i)
         lights_[i]->SetIntensitySortValue(box);
 
-    Sort(lights_.Begin(), lights_.End(), CompareDrawables);
+    Sort(lights_.Begin(), lights_.End(), CompareDrawables); // 按光源影响的降序排列
     vertexLights_.Insert(vertexLights_.End(), lights_.Begin() + maxLights_, lights_.End());
     lights_.Resize(maxLights_);
 }

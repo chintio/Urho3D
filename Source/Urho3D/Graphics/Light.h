@@ -396,7 +396,7 @@ private:
     bool usePhysicalValues_;
 };
 
-// 顶点光排在前，像素光排在后（对于像素光sortValue_小的（最明亮/最接近相机）排在前）
+// 如果光源类型（顶点光/像素光）不同，则顶点光在前，否则“排序值”（sortValue_）小的在前（sortValue_: 平行负光源<非平行负光源<平行正光源<非平行正光源；相同条件光源，越近相机值越小，颜色越强值越小）
 inline bool CompareLights(Light* lhs, Light* rhs)
 {
     // When sorting lights, give priority to per-vertex lights, so that vertex lit base pass can be evaluated first
