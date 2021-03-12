@@ -49,6 +49,7 @@ VertexBuffer::~VertexBuffer()
     Release();
 }
 
+// 设置使用影子缓冲区，用于数据从内存同步到显存
 void VertexBuffer::SetShadowed(bool enable)
 {
     // If no graphics subsystem, can not disable shadowing
@@ -66,13 +67,13 @@ void VertexBuffer::SetShadowed(bool enable)
     }
 }
 
-// “位掩码”定义顶点数据
+// “位掩码”定义顶点格式，创建设备对象
 bool VertexBuffer::SetSize(unsigned vertexCount, unsigned elementMask, bool dynamic)
 {
     return SetSize(vertexCount, GetElements(elementMask), dynamic);
 }
 
-// “顶点描述”定义顶点数据
+// “顶点描述”定义顶点格式，创建设备对象
 bool VertexBuffer::SetSize(unsigned vertexCount, const PODVector<VertexElement>& elements, bool dynamic)
 {
     Unlock();
@@ -91,7 +92,7 @@ bool VertexBuffer::SetSize(unsigned vertexCount, const PODVector<VertexElement>&
     return Create();
 }
 
-// 计算elements_[].offset_（顶点元素的偏移字节），elementHash_，elementMask_
+// 计算elements_[].offset_（顶点元素的偏移字节），elementHash_，elementMask_，vertexSize_
 void VertexBuffer::UpdateOffsets()
 {
     unsigned elementOffset = 0;
@@ -119,6 +120,7 @@ void VertexBuffer::UpdateOffsets()
     vertexSize_ = elementOffset;
 }
 
+// 返回元数描述
 const VertexElement* VertexBuffer::GetElement(VertexElementSemantic semantic, unsigned char index) const
 {
     for (PODVector<VertexElement>::ConstIterator i = elements_.Begin(); i != elements_.End(); ++i)
@@ -130,6 +132,7 @@ const VertexElement* VertexBuffer::GetElement(VertexElementSemantic semantic, un
     return nullptr;
 }
 
+// 返回元数描述
 const VertexElement* VertexBuffer::GetElement(VertexElementType type, VertexElementSemantic semantic, unsigned char index) const
 {
     for (PODVector<VertexElement>::ConstIterator i = elements_.Begin(); i != elements_.End(); ++i)
@@ -141,6 +144,7 @@ const VertexElement* VertexBuffer::GetElement(VertexElementType type, VertexElem
     return nullptr;
 }
 
+// 返回元数描述
 const VertexElement* VertexBuffer::GetElement(const PODVector<VertexElement>& elements, VertexElementType type, VertexElementSemantic semantic, unsigned char index)
 {
     for (PODVector<VertexElement>::ConstIterator i = elements.Begin(); i != elements.End(); ++i)
@@ -152,17 +156,20 @@ const VertexElement* VertexBuffer::GetElement(const PODVector<VertexElement>& el
     return nullptr;
 }
 
+// 判断元数是否存在
 bool VertexBuffer::HasElement(const PODVector<VertexElement>& elements, VertexElementType type, VertexElementSemantic semantic, unsigned char index)
 {
     return GetElement(elements, type, semantic, index) != nullptr;
 }
 
+// 返回元数字节偏移
 unsigned VertexBuffer::GetElementOffset(const PODVector<VertexElement>& elements, VertexElementType type, VertexElementSemantic semantic, unsigned char index)
 {
     const VertexElement* element = GetElement(elements, type, semantic, index);
     return element ? element->offset_ : M_MAX_UNSIGNED;
 }
 
+// 依据顶点元数掩码，从LEGACY_VERTEXELEMENTS[]构建顶点元数数组
 PODVector<VertexElement> VertexBuffer::GetElements(unsigned elementMask)
 {
     PODVector<VertexElement> ret;
@@ -176,6 +183,7 @@ PODVector<VertexElement> VertexBuffer::GetElements(unsigned elementMask)
     return ret;
 }
 
+// 根据元数描述表返回顶点大小
 unsigned VertexBuffer::GetVertexSize(const PODVector<VertexElement>& elements)
 {
     unsigned size = 0;
@@ -186,6 +194,7 @@ unsigned VertexBuffer::GetVertexSize(const PODVector<VertexElement>& elements)
     return size;
 }
 
+// 根据元数掩码返回顶点大小
 unsigned VertexBuffer::GetVertexSize(unsigned elementMask)
 {
     unsigned size = 0;
@@ -199,6 +208,7 @@ unsigned VertexBuffer::GetVertexSize(unsigned elementMask)
     return size;
 }
 
+// 计算各元数偏移
 void VertexBuffer::UpdateOffsets(PODVector<VertexElement>& elements)
 {
     unsigned elementOffset = 0;

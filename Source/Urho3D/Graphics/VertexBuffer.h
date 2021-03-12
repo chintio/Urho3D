@@ -145,7 +145,7 @@ private:
     void UnmapBuffer();
 
     /// Shadow data.
-    SharedArrayPtr<unsigned char> shadowData_; // 影子数据，系统内存中
+    SharedArrayPtr<unsigned char> shadowData_; // 影子数据（系统内存中），用于设备丢失后的重建
     /// Number of vertices.
     unsigned vertexCount_{}; // 顶点个数
     /// Vertex size.
@@ -163,7 +163,7 @@ private:
     /// Lock number of vertices.
     unsigned lockCount_{};
     /// Scratch buffer for fallback locking.
-    void* lockScratchData_{};
+    void* lockScratchData_{}; // graphics_管理的系统内存，在没有设备缓存（object_.ptr_）或者影子缓存（shadowData_）时使用
     /// Dynamic flag.
     bool dynamic_{}; // 动态数据，存于AGP，在系统内存中没有备份，在Device Lost时需要释放后重新创建
     /// Shadowed flag.

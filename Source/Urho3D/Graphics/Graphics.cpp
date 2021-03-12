@@ -317,6 +317,7 @@ void* Graphics::ReserveScratchBuffer(unsigned size)
         maxScratchBufferRequest_ = size;
 
     // First check for a free buffer that is large enough
+    // 从空闲缓冲区寻找
     for (Vector<ScratchBuffer>::Iterator i = scratchBuffers_.Begin(); i != scratchBuffers_.End(); ++i)
     {
         if (!i->reserved_ && i->size_ >= size)
@@ -327,6 +328,7 @@ void* Graphics::ReserveScratchBuffer(unsigned size)
     }
 
     // Then check if a free buffer can be resized
+    // 在空闲缓冲区中再分配
     for (Vector<ScratchBuffer>::Iterator i = scratchBuffers_.Begin(); i != scratchBuffers_.End(); ++i)
     {
         if (!i->reserved_)
@@ -342,6 +344,7 @@ void* Graphics::ReserveScratchBuffer(unsigned size)
     }
 
     // Finally allocate a new buffer
+    // 没有空闲缓冲区，则创建
     ScratchBuffer newBuffer;
     newBuffer.data_ = new unsigned char[size];
     newBuffer.size_ = size;
@@ -353,6 +356,7 @@ void* Graphics::ReserveScratchBuffer(unsigned size)
     return newBuffer.data_.Get();
 }
 
+// 释放一个指定的在用缓冲区
 void Graphics::FreeScratchBuffer(void* buffer)
 {
     if (!buffer)
@@ -370,11 +374,12 @@ void Graphics::FreeScratchBuffer(void* buffer)
     URHO3D_LOGWARNING("Reserved scratch buffer " + ToStringHex((unsigned)(size_t)buffer) + " not found");
 }
 
+// 清理过大的空闲缓存
 void Graphics::CleanupScratchBuffers()
 {
     for (Vector<ScratchBuffer>::Iterator i = scratchBuffers_.Begin(); i != scratchBuffers_.End(); ++i)
     {
-        if (!i->reserved_ && i->size_ > maxScratchBufferRequest_ * 2 && i->size_ >= 1024 * 1024)
+        if (!i->reserved_ && i->size_ > maxScratchBufferRequest_ * 2 && i->size_ >= 1024 * 1024) // 将超过2倍maxScratchBufferRequest_，且1M及以上的缓冲区，重分配为maxScratchBufferRequest_大小
         {
             i->data_ = maxScratchBufferRequest_ > 0 ? (new unsigned char[maxScratchBufferRequest_]) : nullptr;
             i->size_ = maxScratchBufferRequest_;

@@ -789,7 +789,7 @@ bool Graphics::BeginFrame()
             return false;
         }
         // The device is lost, but ready to be reset. Reset device but do not render on this frame yet
-        if (hr == D3DERR_DEVICENOTRESET)
+        if (hr == D3DERR_DEVICENOTRESET) // 设备可以reset
         {
             ResetDevice();
             return false;
@@ -2619,6 +2619,10 @@ void Graphics::CheckFeatureSupport()
     sRGBWriteSupport_ = impl_->CheckFormatSupport(D3DFMT_X8R8G8B8, D3DUSAGE_QUERY_SRGBWRITE, D3DRTYPE_TEXTURE);
 }
 
+// 恢复设备三步骤：
+// 1，释放所有在D3DPOOL_DEFAULT中分配的资源, 包括用IDirect3DDevice9::CreateRenderTarget和IDirect3DDevice9::CreateDepthStencilSurface方法创建的资源. (不进行这一步, 下一步的Reset操作会失败)
+// 2，调用IDirect3DDevice::Reset进行恢复. Reset方法是当设备丢失时, 唯一有效的方法, 并且是应用程序可用来把设备从丢失状态恢复到操作状态的唯一方法.
+// 3，重建在步骤1中释放的资源, 同时还需要重新设置state等
 void Graphics::ResetDevice()
 {
     OnDeviceLost();

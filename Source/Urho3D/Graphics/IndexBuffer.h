@@ -96,7 +96,7 @@ private:
     void UnmapBuffer();
 
     /// Shadow data.
-    SharedArrayPtr<unsigned char> shadowData_;
+    SharedArrayPtr<unsigned char> shadowData_; // 影子数据（系统内存中），用于设备丢失后的重建
     /// Number of indices.
     unsigned indexCount_;
     /// Index size.

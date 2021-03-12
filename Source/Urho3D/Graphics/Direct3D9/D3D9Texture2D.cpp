@@ -501,6 +501,8 @@ bool Texture2D::GetData(unsigned level, void* dest) const
 // 创建IDirect3DTexture9（object_.ptr），如果格式不支持或者需要多重采样，则额外创建IDirect3DSurface9对象
 // IDirect3DTexture9的关联表面或额外创建的表面赋值给renderSurface_->surface_并用作render target
 // Device->CreateTexture 可以创建任意大小的纹理（D3DXCreateTexture创建的是2的n次幂的纹理），这种方法创建的Texture与Surface是一一对应的，由D3D底层自动做了Resolve的过程，不能使用MultiSample
+// Usage为D3DUSAGE_RENDERTARGET的Texture不能进行MultiSample（反锯齿）, 而且Pool必须为D3DPOOL_DEFAULT.
+// 如果想利用RenderTarget做为纹理又想反锯齿, 可以先把场景渲染到一个CreateRenderTarget创建的Surface(或BackBuffer)上, 再用IDirect3DDevice9::StretchRect拷贝到纹理关联的Surface上
 bool Texture2D::Create()
 {
     Release();

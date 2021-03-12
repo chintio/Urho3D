@@ -700,7 +700,7 @@ private:
     /// GPU objects.
     PODVector<GPUObject*> gpuObjects_; // GPU对象集
     /// Scratch buffers.
-    Vector<ScratchBuffer> scratchBuffers_;
+    Vector<ScratchBuffer> scratchBuffers_; // System Memory，用于顶点数据更新
     /// Shadow map dummy color texture format.
     unsigned dummyColorFormat_{}; // 阴影图rendertarget使用的纹理格式
     /// Shadow map depth texture format.
