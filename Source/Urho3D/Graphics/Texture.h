@@ -239,7 +239,7 @@ protected:
     /// Parameters dirty flag.
     bool parametersDirty_{true};
     /// Multisampling autoresolve flag.
-    bool autoResolve_{};
+    bool autoResolve_{}; // 多重采样的表面由程序自动解析到纹理
     /// Multisampling resolve needed -flag.
     bool resolveDirty_{};
     /// Mipmap levels regeneration needed -flag.

@@ -644,6 +644,7 @@ unsigned Renderer::GetNumOccluders(bool allViews) const
     return numOccluders;
 }
 
+// 根据场景的viewports_创建views_及其批次；处理需要渲染的rendertarget，根据RT的viewports_创建views_及其批次
 void Renderer::Update(float timeStep)
 {
     URHO3D_PROFILE(UpdateViews);
@@ -834,13 +835,15 @@ Geometry* Renderer::GetQuadGeometry()
     return dirLightGeometry_;
 }
 
+// 分配阴影贴图。如果禁用阴影贴图重用，则每次返回不同的贴图。
+// 根据光源计算阴影贴图尺寸，在设备中创建阴影贴图（如显卡不支持，再创建对应的颜色贴图用于rendertarget）
 Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWidth, unsigned viewHeight)
 {
     LightType type = light->GetLightType();
     const FocusParameters& parameters = light->GetShadowFocus();
     float size = (float)shadowMapSize_ * light->GetShadowResolution();
     // Automatically reduce shadow map size when far away
-    if (parameters.autoSize_ && type != LIGHT_DIRECTIONAL)
+    if (parameters.autoSize_ && type != LIGHT_DIRECTIONAL) // 远离时自动减小阴影贴图大小
     {
         const Matrix3x4& view = camera->GetView();
         const Matrix4& projection = camera->GetProjection();
@@ -876,6 +879,7 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
     int height = width;
 
     // Adjust the size for directional or point light shadow map atlases
+    // //调整平行光或点光源阴影贴图集的大小。聚光灯只有一个相机，无需调整
     if (type == LIGHT_DIRECTIONAL)
     {
         auto numSplits = (unsigned)light->GetNumShadowSplits();
@@ -894,11 +898,12 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
     if (shadowMaps_.Contains(searchKey))
     {
         // If shadow maps are reused, always return the first
-        if (reuseShadowMaps_)
+        if (reuseShadowMaps_) // 可以重用，则返回既有的
             return shadowMaps_[searchKey][0];
         else
         {
             // If not reused, check allocation count and return existing shadow map if possible
+            // 不能重用，则返回既有的空闲项，如果没有空闲项且既有数已经达到最大数，则返回空
             unsigned allocated = shadowMapAllocations_[searchKey].Size();
             if (allocated < shadowMaps_[searchKey].Size())
             {
@@ -927,7 +932,7 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
         shadowMapFormat = graphics_->GetHiresShadowMapFormat();
         break;
 
-    case SHADOWQUALITY_VSM:
+    case SHADOWQUALITY_VSM: // 方差阴影
     case SHADOWQUALITY_BLUR_VSM:
         shadowMapFormat = graphics_->GetRGFloat32Format();
         shadowMapUsage = TEXTURE_RENDERTARGET;
@@ -945,6 +950,7 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
     // Disable mipmaps from the shadow map
     newShadowMap->SetNumLevels(1);
 
+    // 在设备中创建阴影贴图
     while (retries)
     {
         if (!newShadowMap->SetSize(width, height, shadowMapFormat, shadowMapUsage, multiSample))
@@ -994,12 +1000,12 @@ Texture2D* Renderer::GetShadowMap(Light* light, Camera* camera, unsigned viewWid
     return newShadowMap;
 }
 
-// 根据cubemap参数分配Texture2D或者TextureCube对象，并压入screenBuffers_（width、height、format、multiSample、persistentKey组成的key做索引）
-// 如果是depth-stencil缓冲，则重用（screenBufferAllocations_控制是新分配还是重用）
+// 为延迟渲染或后处理分配rendertarget或depth stencil纹理。只应在实际渲染期间调用，而不应在渲染之前调用。
+// 如果是depth-stencil纹理或persistentKey非0，则重用（screenBufferAllocations_控制是新分配还是重用）
 Texture* Renderer::GetScreenBuffer(int width, int height, unsigned format, int multiSample, bool autoResolve, bool cubemap, bool filtered, bool srgb,
     unsigned persistentKey)
 {
-    bool depthStencil = (format == Graphics::GetDepthStencilFormat()) || (format == Graphics::GetReadableDepthFormat());
+    bool depthStencil = (format == Graphics::GetDepthStencilFormat()) || (format == Graphics::GetReadableDepthFormat()); // 判断是否“深度模板”格式
     if (depthStencil)
     {
         filtered = false;

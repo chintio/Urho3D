@@ -569,7 +569,7 @@ bool Texture2D::Create()
     // If creating a depth-stencil texture, and it is not supported, create a depth-stencil surface instead
     // Multisampled surfaces need also to be created this way
     if (usage_ == TEXTURE_DEPTHSTENCIL && (multiSample_ > 1 || !graphics_->GetImpl()->CheckFormatSupport((D3DFORMAT)format_, 
-        d3dUsage, D3DRTYPE_TEXTURE))) // 对于深度模板，多重采样等级大于1或者纹理格式不被支持，则只创建表面
+        d3dUsage, D3DRTYPE_TEXTURE))) // 对于深度模板纹理，多重采样等级大于1或者纹理格式不被支持，则只创建表面
     {
         HRESULT hr = device->CreateDepthStencilSurface(
             (UINT)width_,

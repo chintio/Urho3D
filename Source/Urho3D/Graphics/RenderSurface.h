@@ -147,7 +147,7 @@ private:
     /// Viewports.
     Vector<SharedPtr<Viewport> > viewports_; // 辅助视口，用于实现render to texture
     /// Linked color buffer.
-    WeakPtr<RenderSurface> linkedRenderTarget_;
+    WeakPtr<RenderSurface> linkedRenderTarget_; // 阴影贴图关联的颜色贴图（显卡不支持输出空颜色贴图）
     /// Linked depth buffer.
     WeakPtr<RenderSurface> linkedDepthStencil_;
     /// Update mode for viewports.

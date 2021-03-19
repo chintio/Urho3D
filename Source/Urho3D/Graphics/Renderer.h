@@ -502,9 +502,9 @@ private:
     /// Reusable occlusion buffers.
     Vector<SharedPtr<OcclusionBuffer> > occlusionBuffers_;
     /// Shadow maps by resolution.
-    HashMap<int, Vector<SharedPtr<Texture2D> > > shadowMaps_;
+    HashMap<int, Vector<SharedPtr<Texture2D> > > shadowMaps_; // 按尺寸索引的阴影图
     /// Shadow map dummy color buffers by resolution.
-    HashMap<int, SharedPtr<Texture2D> > colorShadowMaps_;
+    HashMap<int, SharedPtr<Texture2D> > colorShadowMaps_; // shadowMaps_对应的颜色贴图（显卡不支持输出空颜色贴图）
     /// Shadow map allocations by resolution.
     HashMap<int, PODVector<Light*> > shadowMapAllocations_;
     /// Instance of shadow map filter
@@ -512,9 +512,9 @@ private:
     /// Function pointer of shadow map filter
     ShadowMapFilter shadowMapFilter_{};
     /// Screen buffers by resolution and format.
-    HashMap<unsigned long long, Vector<SharedPtr<Texture> > > screenBuffers_;
+    HashMap<unsigned long long, Vector<SharedPtr<Texture> > > screenBuffers_; // 为延迟渲染或后处理分配的rendertarget或depth stencil纹理
     /// Current screen buffer allocations by resolution and format.
-    HashMap<unsigned long long, unsigned> screenBufferAllocations_;
+    HashMap<unsigned long long, unsigned> screenBufferAllocations_; // screenBuffers_[x].Size() - 1
     /// Cache for light scissor queries.
     HashMap<Pair<Light*, Camera*>, Rect> lightScissorCache_;
     /// Backbuffer viewports.
@@ -552,7 +552,7 @@ private:
     /// Shadow parameters when VSM is used, they help to reduce light bleeding.
     Vector2 vsmShadowParams_{0.0000001f, 0.9f};
     /// Multisample level for VSM shadows.
-    int vsmMultiSample_{1};
+    int vsmMultiSample_{1}; // 方差阴影的多重采样等级
     /// Maximum number of shadow maps per resolution.
     int maxShadowMaps_{1};
     /// Minimum number of instances required in a batch group to render as instanced.

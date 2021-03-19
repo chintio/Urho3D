@@ -581,10 +581,10 @@ void View::Render()
         return;
     }
 
-    UpdateGeometries();
+    UpdateGeometries(); // 对批次(batchQueues_,lightQueues_)排序，更新threadedGeometries_、nonThreadedGeometries_中的几何体
 
     // Allocate screen buffers as necessary
-    AllocateScreenBuffers();
+    AllocateScreenBuffers(); // 分配RenderPath中需要的rendertarget
     SendViewEvent(E_VIEWBUFFERSREADY);
 
     // Forget parameter sources from the previous view
@@ -1305,8 +1305,8 @@ void View::GetBaseBatches()
     }
 }
 
-// 对顶点光照队列（batchQueues_）和像素光照队列（lightQueues_）进行批次排序，
-// 更新Drawable（Drawable::UpdateGeometry）
+// 对渲染路径（RenderPath）中的场景过程（scene pass）队列（batchQueues_）和像素光照队列（lightQueues_）进行批次排序，
+// 更新threadedGeometries_、nonThreadedGeometries_中的几何体（Drawable::UpdateGeometry）
 void View::UpdateGeometries()
 {
     // Update geometries in the source view if necessary (prepare order may differ from render order)
@@ -1360,6 +1360,7 @@ void View::UpdateGeometries()
 
     // Update geometries. Split into threaded and non-threaded updates.
     {
+        // 更新在子线程中处理的几何体
         if (threadedGeometries_.Size())
         {
             // In special cases (context loss, multi-view) a drawable may theoretically first have reported a threaded update, but will actually
@@ -1397,6 +1398,7 @@ void View::UpdateGeometries()
         }
 
         // While the work queue is processed, update non-threaded geometries
+        // 更新在主线程中处理的几何体
         for (PODVector<Drawable*>::ConstIterator i = nonThreadedGeometries_.Begin(); i != nonThreadedGeometries_.End(); ++i)
             (*i)->UpdateGeometry(frame_);
     }
@@ -1935,7 +1937,7 @@ void View::RenderQuad(RenderPathCommand& command)
     DrawFullscreenQuad(false);
 }
 
-// 检查命令是否有内容需要渲染
+// 检查场景过程（CMD_SCENEPASS）是否有内容需要渲染
 bool View::IsNecessary(const RenderPathCommand& command)
 {
     return command.enabled_ && command.outputs_.Size() &&
@@ -2015,7 +2017,7 @@ void View::AllocateScreenBuffers()
         const RenderPathCommand& command = renderPath_->commands_[i];
         if (!actualView->IsNecessary(command))
             continue;
-        if (!hasViewportRead && CheckViewportRead(command))
+        if (!hasViewportRead && CheckViewportRead(command)) // 需要读取"viewport"
             hasViewportRead = true;
         if (!hasPingpong && CheckPingpong(i))
             hasPingpong = true;

@@ -702,7 +702,7 @@ private:
     /// Scratch buffers.
     Vector<ScratchBuffer> scratchBuffers_; // System Memory，用于顶点数据更新
     /// Shadow map dummy color texture format.
-    unsigned dummyColorFormat_{}; // 阴影图rendertarget使用的纹理格式
+    unsigned dummyColorFormat_{}; // 阴影图（深度图）对应的rendertarget使用的纹理格式
     /// Shadow map depth texture format.
     unsigned shadowMapFormat_{}; // 硬件阴影格式（深度模板格式），0为不支持硬件阴影
     /// Shadow map 24-bit depth texture format.

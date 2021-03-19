@@ -869,6 +869,7 @@ void Graphics::Clear(ClearTargetFlags flags, const Color& color, float depth, un
     impl_->device_->Clear(0, nullptr, d3dFlags, GetD3DColor(color), depth, stencil);
 }
 
+// 将多采样backbuffer解析到纹理渲染目标。纹理的大小应与视口大小匹配。
 bool Graphics::ResolveToTexture(Texture2D* destination, const IntRect& viewport)
 {
     if (!destination || !destination->GetRenderSurface())
@@ -2532,7 +2533,7 @@ bool Graphics::CreateDevice(unsigned adapter, unsigned deviceType)
     return true;
 }
 
-// 检测需要的特性
+// 检测需要的特性：深度图（阴影图）格式及其对应的rendertarget颜色图格式；光照预处理和延迟渲染；实例渲染；sRGB读写
 void Graphics::CheckFeatureSupport()
 {
     anisotropySupport_ = true;
@@ -2546,6 +2547,7 @@ void Graphics::CheckFeatureSupport()
     readableDepthFormat = 0;
 
     // Check hardware shadow map support: prefer NVIDIA style hardware depth compared shadow maps if available
+    // 确定是否支持硬件阴影，以及硬件阴影贴图（深度图）格式
     shadowMapFormat_ = D3DFMT_D16;
     if (impl_->CheckFormatSupport((D3DFORMAT)shadowMapFormat_, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE)) // 深度模板缓存支持D3DFMT_D16
     {
@@ -2589,6 +2591,7 @@ void Graphics::CheckFeatureSupport()
         readableDepthFormat = intZFormat;
 
     // Check for dummy color rendertarget format used with hardware shadow maps
+    // 阴影图（深度图）对应的rendertarget使用的纹理格式（理想情况是只输出深度图，不要输出颜色贴图，这样不消耗显卡内存，即dummyColorFormat_ = nullFormat，但早期硬件可能不支持）
     dummyColorFormat_ = D3DFMT_A8R8G8B8;
     D3DFORMAT nullFormat = (D3DFORMAT)MAKEFOURCC('N', 'U', 'L', 'L');
     if (impl_->CheckFormatSupport(nullFormat, D3DUSAGE_RENDERTARGET, D3DRTYPE_TEXTURE))
@@ -2601,8 +2604,9 @@ void Graphics::CheckFeatureSupport()
         dummyColorFormat_ = D3DFMT_A4R4G4B4;
 
     // Check for light prepass and deferred rendering support
+    // 检测光照预处理和延迟渲染能力
     if (impl_->deviceCaps_.NumSimultaneousRTs >= 2 && impl_->CheckFormatSupport(D3DFMT_R32F, D3DUSAGE_RENDERTARGET,
-        D3DRTYPE_TEXTURE))
+        D3DRTYPE_TEXTURE)) // 同时使用的rendertarget数目>=2，且支持D3DFMT_R32F的纹理
     {
         lightPrepassSupport_ = true;
         if (impl_->deviceCaps_.NumSimultaneousRTs >= 4)
@@ -2610,6 +2614,7 @@ void Graphics::CheckFeatureSupport()
     }
 
     // Check for stream offset (needed for instancing)
+    // 支持实例
     if (impl_->deviceCaps_.DevCaps2 & D3DDEVCAPS2_STREAMOFFSET)
         instancingSupport_ = true;
 
