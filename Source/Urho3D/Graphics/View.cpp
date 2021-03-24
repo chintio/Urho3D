@@ -571,6 +571,7 @@ void View::Update(const FrameInfo& frame)
     SendViewEvent(E_ENDVIEWUPDATE);
 }
 
+// 对批次排序，分配需要的屏幕缓冲区，执行renderpath命令
 void View::Render()
 {
     SendViewEvent(E_BEGINVIEWRENDER);
@@ -584,7 +585,7 @@ void View::Render()
     UpdateGeometries(); // 对批次(batchQueues_,lightQueues_)排序，更新threadedGeometries_、nonThreadedGeometries_中的几何体
 
     // Allocate screen buffers as necessary
-    AllocateScreenBuffers(); // 分配RenderPath中需要的rendertarget
+    AllocateScreenBuffers(); // 分配需要的screen buffer
     SendViewEvent(E_VIEWBUFFERSREADY);
 
     // Forget parameter sources from the previous view
@@ -1305,7 +1306,7 @@ void View::GetBaseBatches()
     }
 }
 
-// 对渲染路径（RenderPath）中的场景过程（scene pass）队列（batchQueues_）和像素光照队列（lightQueues_）进行批次排序，
+// 对渲染路径（RenderPath）中的场景过程（scene pass）队列（batchQueues_）和像素光照队列（lightQueues_[].shadowSplits_[].shadowBatches_）进行批次排序，
 // 更新threadedGeometries_、nonThreadedGeometries_中的几何体（Drawable::UpdateGeometry）
 void View::UpdateGeometries()
 {
@@ -1937,7 +1938,7 @@ void View::RenderQuad(RenderPathCommand& command)
     DrawFullscreenQuad(false);
 }
 
-// 检查场景过程（CMD_SCENEPASS）是否有内容需要渲染
+// 检查命令是否需要处理（非CMD_SCENEPASS命令，或者CMD_SCENEPASS命令且有批次数据）
 bool View::IsNecessary(const RenderPathCommand& command)
 {
     return command.enabled_ && command.outputs_.Size() &&
@@ -1975,7 +1976,7 @@ bool View::CheckPingpong(unsigned index)
 {
     // Current command must be a viewport-reading & writing quad to begin the pingpong chain
     RenderPathCommand& current = renderPath_->commands_[index];
-    if (current.type_ != CMD_QUAD || !CheckViewportRead(current) || !CheckViewportWrite(current)) // 如果当前命令不是CMD_QUAD，或者不读取viewport，或者不写入viewport，则不使用pingpong
+    if (current.type_ != CMD_QUAD || !CheckViewportRead(current) || !CheckViewportWrite(current)) // 当前命令是CMD_QUAD，并且既有读viewport，也有写viewport，才可能使用pingpong链
         return false;
 
     // If there are commands other than quads that target the viewport, we must keep rendering to the final target and resolving
@@ -1996,15 +1997,17 @@ bool View::CheckPingpong(unsigned index)
     return true;
 }
 
-// 根据RenderPath中的<texture unit="environment" name="viewport" />、<output index="0" name="viewport" />等信息，分配RenderTarget：substituteRenderTarget_、viewportTextures_、renderTargets_
+// 根据是否需要替补缓冲区，定义substituteRenderTarget_
+// 根据是否需要读视口，以及是否需要pingpong链，定义viewportTextures_。（如果存在substituteRenderTarget_，可替换pingpong链中的一个）
+// 分配render path文件中定义的render target（<rendertarget name="xxx" ... />），放入renderTargets_
 void View::AllocateScreenBuffers()
 {
     View* actualView = sourceView_ ? sourceView_ : this;
 
-    bool hasScenePassToRTs = false;
-    bool hasCustomDepth = false;
-    bool hasViewportRead = false;
-    bool hasPingpong = false;
+    bool hasScenePassToRTs = false; // CMD_SCENEPASS需要渲染到rendertarget
+    bool hasCustomDepth = false; // 需要自定义的深度模板缓存
+    bool hasViewportRead = false; // 需要读视口
+    bool hasPingpong = false; // 需要pingpong链
     bool needSubstitute = false;
     unsigned numViewportTextures = 0;
     depthOnlyDummyTexture_ = nullptr;
@@ -2017,7 +2020,7 @@ void View::AllocateScreenBuffers()
         const RenderPathCommand& command = renderPath_->commands_[i];
         if (!actualView->IsNecessary(command))
             continue;
-        if (!hasViewportRead && CheckViewportRead(command)) // 需要读取"viewport"
+        if (!hasViewportRead && CheckViewportRead(command)) // 需要读"viewport"
             hasViewportRead = true;
         if (!hasPingpong && CheckPingpong(i))
             hasPingpong = true;
@@ -2048,7 +2051,7 @@ void View::AllocateScreenBuffers()
         needSubstitute = true;
 #endif
     // If backbuffer is antialiased when using deferred rendering, need to reserve a buffer
-    if (deferred_ && !renderTarget_ && graphics_->GetMultiSample() > 1)
+    if (deferred_ && !renderTarget_ && graphics_->GetMultiSample() > 1) // 如果在使用延迟渲染时backbuffer是抗锯齿的，则需要预备替补缓冲区
         needSubstitute = true;
     // If viewport is smaller than whole texture/backbuffer in deferred rendering, need to reserve a buffer, as the G-buffer
     // textures will be sized equal to the viewport
@@ -2114,6 +2117,7 @@ void View::AllocateScreenBuffers()
         viewportTextures_[1] = substituteRenderTarget_->GetParentTexture();
 
     // Allocate extra render targets defined by the render path
+    // 分配render path文件中定义的render target，放入renderTargets_
     for (unsigned i = 0; i < renderPath_->renderTargets_.Size(); ++i)
     {
         const RenderTargetInfo& rtInfo = renderPath_->renderTargets_[i];

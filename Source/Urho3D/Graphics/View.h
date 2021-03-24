@@ -335,7 +335,7 @@ private:
     /// Substitute rendertarget for deferred rendering. Allocated if necessary.
     RenderSurface* substituteRenderTarget_{};
     /// Texture(s) for sampling the viewport contents. Allocated if necessary.
-    Texture* viewportTextures_[MAX_VIEWPORT_TEXTURES]{};
+    Texture* viewportTextures_[MAX_VIEWPORT_TEXTURES]{}; // 用于采样视口的纹理
     /// Color rendertarget active for the current renderpath command.
     RenderSurface* currentRenderTarget_{};
     /// Last used custom depth render surface.
@@ -408,7 +408,7 @@ private:
     /// Drawables that limit their maximum light count.
     HashSet<Drawable*> maxLightsDrawables_;
     /// Rendertargets defined by the renderpath.
-    HashMap<StringHash, Texture*> renderTargets_;
+    HashMap<StringHash, Texture*> renderTargets_; // renderpath中定义的rendertarget
     /// Intermediate light processing results.
     Vector<LightQueryResult> lightQueryResults_; // 与各光源关联的几何体及阴影信息（lights_中每个光源及其影响的几何体为一组）
     /// Info for scene render passes defined by the renderpath.

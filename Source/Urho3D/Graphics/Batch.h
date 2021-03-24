@@ -77,9 +77,9 @@ struct Batch
     /// State sorting key.
     unsigned long long sortKey_{};
     /// Distance from camera.
-    float distance_{};
+    float distance_{}; // 与相机的距离
     /// 8-bit render order modifier from material.
-    unsigned char renderOrder_{};
+    unsigned char renderOrder_{}; // material中定义的渲染顺序
     /// 8-bit light mask for stencil marking in deferred rendering.
     unsigned char lightMask_{};
     /// Base batch flag. This tells to draw the object fully without light optimizations.
@@ -245,7 +245,7 @@ public:
     bool IsEmpty() const { return batches_.Empty() && batchGroups_.Empty(); }
 
     /// Instanced draw calls.
-    HashMap<BatchGroupKey, BatchGroup> batchGroups_; // 实例渲染的批次
+    HashMap<BatchGroupKey, BatchGroup> batchGroups_; // 未排序的实例批次（根据场景中相机可见的几何体生成）
     /// Shader remapping table for 2-pass state and distance sort.
     HashMap<unsigned, unsigned> shaderRemapping_;
     /// Material remapping table for 2-pass state and distance sort.
@@ -254,11 +254,11 @@ public:
     HashMap<unsigned short, unsigned short> geometryRemapping_;
 
     /// Unsorted non-instanced draw calls.
-    PODVector<Batch> batches_; // 非实例渲染的批次
+    PODVector<Batch> batches_; // 未排序的批次（根据场景中相机可见的几何体生成）
     /// Sorted non-instanced draw calls.
-    PODVector<Batch*> sortedBatches_;
+    PODVector<Batch*> sortedBatches_; // 排序后的批次（根据batches_生成）
     /// Sorted instanced draw calls.
-    PODVector<BatchGroup*> sortedBatchGroups_;
+    PODVector<BatchGroup*> sortedBatchGroups_; // 排序后的实例批次（根据batchGroups_生成）
     /// Maximum sorted instances.
     unsigned maxSortedInstances_;
     // 以下五项从RenderPath中产生（vsdefines=、psdefines=）

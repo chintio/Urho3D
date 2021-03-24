@@ -40,6 +40,7 @@
 namespace Urho3D
 {
 
+// 按renderOrder_、sortKey_、distance_排序
 inline bool CompareBatchesState(Batch* lhs, Batch* rhs)
 {
     if (lhs->renderOrder_ != rhs->renderOrder_)
@@ -50,13 +51,14 @@ inline bool CompareBatchesState(Batch* lhs, Batch* rhs)
         return lhs->distance_ < rhs->distance_;
 }
 
+// 按renderOrder_、distance_、sortKey_排序
 inline bool CompareBatchesFrontToBack(Batch* lhs, Batch* rhs)
 {
-    if (lhs->renderOrder_ != rhs->renderOrder_)
+    if (lhs->renderOrder_ != rhs->renderOrder_) // 根据材质中定义的渲染顺序排序
         return lhs->renderOrder_ < rhs->renderOrder_;
-    else if (lhs->distance_ != rhs->distance_)
+    else if (lhs->distance_ != rhs->distance_) // 根据与相机的距离排序
         return lhs->distance_ < rhs->distance_;
-    else
+    else // 根据sortKey_排序
         return lhs->sortKey_ < rhs->sortKey_;
 }
 
@@ -159,6 +161,7 @@ void CalculateSpotMatrix(Matrix4& dest, Light* light)
     dest = texAdjust * spotProj * spotView;
 }
 
+// 计算sortKey_，由着色器、灯光、材质、几何体信息构成
 void Batch::CalculateSortKey()
 {
     auto shaderID = (unsigned)(
@@ -758,16 +761,16 @@ void BatchQueue::SortFrontToBack()
     {
         if (i->second_.instances_.Size() <= maxSortedInstances_)
         {
-            Sort(i->second_.instances_.Begin(), i->second_.instances_.End(), CompareInstancesFrontToBack);
+            Sort(i->second_.instances_.Begin(), i->second_.instances_.End(), CompareInstancesFrontToBack); // 对每个实例，按与相机的距离排序
             if (i->second_.instances_.Size())
-                i->second_.distance_ = i->second_.instances_[0].distance_;
+                i->second_.distance_ = i->second_.instances_[0].distance_; // 批次组的distance_为距离相机最近的实例的distance_
         }
         else
         {
             float minDistance = M_INFINITY;
             for (PODVector<InstanceData>::ConstIterator j = i->second_.instances_.Begin(); j != i->second_.instances_.End(); ++j)
                 minDistance = Min(minDistance, j->distance_);
-            i->second_.distance_ = minDistance;
+            i->second_.distance_ = minDistance; // 批次组的distance_为距离相机最近的实例的distance_
         }
     }
 

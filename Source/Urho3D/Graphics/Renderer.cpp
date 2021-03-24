@@ -690,6 +690,7 @@ void Renderer::Update(float timeStep)
     resetViews_ = false;
 }
 
+// views_[].Render()
 void Renderer::Render()
 {
     // Engine does not render when window is closed or device is lost
@@ -1543,6 +1544,7 @@ void Renderer::PrepareViewRender()
     lightStencilValue_ = 1;
 }
 
+// 移除未使用的occlusionBuffers_和screenBuffers_
 void Renderer::RemoveUnusedBuffers()
 {
     for (unsigned i = occlusionBuffers_.Size() - 1; i < occlusionBuffers_.Size(); --i)
@@ -1582,6 +1584,7 @@ void Renderer::ResetShadowMapAllocations()
         i->second_.Clear();
 }
 
+// Screen buffers分配计数清零
 void Renderer::ResetScreenBufferAllocations()
 {
     for (HashMap<unsigned long long, unsigned>::Iterator i = screenBufferAllocations_.Begin(); i != screenBufferAllocations_.End(); ++i)
