@@ -1539,9 +1539,9 @@ void View::ExecuteRenderPathCommands()
                     isPingponging = true;
 
                 // If not using pingponging, simply resolve/copy to the first viewport texture
-                if (!isPingponging)
+                if (!isPingponging) // 不使用pingpong链
                 {
-                    if (!currentRenderTarget_)
+                    if (!currentRenderTarget_) // 从视口（viewport）resolve到currentViewportTexture_（viewportTextures_[0]）
                     {
                         graphics_->ResolveToTexture(dynamic_cast<Texture2D*>(viewportTextures_[0]), viewRect_);
                         currentViewportTexture_ = viewportTextures_[0];
@@ -1550,14 +1550,14 @@ void View::ExecuteRenderPathCommands()
                     }
                     else
                     {
-                        if (viewportWrite)
+                        if (viewportWrite) // currentRenderTarget_将被写入，需要blit到currentViewportTexture_（viewportTextures_[0]）
                         {
                             BlitFramebuffer(currentRenderTarget_->GetParentTexture(),
                                 GetRenderSurfaceFromTexture(viewportTextures_[0]), false);
                             currentViewportTexture_ = viewportTextures_[0];
                             viewportModified = false;
                         }
-                        else
+                        else // currentRenderTarget_不用于写入，可直接作为读取
                         {
                             // If the current render target is already a texture, and we are not writing to it, can read that
                             // texture directly instead of blitting. However keep the viewport dirty flag in case a later command
@@ -1566,9 +1566,10 @@ void View::ExecuteRenderPathCommands()
                         }
                     }
                 }
-                else
+                else // 使用pingpong，交换viewportTextures_[0]、viewportTextures_[1]
                 {
                     // Swap the pingpong double buffer sides. Texture 0 will be read next
+                    // viewportTextures_[0]、viewportTextures_[1]交换指针内容（此时currentRenderTarget_指向viewportTextures_[1]），currentViewportTexture_指向viewportTextures_[0]
                     viewportTextures_[1] = viewportTextures_[0];
                     viewportTextures_[0] = currentRenderTarget_->GetParentTexture();
                     currentViewportTexture_ = viewportTextures_[0];
@@ -1585,6 +1586,7 @@ void View::ExecuteRenderPathCommands()
             {
                 if (isPingponging)
                 {
+                    // currentRenderTarget_指向viewportTextures_[1]
                     currentRenderTarget_ = GetRenderSurfaceFromTexture(viewportTextures_[1]);
                     // If the render path ends into a quad, it can be redirected to the final render target
                     // However, on OpenGL we can not reliably do this in case the final target is the backbuffer, and we want to
@@ -1759,7 +1761,7 @@ void View::ExecuteRenderPathCommands()
             }
 
             // If current command output to the viewport, mark it modified
-            if (viewportWrite)
+            if (viewportWrite) // 视口已被写入内容
                 viewportModified = true;
         }
     }
@@ -1775,7 +1777,7 @@ void View::SetRenderTargets(RenderPathCommand& command)
 
     while (index < command.outputs_.Size())
     {
-        if (!command.outputs_[index].first_.Compare("viewport", false))
+        if (!command.outputs_[index].first_.Compare("viewport", false)) // 如果输出目标是"viewport"，则输出到currentRenderTarget_
         {
             graphics_->SetRenderTarget(index, currentRenderTarget_);
             useViewportOutput = true;
@@ -1785,6 +1787,7 @@ void View::SetRenderTargets(RenderPathCommand& command)
             Texture* texture = FindNamedTexture(command.outputs_[index].first_, true, false);
 
             // Check for depth only rendering (by specifying a depth texture as the sole output)
+            // 仅深度渲染（指定深度纹理为唯一输出）
             if (!index && command.outputs_.Size() == 1 && texture && (texture->GetFormat() == Graphics::GetReadableDepthFormat() ||
                                                                       texture->GetFormat() == Graphics::GetDepthStencilFormat()))
             {
@@ -1938,11 +1941,11 @@ void View::RenderQuad(RenderPathCommand& command)
     DrawFullscreenQuad(false);
 }
 
-// 检查命令是否需要处理（非CMD_SCENEPASS命令，或者CMD_SCENEPASS命令且有批次数据）
+// 检查命令是否需要处理
 bool View::IsNecessary(const RenderPathCommand& command)
 {
     return command.enabled_ && command.outputs_.Size() &&
-           (command.type_ != CMD_SCENEPASS || !batchQueues_[command.passIndex_].IsEmpty());
+           (command.type_ != CMD_SCENEPASS || !batchQueues_[command.passIndex_].IsEmpty()); // 非CMD_SCENEPASS命令，或者CMD_SCENEPASS命令且有批次数据
 }
 
 // 检测命令是否读取viewport
@@ -2880,16 +2883,17 @@ void View::FindZone(Drawable* drawable)
     drawable->SetZone(newZone, temporary);
 }
 
+// 根据drawable->lodDistance_从material中选择最优technique
 Technique* View::GetTechnique(Drawable* drawable, Material* material)
 {
     if (!material)
-        return renderer_->GetDefaultMaterial()->GetTechniques()[0].technique_;
+        return renderer_->GetDefaultMaterial()->GetTechniques()[0].technique_; // 使用缺省材质的第一个technique
 
     const Vector<TechniqueEntry>& techniques = material->GetTechniques();
     // If only one technique, no choice
-    if (techniques.Size() == 1)
+    if (techniques.Size() == 1) // 材质只有一个technique
         return techniques[0].technique_;
-    else
+    else // 选择最优technique
     {
         float lodDistance = drawable->GetLodDistance();
 
@@ -2910,7 +2914,7 @@ Technique* View::GetTechnique(Drawable* drawable, Material* material)
         }
 
         // If no suitable technique found, fallback to the last
-        return techniques.Size() ? techniques.Back().technique_ : nullptr;
+        return techniques.Size() ? techniques.Back().technique_ : nullptr; // 如果没有匹配到，则使用最后一个technique
     }
 }
 
@@ -3129,6 +3133,7 @@ bool View::NeedRenderShadowMap(const LightBatchQueue& queue)
         !queue.volumeBatches_.Empty());
 }
 
+// 渲染深度图
 void View::RenderShadowMap(const LightBatchQueue& queue)
 {
     URHO3D_PROFILE(RenderShadowMap);
@@ -3253,6 +3258,7 @@ void View::SendViewEvent(StringHash eventType)
     renderer_->SendEvent(eventType, eventData);
 }
 
+// 先查找renderTargets_，再查找ResourceCache，如有必要（isRenderTarget==false）还要尝试从文件加载
 Texture* View::FindNamedTexture(const String& name, bool isRenderTarget, bool isVolumeMap)
 {
     // Check rendertargets first

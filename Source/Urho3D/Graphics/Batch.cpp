@@ -178,6 +178,7 @@ void Batch::CalculateSortKey()
                (((unsigned long long)materialID) << 16u) | geometryID;
 }
 
+// 设置渲染状态、着色器参数、材质贴图、光照相关贴图
 void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool allowDepthWrite) const
 {
     if (!vertexShader_ || !pixelShader_)
@@ -190,9 +191,11 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
     Texture2D* shadowMap = lightQueue_ ? lightQueue_->shadowMap_ : nullptr;
 
     // Set shaders first. The available shader parameters and their register/uniform positions depend on the currently set shaders
+    // 设置着色器
     graphics->SetShaders(vertexShader_, pixelShader_);
 
     // Set pass / material-specific renderstates
+    // 设置渲染状态
     if (pass_ && material_)
     {
         BlendMode blend = pass_->GetBlendMode();
@@ -227,10 +230,12 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
     }
 
     // Set global (per-frame) shader parameters
+    // 设置着色器参数
     if (graphics->NeedParameterUpdate(SP_FRAME, nullptr))
         view->SetGlobalShaderParameters();
 
     // Set camera & viewport shader parameters
+    // 设置着色器参数
     auto cameraHash = (unsigned)(size_t)camera;
     IntRect viewport = graphics->GetViewport();
     IntVector2 viewSize = IntVector2(viewport.Width(), viewport.Height());
@@ -243,6 +248,7 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
     }
 
     // Set model or skinning transforms
+    // 设置模型的世界变换
     if (setModelTransform && graphics->NeedParameterUpdate(SP_OBJECT, worldTransform_))
     {
         if (geometryType_ == GEOM_SKINNED)
@@ -265,6 +271,7 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
     }
 
     // Set zone-related shader parameters
+    // 设置zone相关的着色器参数
     BlendMode blend = graphics->GetBlendMode();
     // If the pass is additive, override fog color to black so that shaders do not need a separate additive path
     bool overrideFogColorToBlack = blend == BLEND_ADD || blend == BLEND_ADDALPHA;
@@ -310,8 +317,10 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
     }
 
     // Set light-related shader parameters
+    // 设置灯光相关的着色器参数
     if (lightQueue_)
     {
+        // 设置像素光参数（颜色、位置、方向、阴影空间矩阵、阴影的其他参数）
         if (light && graphics->NeedParameterUpdate(SP_LIGHT, lightQueue_))
         {
             Node* lightNode = light->GetNode();
@@ -535,6 +544,7 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
                 }
             }
         }
+        // 设置顶点光参数（VSP_VERTEXLIGHTS，包含每个光源的颜色、位置、方向）
         else if (lightQueue_->vertexLights_.Size() && graphics->HasShaderParameter(VSP_VERTEXLIGHTS) &&
                  graphics->NeedParameterUpdate(SP_LIGHT, lightQueue_))
         {

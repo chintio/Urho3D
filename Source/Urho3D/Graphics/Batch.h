@@ -95,11 +95,11 @@ struct Batch
     /// Per-instance data. If not null, must contain enough data to fill instancing buffer.
     void* instancingData_{};
     /// Zone.
-    Zone* zone_{};
+    Zone* zone_{}; // drawable所在区域
     /// Light properties.
-    LightBatchQueue* lightQueue_{}; // 批次所在的光源信息
+    LightBatchQueue* lightQueue_{}; // 批次所在的光源信息（像素光、顶点光、或空）
     /// Material pass.
-    Pass* pass_{};
+    Pass* pass_{}; // 根据drawable->lodDistance_从material中选择最优technique，根据RenderPath中的scene pass从technique选择相应的pass
     /// Vertex shader.
     ShaderVariation* vertexShader_{};
     /// Pixel shader.
@@ -291,7 +291,7 @@ struct ShadowBatchQueue
 };
 
 /// Queue for light related draw calls.
-struct LightBatchQueue // 对于逐像素光源，保存几何体的光照批次（litBaseBatches_、litBatches_）、阴影批次（shadowSplits_）、光源本体批次（volumeBatches_）；对于RenderPath的scenepass，只保存顶点光列表，其他成员为空
+struct LightBatchQueue // 对于逐像素光源（light_指向该光源），保存几何体的光照批次（litBaseBatches_、litBatches_）、阴影批次（shadowSplits_）、光源本体批次（volumeBatches_）、阴影深度图（shadowMap_）；对于逐顶点光源，只保存顶点光列表（vertexLights_，引用自Drawable::vertexLights_），其他成员为空
 {
     /// Per-pixel light.
     Light* light_; // 像素光

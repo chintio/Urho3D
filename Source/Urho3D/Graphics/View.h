@@ -335,13 +335,13 @@ private:
     /// Substitute rendertarget for deferred rendering. Allocated if necessary.
     RenderSurface* substituteRenderTarget_{};
     /// Texture(s) for sampling the viewport contents. Allocated if necessary.
-    Texture* viewportTextures_[MAX_VIEWPORT_TEXTURES]{}; // 用于采样视口的纹理
+    Texture* viewportTextures_[MAX_VIEWPORT_TEXTURES]{}; // 用于采样视口的纹理，使用pingpong时，currentViewportTexture_指向viewportTextures_[0]，currentRenderTarget_指向viewportTextures_[1]
     /// Color rendertarget active for the current renderpath command.
-    RenderSurface* currentRenderTarget_{};
+    RenderSurface* currentRenderTarget_{}; // viewport对应的RT
     /// Last used custom depth render surface.
     RenderSurface* lastCustomDepthSurface_{};
     /// Texture containing the latest viewport texture.
-    Texture* currentViewportTexture_{}; // 从当前视口取得的纹理
+    Texture* currentViewportTexture_{}; // viewport对应的纹理
     /// Dummy texture for D3D9 depth only rendering.
     Texture* depthOnlyDummyTexture_{};
     /// Viewport rectangle.
