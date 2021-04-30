@@ -301,15 +301,15 @@ private:
     void SendCollisionEvents();
 
     /// Bullet collision configuration.
-    btCollisionConfiguration* collisionConfiguration_{};
+    btCollisionConfiguration* collisionConfiguration_{}; // 碰撞配置。主要功能是决定Bullet使用何种内存管理方式，在遇到box-box, sphere-box, 和其他不同的碰撞时该用什么算法。
     /// Bullet collision dispatcher.
-    UniquePtr<btDispatcher> collisionDispatcher_;
+    UniquePtr<btDispatcher> collisionDispatcher_; // 碰撞事件分发。它负责通知程序哪些物体互相碰撞了，碰撞点在哪里等信息。碰撞配置（btCollisionConfiguration）负责提供各种算法，当（btBroadphaseInterface）发现两个物体碰撞时把两个物体交付给分发器（btDispatcher），分发器寻找碰撞配置中提供的算法，并决定如何碰撞
     /// Bullet collision broadphase.
-    UniquePtr<btBroadphaseInterface> broadphase_;
+    UniquePtr<btBroadphaseInterface> broadphase_; // （碰撞）粗略阶段。碰撞检测系统
     /// Bullet constraint solver.
-    UniquePtr<btConstraintSolver> solver_;
+    UniquePtr<btConstraintSolver> solver_; // 约束处理。主要功能就是让我们的世界中的物体对特定的限制进行响应，比如门的铰链不能超过120度啊，被钩子勾住的物体不能自由下落啊，轮子不能从汽车上飞走啊…等等，这都属于限制条件.而constraint solver则解决类似的问题而存在。
     /// Bullet physics world.
-    UniquePtr<btDiscreteDynamicsWorld> world_;
+    UniquePtr<btDiscreteDynamicsWorld> world_; // 离散物理世界。物理模拟的总控，它只定义了随着模拟的进行，物体将会如何移动。而碰撞检测，碰撞响应都有单独的组件完成，并且这些组件是可以自定义的。
     /// Extra weak pointer to scene to allow for cleanup in case the world is destroyed before other components.
     WeakPtr<Scene> scene_;
     /// Rigid bodies in the world.
@@ -364,5 +364,8 @@ private:
 
 /// Register Physics library objects.
 void URHO3D_API RegisterPhysicsLibrary(Context* context);
+
+
+// https://www.it610.com/article/4995067.htm
 
 }

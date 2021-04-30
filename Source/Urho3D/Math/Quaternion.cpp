@@ -36,7 +36,7 @@ const Quaternion Quaternion::IDENTITY;
 // 轴角对转四元数
 void Quaternion::FromAngleAxis(float angle, const Vector3& axis)
 {
-    Vector3 normAxis = axis.Normalized(); // 旋转轴标准化
+    Vector3 normAxis = axis.Normalized(); // 旋转轴标准化（单位向量）
     angle *= M_DEGTORAD_2; // 角度转为弧度，theta/2弧度
     float sinAngle = sinf(angle);
     float cosAngle = cosf(angle);

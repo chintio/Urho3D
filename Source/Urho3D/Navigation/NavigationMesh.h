@@ -311,17 +311,17 @@ protected:
     /// Tile size.
     int tileSize_;
     /// Cell size.
-    float cellSize_;
+    float cellSize_; // 体素尺寸（xz平面，正方形）
     /// Cell height.
-    float cellHeight_;
+    float cellHeight_; // 体素高度（y轴）
     /// Navigation agent height.
-    float agentHeight_;
+    float agentHeight_; // 导航代理的高度（需要寻路的物体的高度，用于判断夹层能否通过）
     /// Navigation agent radius.
-    float agentRadius_;
+    float agentRadius_; // 导航代理的半径（需要寻路的物体的半径，用于判断窄路能否通过）
     /// Navigation agent max vertical climb.
-    float agentMaxClimb_;
+    float agentMaxClimb_; // 导航代理的最大垂直爬升（需要寻路的物体的爬坡高度，用于判断楼梯能否爬上）
     /// Navigation agent max slope.
-    float agentMaxSlope_;
+    float agentMaxSlope_; // 导航代理的最大坡度（需要寻路的物体的可行走倾斜角度，用于判断几何面能否爬上）
     /// Region minimum size.
     float regionMinSize_;
     /// Region merge size.
@@ -356,5 +356,11 @@ protected:
 
 /// Register Navigation library objects.
 void URHO3D_API RegisterNavigationLibrary(Context* context);
+
+
+// https://www.jianshu.com/p/64469a410b5d
+// https://bbs.huaweicloud.com/blogs/114003
+// https://blog.csdn.net/denghecsdn/article/details/78778769
+// https://blog.csdn.net/needmorecode/article/details/81603527?spm=1001.2014.3001.5501
 
 }
